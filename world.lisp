@@ -6,44 +6,31 @@
   (declare (ignore world)))
 
 (defvar *textures* nil)
+(defvar *game-data* nil)
 
 (defun load-assets ()
   (format t "Starting asset load.~%")
   (free-assets)
-  (let ((trees-png (png-read:read-png-file "resources/trees.png")))
-    (let ((gl-tex-trees (car (gl:gen-textures 1))))
-      (gl:bind-texture :texture-2d gl-tex-trees)
-      (gl:tex-parameter :texture-2d :texture-min-filter :linear)
-      ;; these are actually the defaults, just here for reference
-      (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
-      (gl:tex-parameter :texture-2d :texture-wrap-s :repeat)
-      (gl:tex-parameter :texture-2d :texture-wrap-t :repeat)
-      (gl:tex-parameter :texture-2d :texture-border-color '(0 0 0 0))
-      (gl:tex-image-2d :texture-2d 0 :rgba
-                       (png-read:width trees-png) (png-read:height trees-png)
-                       0 :luminance :unsigned-byte
-                       (flatten-image-data (png-read:image-data trees-png)))
-      (setf (getf *textures* :trees) gl-tex-trees)))
+  (let ((ground-data (load-points-from-ai #P"resources/ground.ai")))
+    (setf (getf *game-data* :ground-data) ground-data))
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()
-  (gl:delete-textures (loop for (name gl-tex-obj) on *textures* :by #'cddr collect gl-tex-obj)))
+  (let ((textures (loop for (name gl-tex-obj) on *textures* :by #'cddr collect gl-tex-obj)))
+    (when textures (gl:delete-textures textures))))
 
 (defun draw-world (world)
   (declare (ignore world))
   ;; set up blending
-  (when (getf *textures* :trees)
-    (gl:enable :texture-2d)
-    (gl:bind-texture :texture-2d (getf *textures* :trees)))
-  (gl:color 1 1 1)
-  (gl:with-primitive :quads
-    (gl:tex-coord 0 0)
-    (gl:vertex 0 600 0)
-    (gl:tex-coord 0 1)
-    (gl:vertex  0 0 0)
-    (gl:tex-coord 1 1)
-    (gl:vertex  2000 0 0)
-    (gl:tex-coord 1 0)
-    (gl:vertex 2000 600 0))
+  (gl:color 0 0 0)
+  (gl:push-matrix)
+  (gl:translate 0 0 0)
+  (gl:with-primitive :polygon
+    (dolist (vert (getf *game-data* :ground-data))
+      (let ((x (car vert))
+            (y (cadr vert)))
+        (gl:vertex x y 0))))
+  (gl:pop-matrix)
+  (gl:translate 0 0 0)
   (gl:flush))
 

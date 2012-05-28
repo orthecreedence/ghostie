@@ -33,6 +33,7 @@
                 (in-point-block
                   (let ((verts (read-from-string (concatenate 'string "(" line ")"))))
                     (push (list (car verts) (cadr verts)) points)))))
-    (reverse points)))
+    (reverse points)
+    (push '(0 0) points)))
 
 (load-points-from-ai #P"resources/ground.ai")
