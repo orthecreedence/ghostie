@@ -44,13 +44,12 @@
   (sdl:with-events (:poll)
     (:quit-event () t)
     (:video-expose-event () (sdl:update-display))
+    (:video-resize-event (:w width :h height)
+      (resize-window width height))
     (:key-down-event (:key key)
       (key-handler key))
     (:idle ()
       (step-world *world*)
-      (gl:enable :blend)
-      (gl:blend-func :src-alpha :one-minus-src-alpha)
-      (gl:clear :color-buffer-bit :depth-buffer)
       (draw-world *world*)
       (sdl:update-display))))
 
@@ -68,7 +67,7 @@
                  :title "game level"
                  :width 800
                  :height 600
-                 :background '(1 1 1 0))
+                 :background '(1 1 1 1))
   (stop))
 
 (defun main ()

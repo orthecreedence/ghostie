@@ -13,20 +13,23 @@
   (format t "Starting asset load.~%")
   (free-assets)
   (let ((assets '((:ground #P"resources/ground.ai" 0 0)
-                  (:ground-background #P"resources/ground-background.ai" 0 -50)
-                  (:tree1 #P"resources/tree1.ai" 0 -120)
-                  (:tree2 #P"resources/tree2.ai" 0 -80)
-                  (:tree3 #P"resources/tree3.ai" 0 -100)
+                  (:ground-background #P"resources/ground-background.ai" 0 -25)
+                  (:tree1 #P"resources/tree1.ai" 0 -100)
+                  (:tree2 #P"resources/tree2.ai" 0 -70)
+                  (:tree3 #P"resources/tree3.ai" 0 -80)
                   (:tree4 #P"resources/tree4.ai" 0 -160))))
     (loop for (key file x-offset z-offset) in assets do
           (format t "Loading ~a...~%" file)
-          (setf (getf *game-data* key)
-                (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
-                      x-offset
-                      z-offset))))
+          (let ((buffer (car (gl:gen-buffers 1))))
+            (setf (getf *game-data* key)
+                  (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
+                        x-offset
+                        z-offset
+                        buffer)))))
   (format t "Finished asset load.~%"))
 
-(defun free-assets ())
+(defun free-assets ()
+  (gl:delete-buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
 
 (defun draw-world (world)
   (declare (ignore world))
@@ -59,10 +62,10 @@
 
 (defun test-gl-funcs ()
   (format t "Running test func..~%")
-  (gl:enable :line-smooth)
-  (gl:shade-model :smooth)
+  (format t "OpenGL version: ~a~%" (gl:get-string :version))
+  (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
   (gl:fog :fog-mode :linear)
-  (gl:fog :fog-start 250.0)
+  (gl:fog :fog-start 240.0)
   (gl:fog :fog-end 550.0)
   (gl:fog :fog-density 0.01))
 
