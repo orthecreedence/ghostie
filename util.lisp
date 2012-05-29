@@ -13,7 +13,7 @@
           (incf counter))))
     vec))
 
-(defun file-string (path)
+(defun file-contents (path)
   "Sucks up an entire file from PATH into a freshly-allocated string,
       returning two values: the string and the number of bytes read."
   (with-open-file (s path)
@@ -24,7 +24,7 @@
 (defun load-points-from-ai (filename &key precision)
   (let ((points nil)
         (in-point-block nil)
-        (file-data (file-string filename))
+        (file-data (file-contents filename))
         (mult (if precision (expt 10 precision) 1)))
     (loop for line in (split-sequence:split-sequence #\return file-data) do
           (cond ((equal line "1 XR")

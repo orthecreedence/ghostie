@@ -4,7 +4,7 @@
   (let ((shader (gl:create-shader type)))
     (gl:shader-source shader src)
     (gl:compile-shader shader)
-    (format t "Shader log: ~a~%" (gl:get-shader-info-log shader))
+    (format t "Shader log (~a): ~a~%" type (gl:get-shader-info-log shader))
     shader))
 
 (defun create-shader-program (shader-pairs)
@@ -23,20 +23,5 @@
 
 (defun create-default-shader-program ()
   (create-shader-program
-    '((:vertex-shader .
-       "#version 330
-
-        layout(location = 0) in vec4 position;
-        void main()
-        {
-            gl_Position = position;
-        }")
-      (:fragment-shader .
-       "#version 330
-
-        out vec4 outputColor;
-        void main()
-        {
-            outputColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        }"))))
-
+    `((:vertex-shader . ,(file-contents #P"shaders/vertex.v1.glsl"))
+      (:fragment-shader . ,(file-contents #P"shaders/fragment.v1.glsl")))))

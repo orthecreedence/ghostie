@@ -31,14 +31,14 @@
 (defun free-assets ()
   (gl:delete-buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
 
-(defun draw-world_ (world)
+(defun draw-world (world)
   (declare (ignore world))
   (gl:clear :color-buffer-bit :depth-buffer)
   (gl:use-program *default-shader-program*)
   (let* ((buffer (car (gl:gen-buffers 1)))
-         (verts #(0.0 0.0 0.0 1.0
-                  1.0 0.0 0.0 1.0
-                  1.0 0.5 0.0 1.0))
+         (verts #(-1.0 -1.0 0.0
+                   1.0 -1.0 0.0
+                   0.0  1.0 0.0))
          (arr (gl:alloc-gl-array :float (length verts))))
     (dotimes (i (length verts))
       (setf (gl:glaref arr i) (aref verts i)))
