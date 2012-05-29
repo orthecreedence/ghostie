@@ -12,6 +12,7 @@
 (setf *random-state* (make-random-state t))
 
 (load "util")
+(load "shaders")
 (load "window")
 (load "world")
 
@@ -44,13 +45,12 @@
   (sdl:with-events (:poll)
     (:quit-event () t)
     (:video-expose-event () (sdl:update-display))
+    (:video-resize-event (:w width :h height)
+      (resize-window width height))
     (:key-down-event (:key key)
       (key-handler key))
     (:idle ()
       (step-world *world*)
-      (gl:enable :blend)
-      (gl:blend-func :src-alpha :one-minus-src-alpha)
-      (gl:clear :color-buffer-bit :depth-buffer)
       (draw-world *world*)
       (sdl:update-display))))
 

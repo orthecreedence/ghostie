@@ -13,22 +13,49 @@
   (format t "Starting asset load.~%")
   (free-assets)
   (let ((assets '((:ground #P"resources/ground.ai" 0 0)
-                  (:ground-background #P"resources/ground-background.ai" 0 -50)
-                  (:tree1 #P"resources/tree1.ai" 0 -120)
-                  (:tree2 #P"resources/tree2.ai" 0 -80)
-                  (:tree3 #P"resources/tree3.ai" 0 -100)
+                  (:ground-background #P"resources/ground-background.ai" 0 -25)
+                  (:tree1 #P"resources/tree1.ai" 0 -100)
+                  (:tree2 #P"resources/tree2.ai" 0 -70)
+                  (:tree3 #P"resources/tree3.ai" 0 -80)
                   (:tree4 #P"resources/tree4.ai" 0 -160))))
     (loop for (key file x-offset z-offset) in assets do
           (format t "Loading ~a...~%" file)
-          (setf (getf *game-data* key)
-                (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
-                      x-offset
-                      z-offset))))
+          (let ((buffer (car (gl:gen-buffers 1))))
+            (setf (getf *game-data* key)
+                  (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
+                        x-offset
+                        z-offset
+                        buffer)))))
   (format t "Finished asset load.~%"))
 
-(defun free-assets ())
+(defun free-assets ()
+  (gl:delete-buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
 
-(defun draw-world (world)
+(defun draw-world_ (world)
+  (declare (ignore world))
+  (gl:clear :color-buffer-bit :depth-buffer)
+  (gl:use-program *default-shader-program*)
+  (let* ((buffer (car (gl:gen-buffers 1)))
+         (verts #(0.0 0.0 0.0 1.0
+                  1.0 0.0 0.0 1.0
+                  1.0 0.5 0.0 1.0))
+         (arr (gl:alloc-gl-array :float (length verts))))
+    (dotimes (i (length verts))
+      (setf (gl:glaref arr i) (aref verts i)))
+    (gl:bind-buffer :array-buffer buffer)
+    (gl:buffer-data :array-buffer :static-draw arr)
+    (gl:free-gl-array arr)
+    (gl:enable-vertex-attrib-array 0)
+    (gl:vertex-attrib-pointer 0 3 :float :false 0 (cffi:null-pointer))
+    (gl:draw-arrays :triangles 0 3)
+    (gl:disable-vertex-attrib-array 0)
+    (gl:bind-buffer :array-buffer 0)
+    (gl:delete-buffers (list buffer)))
+  (gl:use-program 0)
+  (position-camera))
+
+
+(defun draw-world_ (world)
   (declare (ignore world))
   ;; set up blending
   (gl:color 0 0 0)
@@ -59,10 +86,13 @@
 
 (defun test-gl-funcs ()
   (format t "Running test func..~%")
-  (gl:enable :line-smooth)
-  (gl:shade-model :smooth)
+  (format t "OpenGL version: ~a~%" (gl:get-string :version))
+  (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
+  (let ((program (create-default-shader-program)))
+    (format t "Program: ~a~%" program)
+    (when program (gl:delete-program program)))
   (gl:fog :fog-mode :linear)
-  (gl:fog :fog-start 250.0)
+  (gl:fog :fog-start 240.0)
   (gl:fog :fog-end 550.0)
   (gl:fog :fog-density 0.01))
 
