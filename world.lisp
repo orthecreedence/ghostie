@@ -29,7 +29,8 @@
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()
-  (gl:delete-buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
+  (let ((buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
+    (when buffers (gl:delete-buffers buffers))))
 
 (defun draw-world (world)
   (declare (ignore world))
