@@ -1,8 +1,8 @@
 (in-package :game-level)
 
-(defparameter *world-position* '(-265 -435 -256))
+(defparameter *world-position* '(0 0 -1)); '(-265 -435 -256))
 (defun create-world ()
-  (setf *world-position* '(-265 -435 -256)))
+  (setf *world-position* '(0 0 -1))) ;'(-265 -435 -256)))
 
 (defun step-world (world)
   (declare (ignore world)))
@@ -19,42 +19,62 @@
                   (:tree3 #P"resources/tree3.ai" 0 -80)
                   (:tree4 #P"resources/tree4.ai" 0 -160))))
     (loop for (key file x-offset z-offset) in assets do
+          (return)
           (format t "Loading ~a...~%" file)
-          (let ((buffer (car (gl:gen-buffers 1))))
-            (setf (getf *game-data* key)
-                  (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
-                        x-offset
-                        z-offset
-                        buffer)))))
+          (setf (getf *game-data* key)
+                (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
+                      x-offset
+                      z-offset))))
+  (setf (getf *game-data* :triangle) (make-gl-object :data #(-1.0 -1.0 0.0 1.0
+                                                              1.0 -1.0 0.0 1.0
+                                                              0.0  1.0 0.0 1.0)))
+  (setf (getf *game-data* :prism) (make-gl-object :data #(-1.0 -1.0  0.0 1.0
+                                                           1.0 -1.0  0.0 1.0
+                                                           0.0  1.0  0.0 1.0
+                                                           
+                                                          -1.0 -1.0  0.0 1.0
+                                                           0.0  0.0 -1.0 1.0
+                                                           1.0 -1.0  0.0 1.0
+                                                           
+                                                          -1.0 -1.0  0.0 1.0
+                                                           0.0  1.0  0.0 1.0
+                                                           0.0  0.0 -1.0 1.0
+                                                           
+                                                           0.0  1.0  0.0 1.0
+                                                           1.0 -1.0  0.0 1.0
+                                                           0.0  0.0 -1.0 1.0)))
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()
-  (let ((buffers (loop for (nil obj) on *game-data* by #'cddr collect (cdddr obj))))
-    (when buffers (gl:delete-buffers buffers))))
+  (loop for (nil obj) on *game-data* by #'cddr do
+    (when (and (subtypep (type-of obj) 'gl-object)
+               (gl-object-buffer obj))
+      (gl:delete-buffers (list (gl-object-buffer obj))))))
 
 (defun draw-world (world)
   (declare (ignore world))
   (gl:clear :color-buffer-bit :depth-buffer)
   (gl:use-program *default-shader-program*)
-  (let* ((buffer (car (gl:gen-buffers 1)))
-         (verts #(-1.0 -1.0 0.0
-                   1.0 -1.0 0.0
-                   0.0  1.0 0.0))
-         (arr (gl:alloc-gl-array :float (length verts))))
-    (dotimes (i (length verts))
-      (setf (gl:glaref arr i) (aref verts i)))
-    (gl:bind-buffer :array-buffer buffer)
-    (gl:buffer-data :array-buffer :static-draw arr)
-    (gl:free-gl-array arr)
+  (let* ((offset *world-position*)
+         (frustum-scale 1.0)
+         (fz-near 0.5)
+         (fz-far 20.0)
+         (matrix (make-array 16 :initial-element 0)))
+    (setf (aref matrix 0) (/ frustum-scale (/ *window-width* *window-height*))
+          (aref matrix 5) frustum-scale
+          (aref matrix 10) (/ (+ fz-far fz-near) (- fz-near fz-far))
+          (aref matrix 14) (/ (* 2 fz-far fz-near) (- fz-near fz-far))
+          (aref matrix 11) -1.0)
+    (gl:uniform-matrix (gl:get-uniform-location *default-shader-program* "perspectiveMatrix") 4 (vector matrix))
+    (gl:uniformf (gl:get-uniform-location *default-shader-program* "offset") (car offset) (cadr offset) (caddr offset)))
+  (let ((triangle (getf *game-data* :prism)))
+    (gl:bind-buffer :array-buffer (gl-object-buffer triangle))
     (gl:enable-vertex-attrib-array 0)
-    (gl:vertex-attrib-pointer 0 3 :float :false 0 (cffi:null-pointer))
-    (gl:draw-arrays :triangles 0 3)
+    (gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
+    (gl:draw-arrays :triangles 0 12)
     (gl:disable-vertex-attrib-array 0)
-    (gl:bind-buffer :array-buffer 0)
-    (gl:delete-buffers (list buffer)))
-  (gl:use-program 0)
-  (position-camera))
-
+    (gl:bind-buffer :array-buffer 0))
+  (gl:use-program 0))
 
 (defun draw-world_ (world)
   (declare (ignore world))
@@ -80,10 +100,6 @@
       (gl:pop-matrix)))
   (position-camera)
   (gl:flush))
-
-(defun position-camera ()
-  (gl:load-identity)
-  (apply #'gl:translate *world-position*))
 
 (defun test-gl-funcs ()
   (format t "Running test func..~%")
