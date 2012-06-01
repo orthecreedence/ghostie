@@ -25,31 +25,30 @@
                 (list (cl-triangulation:triangulate (coerce (load-points-from-ai file :precision 2) 'vector))
                       x-offset
                       z-offset))))
-  (setf (getf *game-data* :triangle) (make-gl-object :data #(-1.0 -1.0 0.0 1.0
-                                                              1.0 -1.0 0.0 1.0
-                                                              0.0  1.0 0.0 1.0)))
-  (setf (getf *game-data* :prism) (make-gl-object :data #(-1.0 -1.0  0.0 1.0
-                                                           1.0 -1.0  0.0 1.0
-                                                           0.0  1.0  0.0 1.0
-                                                           
-                                                          -1.0 -1.0  0.0 1.0
-                                                           0.0  0.0 -1.0 1.0
-                                                           1.0 -1.0  0.0 1.0
-                                                           
-                                                          -1.0 -1.0  0.0 1.0
-                                                           0.0  1.0  0.0 1.0
-                                                           0.0  0.0 -1.0 1.0
-                                                           
-                                                           0.0  1.0  0.0 1.0
-                                                           1.0 -1.0  0.0 1.0
-                                                           0.0  0.0 -1.0 1.0)))
+  (setf (getf *game-data* :triangle) (make-gl-object :data '(((-1.0 -1.0  0.0)
+                                                              ( 1.0 -1.0  0.0)
+                                                              ( 0.0  1.0  0.0)))))
+  (setf (getf *game-data* :prism) (make-gl-object :data '(((-1.0 -1.0  0.0)
+                                                           ( 1.0 -1.0  0.0)
+                                                           ( 0.0  1.0  0.0))
+
+                                                          ((-1.0 -1.0  0.0)
+                                                           ( 0.0  0.0 -1.0)
+                                                           ( 1.0 -1.0  0.0))
+
+                                                          ((-1.0 -1.0  0.0)
+                                                           ( 0.0  1.0  0.0)
+                                                           ( 0.0  0.0 -1.0))
+
+                                                          (( 0.0  1.0  0.0)
+                                                           ( 1.0 -1.0  0.0)
+                                                           ( 0.0  0.0 -1.0)))))
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()
   (loop for (nil obj) on *game-data* by #'cddr do
-    (when (and (subtypep (type-of obj) 'gl-object)
-               (gl-object-buffer obj))
-      (gl:delete-buffers (list (gl-object-buffer obj))))))
+    (when (subtypep (type-of obj) 'gl-object)
+      (free-gl-object obj))))
 
 (defun draw-world (world)
   (declare (ignore world))
@@ -67,13 +66,8 @@
           (aref matrix 11) -1.0)
     (gl:uniform-matrix (gl:get-uniform-location *default-shader-program* "perspectiveMatrix") 4 (vector matrix))
     (gl:uniformf (gl:get-uniform-location *default-shader-program* "offset") (car offset) (cadr offset) (caddr offset)))
-  (let ((triangle (getf *game-data* :prism)))
-    (gl:bind-buffer :array-buffer (gl-object-buffer triangle))
-    (gl:enable-vertex-attrib-array 0)
-    (gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
-    (gl:draw-arrays :triangles 0 12)
-    (gl:disable-vertex-attrib-array 0)
-    (gl:bind-buffer :array-buffer 0))
+  (let* ((object (getf *game-data* :prism)))
+    (draw-gl-object object))
   (gl:use-program 0))
 
 (defun draw-world_ (world)
@@ -98,7 +92,6 @@
             (gl:vertex (car b) (cadr b))
             (gl:vertex (car c) (cadr c)))))
       (gl:pop-matrix)))
-  (position-camera)
   (gl:flush))
 
 (defun test-gl-funcs ()
