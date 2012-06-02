@@ -1,4 +1,4 @@
-(let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-triangulation)))
+(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
   (dolist (pkg packages)
     (ql:quickload pkg)))
 
@@ -19,45 +19,31 @@
 (load "window")
 (load "world")
 
-(defun key-handler (key action)
-  (when (eql action glfw:+press+)
-    (case key
-      (:minus 
-        (decf (nth 2 *world-position*)))
-      (:equals
-        (incf (nth 2 *world-position*)))
-      (:up
-        (decf (nth 1 *world-position*) .2))
-      (:down
-        (incf (nth 1 *world-position*) .2))
-      (:left
-        (incf (nth 0 *world-position*) .2))
-      (:right
-        (decf (nth 0 *world-position*) .2))
-      (#\R
-       (setf *world-position* '(0 0 -1))) ;'(-265 -435 -256)
-      (#\T
-        (test-gl-funcs))
-      (#\S
-        (let ((program (gl:create-program)))
-          (format t "Prog: ~a~%" program)
-          (gl:delete-program program)))
-      (#\V
-        (format t "ver: ~A~%" (gl:get-string :version)))
-      (#\L
-        (load-assets))
-      (#\Q
-        (glfw:close-window))
-      (:esc
-        (glfw:close-window)))))
+(defun key-handler (key)
+  (when (sdl:key= key :sdl-key-minus)
+    (decf (nth 2 *world-position*)))
+  (when (sdl:key= key :sdl-key-equals)
+    (incf (nth 2 *world-position*)))
+  (when (sdl:key= key :sdl-key-up)
+    (decf (nth 1 *world-position*) .2))
+  (when (sdl:key= key :sdl-key-down)
+    (incf (nth 1 *world-position*) .2))
+  (when (sdl:key= key :sdl-key-left)
+    (incf (nth 0 *world-position*) .2))
+  (when (sdl:key= key :sdl-key-right)
+    (decf (nth 0 *world-position*) .2))
+  (when (sdl:key= key :sdl-key-r)
+    (setf *world-position* '(0 0 -1))) ;'(-265 -435 -256)))
+  (when (sdl:key= key :sdl-key-t)
+    (test-gl-funcs))
+  (when (sdl:key= key :sdl-key-l)
+    (load-assets))
+  (when (sdl:key= key :sdl-key-q)
+    (sdl:push-quit-event))
+  (when (sdl:key= key :sdl-key-escape)
+    (sdl:push-quit-event)))
 
-(defun window-event-handler ()
-  (step-world *world*)
-  ;(draw-world *world*)
-  (glfw:swap-buffers))
-
-#|
-(defun window-event-handler_ (w)
+(defun window-event-handler (w)
   (declare (ignore w))
   (load-assets)
   (sdl:with-events (:poll)
@@ -71,7 +57,6 @@
       (step-world *world*)
       (draw-world *world*)
       (sdl:update-display))))
-|#
 
 (defun stop ()
   (when (and *main-thread*

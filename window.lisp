@@ -26,26 +26,10 @@
   ;(gl:fog :fog-end 550.0)
   ;(gl:hint :fog-hint :nicest)
   (gl:hint :polygon-smooth-hint :nicest)
-  ;(setf *default-shader-program* (create-default-shader-program))
+  (setf *default-shader-program* (create-default-shader-program))
   (apply #'gl:clear-color background))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
-  (glfw:do-window (:title title :width width :height height :mode glfw:+window+)
-    ((setf *quit* nil)
-     (glfw:open-window-hint glfw:+window-no-resize+ glfw:+false+)
-     ;(glfw:open-window-hint glfw:+opengl-version-major+ 3)
-     ;(glfw:open-window-hint glfw:+opengl-version-minor+ 3)
-     ;(glfw:open-window-hint glfw:+opengl-profile+ #x00050001) ;glfw:+opengl-core-profile+
-     ;(glfw:open-window-hint glfw:+opengl-forward-compat+ glfw:+true+)
-
-     (glfw:set-window-size-callback 'resize-window)
-     (glfw:set-key-callback #'key-handler)
-     (glfw:enable glfw:+key-repeat+)
-     (init-opengl background))
-    (funcall draw-fn)))
-
-#|
-(defun create-window_ (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
   "Create an SDL window with the given draw function and additional options."
   (sdl:with-init ()
     (let ((window (sdl:window width height
@@ -61,37 +45,31 @@
       (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
       ;; set up key repeat (so we can hold a key for rapid fire)
       (sdl:enable-key-repeat 200 30)
-  	  (gl:enable :line-smooth :blend :polygon-smooth :depth-test :cull-face)
-      (gl:shade-model :smooth)
-  	  (gl:blend-func :src-alpha :one-minus-src-alpha)
-      (gl:line-width 1.5)        
-      (gl:cull-face :back)
-      (gl:front-face :ccw)
-  	  (let* ((vport (gl:get-integer :viewport))
-             (width (aref vport 2))
-             (height (aref vport 3)))
-        (resize-window width height))
-      (gl:depth-mask :true)
-      (gl:depth-func :lequal)
-      (gl:depth-range 0.0 1.0)
-      (gl:clear-depth 1.0)
-      ;(gl:enable :fog)
-      ;(gl:fog :fog-mode :linear)
-      ;(gl:fog :fog-color '(.8 .8 .8 1.0))
-      ;(gl:fog :fog-density 0.004)
-      ;(gl:fog :fog-start 240.0)
-      ;(gl:fog :fog-end 550.0)
-      ;(gl:hint :fog-hint :nicest)
-      (gl:hint :polygon-smooth-hint :nicest)
-      (apply #'gl:clear-color background)
-      (setf *default-shader-program* (create-default-shader-program))
+      (init-opengl background)
       ;; run the world...this calls our game loop
       (funcall draw-fn window)
       window)))
-|#
 
 (defun resize-window (width height)
   (setf height (max height 1))
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))
+
+#|
+(defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
+  (glfw:do-window (:title title :width width :height height :mode glfw:+window+)
+    ((setf *quit* nil)
+     (glfw:open-window-hint glfw:+window-no-resize+ glfw:+false+)
+     ;(glfw:open-window-hint glfw:+opengl-version-major+ 3)
+     ;(glfw:open-window-hint glfw:+opengl-version-minor+ 3)
+     ;(glfw:open-window-hint glfw:+opengl-profile+ #x00050001) ;glfw:+opengl-core-profile+
+     ;(glfw:open-window-hint glfw:+opengl-forward-compat+ glfw:+true+)
+
+     (glfw:set-window-size-callback 'resize-window)
+     (glfw:set-key-callback #'key-handler)
+     (glfw:enable glfw:+key-repeat+)
+     (init-opengl background))
+    (funcall draw-fn)))
+|#
+
