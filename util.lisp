@@ -21,7 +21,7 @@
            (data (make-string len)))
       (values data (read-sequence data s)))))
 
-(defun load-points-from-ai (filename &key precision)
+(defun load-points-from-ai (filename &key precision center)
   (let ((points nil)
         (in-point-block nil)
         (file-data (file-contents filename))
@@ -41,9 +41,16 @@
                     (push (list (car verts) (cadr verts)) points)))))
     (let* ((last (car points))
            (points (reverse points)))
-      (if (equal (car points) last)
-          (butlast points)
-          points))))
+      (let ((points (if (equal (car points) last) (butlast points) points)))
+        (if center
+            (let* ((x-vals (loop for (x nil) in points collect x))
+                   (y-vals (loop for (nil y) in points collect y))
+                   (x-offset (/ (+ (apply #'min x-vals) (apply #'max x-vals)) -2))
+                   (y-offset (/ (+ (apply #'min y-vals) (apply #'max y-vals)) -2)))
+              (values (mapcar (lambda (pt) (list (+ (car pt) x-offset)
+                                                 (+ (cadr pt) y-offset))) points)
+                      (list x-offset y-offset)))
+            (values points '(0 0)))))))
 
 (defun object-leftmost-point (points)
   (reduce (lambda (a b) (min (if (listp a) (car a) a)

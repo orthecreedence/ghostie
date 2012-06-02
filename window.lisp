@@ -5,28 +5,30 @@
 (defvar *default-shader-program* nil)
 
 (defun init-opengl (background)
-  (gl:enable :line-smooth :blend :polygon-smooth :depth-test :cull-face)
-  (gl:shade-model :smooth)
+  ;; set up blending
+  (gl:enable :blend)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
+  ;; set up culling
+  (gl:enable :cull-face)
   (gl:cull-face :back)
   (gl:front-face :ccw)
+  ;; set up the viewport
   (let* ((vport (gl:get-integer :viewport))
          (width (aref vport 2))
          (height (aref vport 3)))
     (resize-window width height))
+  ;; enable depth testing
+  (gl:enable :depth-test :depth-clamp)
   (gl:depth-mask :true)
   (gl:depth-func :lequal)
   (gl:depth-range 0.0 1.0)
   (gl:clear-depth 1.0)
-  ;(gl:enable :fog)
-  ;(gl:fog :fog-mode :linear)
-  ;(gl:fog :fog-color '(.8 .8 .8 1.0))
-  ;(gl:fog :fog-density 0.004)
-  ;(gl:fog :fog-start 240.0)
-  ;(gl:fog :fog-end 550.0)
-  ;(gl:hint :fog-hint :nicest)
-  (gl:hint :polygon-smooth-hint :nicest)
+  ;; antialiasing (or just fixes gaps betwen polygon triangles)
+  (gl:shade-model :smooth)
+  (gl:enable :multisample-arb)
+  ;; create the shader program
   (setf *default-shader-program* (create-default-shader-program))
+  ;; set the background/clear color
   (apply #'gl:clear-color background))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))

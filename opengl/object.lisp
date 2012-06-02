@@ -5,10 +5,11 @@
    (index-data :accessor gl-object-index-data :initarg :index-data :initform nil)
    (vao :accessor gl-object-vao :initform nil)
    (vertex-buffer :accessor gl-object-vertex-buffer :initform nil)
-   (index-buffer :accessor gl-object-index-buffer :initform nil)))
+   (index-buffer :accessor gl-object-index-buffer :initform nil)
+   (position :accessor gl-object-position :initarg :position :initform '(0 0 0))))
 
-(defun make-gl-object (&key data)
-  (set-gl-object-data (make-instance 'gl-object) data))
+(defun make-gl-object (&key data position)
+  (set-gl-object-data (make-instance 'gl-object :position position) data))
 
 (defmethod set-gl-object-data (gl-object (triangles list))
   "Copies a set of floating-point vertex data into a VBO which is then stored
@@ -24,7 +25,7 @@
       (gl:bind-buffer :array-buffer vertex-buffer)
       (let ((gl-arr (gl:alloc-gl-array :float (length vertex-array))))
         (dotimes (i (length vertex-array))
-          (setf (gl:glaref gl-arr i) (aref vertex-array i)))
+          (setf (gl:glaref gl-arr i) (coerce (aref vertex-array i) 'single-float)))
         (gl:buffer-data :array-buffer :static-draw gl-arr)
         (gl:free-gl-array gl-arr))
       (gl:bind-buffer :array-buffer 0)
