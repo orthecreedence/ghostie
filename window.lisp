@@ -30,19 +30,19 @@
   (apply #'gl:clear-color background))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
-  (setf *quit* nil)
-  (glfw:with-init
-    (glfw:open-window-hint glfw:+window-no-resize+ glfw:+true+)
-    (glfw:open-window-hint glfw:+opengl-version-major+ 3)
-    (glfw:open-window-hint glfw:+opengl-version-minor+ 3)
-    (glfw:open-window-hint glfw:+opengl-profile+ #x00050001) ;glfw:+opengl-core-profile+
-    (glfw:open-window-hint glfw:+opengl-forward-compat+ glfw:+true+)
-    (glfw:with-open-window (:title title :width width :height height :mode glfw:+window+)
+  (glfw:do-window (:title title :width width :height height :mode glfw:+window+)
+    ((setf *quit* nil)
+     (glfw:open-window-hint glfw:+window-no-resize+ glfw:+false+)
+     ;(glfw:open-window-hint glfw:+opengl-version-major+ 3)
+     ;(glfw:open-window-hint glfw:+opengl-version-minor+ 3)
+     ;(glfw:open-window-hint glfw:+opengl-profile+ #x00050001) ;glfw:+opengl-core-profile+
+     ;(glfw:open-window-hint glfw:+opengl-forward-compat+ glfw:+true+)
+
      (glfw:set-window-size-callback 'resize-window)
-     (glfw:set-key-callback 'key-handler)
+     (glfw:set-key-callback #'key-handler)
      (glfw:enable glfw:+key-repeat+)
-     (init-opengl background)
-     (funcall draw-fn))))
+     (init-opengl background))
+    (funcall draw-fn)))
 
 #|
 (defun create-window_ (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))

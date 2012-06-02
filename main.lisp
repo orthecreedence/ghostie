@@ -47,15 +47,14 @@
       (#\L
         (load-assets))
       (#\Q
-        (setf *quit* t))
+        (glfw:close-window))
       (:esc
-        (setf *quit* t)))))
+        (glfw:close-window)))))
 
 (defun window-event-handler ()
-  (loop while (not *quit*) do
-    (step-world *world*)
-    ;(draw-world *world*)
-    (glfw:swap-buffers)))
+  (step-world *world*)
+  ;(draw-world *world*)
+  (glfw:swap-buffers))
 
 #|
 (defun window-event-handler_ (w)
