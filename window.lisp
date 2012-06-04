@@ -2,32 +2,57 @@
 
 (defvar *window-width* 0)
 (defvar *window-height* 0)
-(defvar *default-shader-program* nil)
+(defvar *shader-program* nil)
+(defvar *frustum-scale* (calc-frustum-scale 45))
+(defvar *camera-to-clip-matrix* (clem:array->matrix #2A((0 0 0 0) (0 0 0 0) (0 0 0 0) (0 0 0 0))))
+(defvar *camera-matrix-unif* nil)
+(defvar *model-matrix-unif* nil)
 
 (defun init-opengl (background)
   ;; set up blending
   (gl:enable :blend)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
+
   ;; set up culling
   (gl:enable :cull-face)
   (gl:cull-face :back)
   (gl:front-face :ccw)
+
+  ;; create the shader program/uniform locations
+  (setf *shader-program* (create-default-shader-program))
+  (setf *camera-matrix-unif* (gl:get-uniform-location *shader-program* "cameraToClipMatrix"))
+  (setf *model-matrix-unif* (gl:get-uniform-location *shader-program* "modelToCameraMatrix"))
+
+  ;; create all our needed matrices
+  (let ((fz-near 1)
+        (fz-far 61))
+    (setf (clem:mref *camera-to-clip-matrix* 0 0) *frustum-scale*
+          (clem:mref *camera-to-clip-matrix* 1 1) *frustum-scale*
+          (clem:mref *camera-to-clip-matrix* 2 2) (/ (+ fz-far fz-near) (- fz-near fz-far))
+          (clem:mref *camera-to-clip-matrix* 2 3) -1
+          (clem:mref *camera-to-clip-matrix* 3 2) (/ (* 2 fz-far fz-near) (- fz-near fz-far))))
+
+  ;; set our camera matrix into the program
+  (gl:use-program *shader-program*)
+  (gl:uniform-matrix *camera-matrix-unif* 4 (coerce (clem::matrix->list *camera-to-clip-matrix*) 'vector))
+
   ;; set up the viewport
   (let* ((vport (gl:get-integer :viewport))
          (width (aref vport 2))
          (height (aref vport 3)))
     (resize-window width height))
+
   ;; enable depth testing
   (gl:enable :depth-test :depth-clamp)
   (gl:depth-mask :true)
   (gl:depth-func :lequal)
   (gl:depth-range 0.0 1.0)
   (gl:clear-depth 1.0)
+
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
   (gl:shade-model :smooth)
   (gl:enable :multisample-arb)
-  ;; create the shader program
-  (setf *default-shader-program* (create-default-shader-program))
+
   ;; set the background/clear color
   (apply #'gl:clear-color background))
 
@@ -54,24 +79,11 @@
 
 (defun resize-window (width height)
   (setf height (max height 1))
+  (setf (clem:mref *camera-to-clip-matrix* 0 0) (* *frustum-scale* (/ height width))
+        (clem:mref *camera-to-clip-matrix* 1 1) *frustum-scale*)
+  (gl:use-program *shader-program*)
+  (gl:uniform-matrix *camera-matrix-unif* 4 (coerce (clem::matrix->list *camera-to-clip-matrix*) 'vector))
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))
-
-#|
-(defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
-  (glfw:do-window (:title title :width width :height height :mode glfw:+window+)
-    ((setf *quit* nil)
-     (glfw:open-window-hint glfw:+window-no-resize+ glfw:+false+)
-     ;(glfw:open-window-hint glfw:+opengl-version-major+ 3)
-     ;(glfw:open-window-hint glfw:+opengl-version-minor+ 3)
-     ;(glfw:open-window-hint glfw:+opengl-profile+ #x00050001) ;glfw:+opengl-core-profile+
-     ;(glfw:open-window-hint glfw:+opengl-forward-compat+ glfw:+true+)
-
-     (glfw:set-window-size-callback 'resize-window)
-     (glfw:set-key-callback #'key-handler)
-     (glfw:enable glfw:+key-repeat+)
-     (init-opengl background))
-    (funcall draw-fn)))
-|#
 

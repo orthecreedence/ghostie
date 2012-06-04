@@ -1,4 +1,4 @@
-(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
+(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads clem split-sequence cl-triangulation)))
   (dolist (pkg packages)
     (ql:quickload pkg)))
 

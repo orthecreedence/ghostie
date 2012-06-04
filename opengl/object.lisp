@@ -3,10 +3,12 @@
 (defclass gl-object ()
   ((vertex-data :accessor gl-object-vertex-data :initarg :vertex-data :initform nil)
    (index-data :accessor gl-object-index-data :initarg :index-data :initform nil)
+   (scale :accessor gl-object-scale :initarg :scale :initform #(1 1 1))
+   (position :accessor gl-object-position :initarg :position :initform #(0 0 0))
+   (rotation :accessor gl-object-rotation :initarg :rotation :initform #(0 0 0))
    (vao :accessor gl-object-vao :initform nil)
    (vertex-buffer :accessor gl-object-vertex-buffer :initform nil)
-   (index-buffer :accessor gl-object-index-buffer :initform nil)
-   (position :accessor gl-object-position :initarg :position :initform '(0 0 0))))
+   (index-buffer :accessor gl-object-index-buffer :initform nil)))
 
 (defun make-gl-object (&key data position)
   (set-gl-object-data (make-instance 'gl-object :position position) data))
@@ -56,7 +58,7 @@
             (gl-object-index-buffer gl-object) index-buffer)))
   gl-object)
 
-(defmethod draw-gl-object ((obj gl-object))
+(defmethod draw ((obj gl-object))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))
@@ -71,8 +73,30 @@
   ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
   ;(gl:draw-arrays :triangles 0 3)
   ;(gl:bind-buffer :array-buffer 0)
-  
 
+(defmethod set-rotate ((obj gl-object) (angles list))
+  (let* ((matrix (id-matrix 4))
+         (angle-rad (* degrees (/ 3.14159 180)))
+         (cos (coerce (cos angle-rad) 'double-float))
+         (sin (coerce (sin angle-rad) 'double-float))
+         (nsin (- sin)))
+    (case axis
+      (:x (setf (clem:mref matrix 1 1) cos
+                (clem:mref matrix 2 1) nsin
+                (clem:mref matrix 1 2) sin
+                (clem:mref matrix 2 2) cos))
+      (:y (setf (clem:mref matrix 0 0) cos
+                (clem:mref matrix 2 0) sin
+                (clem:mref matrix 0 2) nsin
+                (clem:mref matrix 2 2) cos))
+      (:z (setf (clem:mref matrix 0 0) cos
+                (clem:mref matrix 1 0) nsin
+                (clem:mref matrix 0 1) sin
+                (clem:mref matrix 1 1) cos)))
+    matrix))
+
+  
+  
 (defun create-point-index (triangles)
   (let ((point-set (make-hash-table :test #'equal))
         (index nil)
