@@ -59,7 +59,9 @@
                                                    (:sdl-gl-red-size 8)
                                                    (:sdl-gl-green-size 8)
                                                    (:sdl-gl-blue-size 8)
-                                                   (:sdl-gl-depth-size 16)))))
+                                                   (:sdl-gl-depth-size 16)
+                                                   (:sdl-gl-multisamplebuffers 2)
+                                                   (:sdl-gl-multisamplesamples 2)))))
       ;; don't know why i'm doing this. someone said to here: http://www.cliki.net/lispbuilder-sdl
       (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
       ;; set up key repeat (so we can hold a key for rapid fire)

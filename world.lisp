@@ -62,4 +62,5 @@
 (defun test-gl-funcs ()
   (format t "Running test func..~%")
   (format t "OpenGL version: ~a~%" (gl:get-string :version))
-  (format t "Shader version: ~a~%" (gl:get-string :shading-language-version)))
+  (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
+  (format t "Extensions: ~a~%" (gl:get-string :extensions)))
