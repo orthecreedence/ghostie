@@ -1,4 +1,4 @@
-(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads clem split-sequence cl-triangulation)))
+(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
   (dolist (pkg packages)
     (ql:quickload pkg)))
 
@@ -13,6 +13,7 @@
 (setf *random-state* (make-random-state t))
 
 (load "util")
+(load "matrix")
 (load "opengl/shaders")
 (load "opengl/util")
 (load "opengl/object")
@@ -24,16 +25,16 @@
     (decf (nth 2 *world-position*)))
   (when (sdl:key= key :sdl-key-equals)
     (incf (nth 2 *world-position*)))
-  (when (sdl:key= key :sdl-key-up)
+  (when (sdl:key= key :sdl-key-w)
     (decf (nth 1 *world-position*) 2))
-  (when (sdl:key= key :sdl-key-down)
+  (when (sdl:key= key :sdl-key-s)
     (incf (nth 1 *world-position*) 2))
-  (when (sdl:key= key :sdl-key-left)
+  (when (sdl:key= key :sdl-key-a)
     (incf (nth 0 *world-position*) 2))
-  (when (sdl:key= key :sdl-key-right)
+  (when (sdl:key= key :sdl-key-d)
     (decf (nth 0 *world-position*) 2))
   (when (sdl:key= key :sdl-key-r)
-    (setf *world-position* '(0 0 -1))) ;'(-265 -435 -256)))
+    (setf *world-position* '(0 0 -1))) ;'(-265 -435 -256)
   (when (sdl:key= key :sdl-key-t)
     (test-gl-funcs))
   (when (sdl:key= key :sdl-key-l)
@@ -70,7 +71,7 @@
   (setf *world* (create-world))
   (create-window #'window-event-handler
                  :title "game level"
-                 :width 800
+                 :width 600
                  :height 600
                  :background '(1 1 1 0))
   (stop))

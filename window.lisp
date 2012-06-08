@@ -4,9 +4,8 @@
 (defvar *window-height* 0)
 (defvar *shader-program* nil)
 (defvar *frustum-scale* (calc-frustum-scale 45))
-(defvar *camera-to-clip-matrix* (clem:array->matrix #2A((0 0 0 0) (0 0 0 0) (0 0 0 0) (0 0 0 0))))
-(defvar *camera-matrix-unif* nil)
-(defvar *model-matrix-unif* nil)
+(defvar *model-to-camera-matrix-unif* nil)
+(defvar *camera-to-clip-matrix-unif* nil)
 
 (defun init-opengl (background)
   ;; set up blending
@@ -20,21 +19,14 @@
 
   ;; create the shader program/uniform locations
   (setf *shader-program* (create-default-shader-program))
-  (setf *camera-matrix-unif* (gl:get-uniform-location *shader-program* "cameraToClipMatrix"))
-  (setf *model-matrix-unif* (gl:get-uniform-location *shader-program* "modelToCameraMatrix"))
-
-  ;; create all our needed matrices
-  (let ((fz-near 1)
-        (fz-far 61))
-    (setf (clem:mref *camera-to-clip-matrix* 0 0) *frustum-scale*
-          (clem:mref *camera-to-clip-matrix* 1 1) *frustum-scale*
-          (clem:mref *camera-to-clip-matrix* 2 2) (/ (+ fz-far fz-near) (- fz-near fz-far))
-          (clem:mref *camera-to-clip-matrix* 2 3) -1
-          (clem:mref *camera-to-clip-matrix* 3 2) (/ (* 2 fz-far fz-near) (- fz-near fz-far))))
+  (setf *model-to-camera-matrix-unif* (gl:get-uniform-location *shader-program* "modelToCameraMatrix"))
+  (setf *camera-to-clip-matrix-unif* (gl:get-uniform-location *shader-program* "cameraToClipMatrix"))
 
   ;; set our camera matrix into the program
   (gl:use-program *shader-program*)
-  (gl:uniform-matrix *camera-matrix-unif* 4 (coerce (clem::matrix->list *camera-to-clip-matrix*) 'vector))
+
+  ;; create reset view matrix
+  (setf *view-matrix* (id-matrix 4))
 
   ;; set up the viewport
   (let* ((vport (gl:get-integer :viewport))
@@ -79,10 +71,8 @@
 
 (defun resize-window (width height)
   (setf height (max height 1))
-  (setf (clem:mref *camera-to-clip-matrix* 0 0) (* *frustum-scale* (/ height width))
-        (clem:mref *camera-to-clip-matrix* 1 1) *frustum-scale*)
+  (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
   (gl:use-program *shader-program*)
-  (gl:uniform-matrix *camera-matrix-unif* 4 (coerce (clem::matrix->list *camera-to-clip-matrix*) 'vector))
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))

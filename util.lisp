@@ -60,7 +60,3 @@
   (let ((deg->rad (/ 3.14159 180)))
     (/ 1 (tan (/ (* fov-deg deg->rad) 2)))))
 
-(defun id-matrix (dims)
-  (clem:array->matrix (case dims
-                        (3 #2A((1 0 0) (0 1 0) (0 0 1)))
-                        (4 #2A((1 0 0 0) (0 1 0 0) (0 0 1 0) (0 0 0 1))))))

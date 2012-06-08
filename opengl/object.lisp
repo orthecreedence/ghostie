@@ -4,8 +4,8 @@
   ((vertex-data :accessor gl-object-vertex-data :initarg :vertex-data :initform nil)
    (index-data :accessor gl-object-index-data :initarg :index-data :initform nil)
    (scale :accessor gl-object-scale :initarg :scale :initform #(1 1 1))
-   (position :accessor gl-object-position :initarg :position :initform #(0 0 0))
-   (rotation :accessor gl-object-rotation :initarg :rotation :initform #(0 0 0))
+   (position :accessor gl-object-position :initarg :position :initform '(0 0 0))
+   (rotation :accessor gl-object-rotation :initarg :rotation :initform '(0 0 0 0))
    (vao :accessor gl-object-vao :initform nil)
    (vertex-buffer :accessor gl-object-vertex-buffer :initform nil)
    (index-buffer :accessor gl-object-index-buffer :initform nil)))
@@ -46,11 +46,10 @@
       (gl:bind-vertex-array (gl-object-vao gl-object))
       (gl:bind-buffer :array-buffer vertex-buffer)
       (gl:enable-vertex-attrib-array 0)
-      (gl:vertex-attrib-pointer 0 4 :float nil 0 (cffi:null-pointer))
+      (gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
       (gl:bind-buffer :element-array-buffer index-buffer)
       (gl:bind-vertex-array 0)
 
-      ;(format t "vert: ~a, idx: ~a~%" vertex-array index)
       ;; set that shit
       (setf (gl-object-vertex-data gl-object) vertex-array
             (gl-object-index-data gl-object) index
@@ -59,44 +58,18 @@
   gl-object)
 
 (defmethod draw ((obj gl-object))
+  (let* ((position (gl-object-position obj))
+         (rotation (gl-object-rotation obj))
+         (model-matrix (id-matrix 4))
+         (model-matrix (mat* model-matrix (apply #'m-rotate rotation)))
+         (model-matrix (mat* model-matrix (apply #'m-translate position)))
+         (model-matrix (mat* model-matrix *view-matrix*))
+         (mv-matrix (mat* model-matrix *view-matrix*)))
+    (gl:uniform-matrix *model-to-camera-matrix-unif* 4 (vector mv-matrix) t))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))
-  ;(gl:enable-vertex-attrib-array 0)
-  ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
-  ;(gl:draw-arrays :triangles 0 3)
-  ;(gl:disable-vertex-attrib-array 0)
-  ;(gl:bind-buffer :element-array-buffer 0)
-  ;(gl:bind-buffer :array-buffer 0)
-  ;(gl:bind-buffer :array-buffer (gl-object-vertex-buffer obj))
-  ;(gl:enable-vertex-attrib-array 0)
-  ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
-  ;(gl:draw-arrays :triangles 0 3)
-  ;(gl:bind-buffer :array-buffer 0)
 
-(defmethod set-rotate ((obj gl-object) (angles list))
-  (let* ((matrix (id-matrix 4))
-         (angle-rad (* degrees (/ 3.14159 180)))
-         (cos (coerce (cos angle-rad) 'double-float))
-         (sin (coerce (sin angle-rad) 'double-float))
-         (nsin (- sin)))
-    (case axis
-      (:x (setf (clem:mref matrix 1 1) cos
-                (clem:mref matrix 2 1) nsin
-                (clem:mref matrix 1 2) sin
-                (clem:mref matrix 2 2) cos))
-      (:y (setf (clem:mref matrix 0 0) cos
-                (clem:mref matrix 2 0) sin
-                (clem:mref matrix 0 2) nsin
-                (clem:mref matrix 2 2) cos))
-      (:z (setf (clem:mref matrix 0 0) cos
-                (clem:mref matrix 1 0) nsin
-                (clem:mref matrix 0 1) sin
-                (clem:mref matrix 1 1) cos)))
-    matrix))
-
-  
-  
 (defun create-point-index (triangles)
   (let ((point-set (make-hash-table :test #'equal))
         (index nil)
@@ -116,14 +89,13 @@
 (defun flatten-vertices-into-array (vertices)
   (let* ((points-per-vert (length (aref vertices 0)))
          (num-verts (length vertices))
-         (vert-array (make-array (* 4 num-verts) :initial-element 0))
+         (vert-array (make-array (* 3 num-verts) :initial-element 0))
          (idx 0))
     (loop for vertex across vertices do
       (dolist (coord vertex)
         (setf (aref vert-array idx) coord)
         (incf idx))
-      (incf idx (- 4 points-per-vert))
-      (setf (aref vert-array (1- idx)) 1.0))
+      (incf idx (- 3 points-per-vert)))
     vert-array))
 
 (defmethod free-gl-object (gl-object)
@@ -137,3 +109,15 @@
     (gl:delete-vertex-arrays (list (gl-object-vao gl-object)))
     (setf (gl-object-vao gl-object) nil)))
 
+
+  ;(gl:enable-vertex-attrib-array 0)
+  ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
+  ;(gl:draw-arrays :triangles 0 3)
+  ;(gl:disable-vertex-attrib-array 0)
+  ;(gl:bind-buffer :element-array-buffer 0)
+  ;(gl:bind-buffer :array-buffer 0)
+  ;(gl:bind-buffer :array-buffer (gl-object-vertex-buffer obj))
+  ;(gl:enable-vertex-attrib-array 0)
+  ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
+  ;(gl:draw-arrays :triangles 0 3)
+  ;(gl:bind-buffer :array-buffer 0)
