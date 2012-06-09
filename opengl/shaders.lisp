@@ -1,6 +1,6 @@
 (in-package :game-level)
 
-(defvar *shader-unif-locations* (make-hash-table :test #'equal))
+(defvar *shader-unif-locations* nil)
 
 (defun get-shader-unif (name)
   (multiple-value-bind (unif exists) (gethash name *shader-unif-locations*)
@@ -37,6 +37,7 @@
     program))
 
 (defun create-default-shader-program ()
+  (setf *shader-unif-locations* (make-hash-table :test #'equal))
   (create-shader-program
     `((:vertex-shader . ,(file-contents #P"opengl/shaders/vertex.v1.glsl"))
       (:fragment-shader . ,(file-contents #P"opengl/shaders/fragment.v1.glsl")))))
