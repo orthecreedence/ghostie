@@ -1,5 +1,18 @@
 (in-package :game-level)
 
+(defvar *shader-unif-locations* (make-hash-table :test #'equal))
+
+(defun get-shader-unif (name)
+  (multiple-value-bind (unif exists) (gethash name *shader-unif-locations*)
+    (unless exists
+      (setf unif (gl:get-uniform-location *shader-program* name))
+      (setf (gethash name *shader-unif-locations*) unif))
+    unif))
+
+(defun set-shader-matrix (name matrix &key (size 4))
+  (let ((unif (get-shader-unif name)))
+    (gl:uniform-matrix unif size (vector matrix) t)))
+
 (defun create-shader (type src)
   (let ((shader (gl:create-shader type)))
     (gl:shader-source shader src)

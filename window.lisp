@@ -4,8 +4,6 @@
 (defvar *window-height* 0)
 (defvar *shader-program* nil)
 (defvar *frustum-scale* (calc-frustum-scale 45))
-(defvar *model-to-camera-matrix-unif* nil)
-(defvar *camera-to-clip-matrix-unif* nil)
 
 (defun init-opengl (background)
   ;; set up blending
@@ -19,8 +17,7 @@
 
   ;; create the shader program/uniform locations
   (setf *shader-program* (create-default-shader-program))
-  (setf *model-to-camera-matrix-unif* (gl:get-uniform-location *shader-program* "modelToCameraMatrix"))
-  (setf *camera-to-clip-matrix-unif* (gl:get-uniform-location *shader-program* "cameraToClipMatrix"))
+  (setf *camera-to-clip-matrix-unif* (gl:get-uniform-location *shader-program* ""))
 
   ;; set our camera matrix into the program
   (gl:use-program *shader-program*)
@@ -38,7 +35,7 @@
   (gl:enable :depth-test :depth-clamp)
   (gl:depth-mask :true)
   (gl:depth-func :lequal)
-  (gl:depth-range 0.0 1.0)
+  (gl:depth-range 0 1)
   (gl:clear-depth 1.0)
 
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
@@ -59,7 +56,7 @@
                                                    (:sdl-gl-red-size 8)
                                                    (:sdl-gl-green-size 8)
                                                    (:sdl-gl-blue-size 8)
-                                                   (:sdl-gl-depth-size 16)
+                                                   (:sdl-gl-depth-size 24)
                                                    (:sdl-gl-multisamplebuffers 2)
                                                    (:sdl-gl-multisamplesamples 2)))))
       ;; don't know why i'm doing this. someone said to here: http://www.cliki.net/lispbuilder-sdl
