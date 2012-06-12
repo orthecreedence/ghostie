@@ -31,7 +31,7 @@
 
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
   ;(gl:shade-model :smooth)
-  ;(gl:enable :multisample-arb)
+  (gl:enable :multisample)
 
   ;; set up the viewport
   (let* ((vport (gl:get-integer :viewport))
@@ -61,6 +61,13 @@
       (gl:renderbuffer-storage-ext :renderbuffer-ext :depth-component width height)
       (gl:framebuffer-renderbuffer-ext :framebuffer-ext :depth-attachment-ext :renderbuffer-ext rbo)
       (gl:bind-renderbuffer-ext :renderbuffer-ext 0)
+
+      ;; check status of FBO
+      (let ((fbo-status (gl:check-framebuffer-status-ext :framebuffer-ext)))
+        (unless (gl::enum= fbo-status :framebuffer-complete-ext)
+          (error "Framebuffer failed: ~a" fbo-status)))
+
+      ;; unbind it and save our objs for later rendering
       (gl:bind-framebuffer :framebuffer-ext 0)
       (setf (getf *render-objs* :fbo1) fbo
             (getf *render-objs* :fbo1-tex) tex
