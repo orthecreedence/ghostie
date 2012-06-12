@@ -5,7 +5,7 @@
 
 (defun init-opengl (background)
   ;; set up blending
-  (gl:enable :blend)
+  (gl:enable :blend :texture-2d)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
 
   ;; set up culling
