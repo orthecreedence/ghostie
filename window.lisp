@@ -22,12 +22,6 @@
   (gl:use-program *shader-program*)
   (setf *view-matrix* (id-matrix 4))
 
-  ;; set up the viewport
-  (let* ((vport (gl:get-integer :viewport))
-         (width (aref vport 2))
-         (height (aref vport 3)))
-    (resize-window width height))
-
   ;; enable depth testing
   (gl:enable :depth-test :depth-clamp)
   (gl:depth-mask :true)
@@ -39,16 +33,34 @@
   ;(gl:shade-model :smooth)
   ;(gl:enable :multisample-arb)
 
-  ;; set up our FBO n shiiii
-  (let ((fbo (car (gl:gen-framebuffers-ext 1)))
-        (tex (car (gl:gen-textures 1))))
-    (gl:bind-framebuffer :framebuffer-ext fbo)
-    (let ((rbo (car (gl:gen-renderbuffers-ext 1))))
+  ;; set up the viewport
+  (let* ((vport (gl:get-integer :viewport))
+         (width (aref vport 2))
+         (height (aref vport 3)))
+    ;; set window size AND setup our view translation matrices
+    (resize-window width height)
+    ;; set up our FBO n shiiii
+    (let ((fbo (car (gl:gen-framebuffers-ext 1)))
+          (rbo (car (gl:gen-renderbuffers-ext 1)))
+          (tex (car (gl:gen-textures 1))))
+
+      ;; bind framebuffer
+      (gl:bind-framebuffer :framebuffer-ext fbo)
+
+      ;; setup texture we render to
+      (gl:bind-texture :texture-2d tex)
+      (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+      (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+      (gl:tex-image-2d :texture-2d 0 :rgba width height 0 :rgba :unsigned-byte (cffi:null-pointer))
+      (gl:generate-mipmap-ext :texture-2d)
+      (gl:bind-texture :texture-2d 0)
+      (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)
+
+      ;; set up depth buffer
       (gl:bind-renderbuffer-ext :renderbuffer-ext rbo)
       (gl:renderbuffer-storage-ext :renderbuffer-ext :depth-component width height)
-      (gl:bind-renderbuffer-ext :renderbuffer-ext 0)
-      (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)
       (gl:framebuffer-renderbuffer-ext :framebuffer-ext :depth-attachment-ext :renderbuffer-ext rbo)
+      (gl:bind-renderbuffer-ext :renderbuffer-ext 0)
       (gl:bind-framebuffer :framebuffer-ext 0)
       (setf (getf *render-objs* :fbo1) fbo
             (getf *render-objs* :fbo1-tex) tex
