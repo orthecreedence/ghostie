@@ -3,6 +3,8 @@
 (defvar *window-width* 0)
 (defvar *window-height* 0)
 
+(defparameter *render-objs* nil)
+
 (defun init-opengl (background)
   ;; set up blending
   (gl:enable :blend :texture-2d)
@@ -18,8 +20,6 @@
 
   ;; set our camera matrix into the program
   (gl:use-program *shader-program*)
-
-  ;; create reset view matrix
   (setf *view-matrix* (id-matrix 4))
 
   ;; set up the viewport
@@ -36,11 +36,14 @@
   (gl:clear-depth 1.0)
 
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
-  (gl:shade-model :smooth)
-  (gl:enable :multisample-arb)
+  ;(gl:shade-model :smooth)
+  ;(gl:enable :multisample-arb)
 
   ;; set the background/clear color
   (apply #'gl:clear-color background))
+
+(defun cleanup-opengl ()
+  (gl:delete-program *shader-program*))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
   "Create an SDL window with the given draw function and additional options."
@@ -77,7 +80,8 @@
   (declare (ignore w))
   (load-assets)
   (sdl:with-events (:poll)
-    (:quit-event () t)
+    (:quit-event () 
+     (cleanup-opengl))
     (:video-expose-event () (sdl:update-display))
     (:video-resize-event (:w width :h height)
       (resize-window width height))

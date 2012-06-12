@@ -3,14 +3,13 @@
 (defparameter *world-position* '(-17.19999 -24.00002 -36.000065))
 (defparameter *perspective-matrix* nil)
 (defparameter *view-matrix* nil)
+(defvar *game-data* nil)
 
 (defun create-world ()
   (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
 
 (defun step-world (world)
   (declare (ignore world)))
-
-(defvar *game-data* nil)
 
 (defun load-assets ()
   (format t "Starting asset load.~%")
