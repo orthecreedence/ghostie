@@ -18,7 +18,8 @@ void main()
 	fog_amt		=	clamp(fog_amt, 0.0, 1.0);
 
 	outputColor	=	mix(
-		vec4(0.9f, 0.9f, 0.9f, 1.0f),
+		vec4(1.0f, 1.0f, 1.0f, 1.0f),
+		//vec4(0.33f, 0.28f, 0.25f, 1.0f),
 		vec4(0, 0, 0, 1.0f),
 		// 0 == all fog, 1 == all color
 		fog_amt

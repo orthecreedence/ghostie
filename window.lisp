@@ -2,8 +2,6 @@
 
 (defvar *window-width* 0)
 (defvar *window-height* 0)
-(defvar *shader-program* nil)
-(defvar *frustum-scale* (calc-frustum-scale 45))
 
 (defun init-opengl (background)
   ;; set up blending
@@ -17,7 +15,6 @@
 
   ;; create the shader program/uniform locations
   (setf *shader-program* (create-default-shader-program))
-  (setf *camera-to-clip-matrix-unif* (gl:get-uniform-location *shader-program* ""))
 
   ;; set our camera matrix into the program
   (gl:use-program *shader-program*)
@@ -75,4 +72,19 @@
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))
+
+(defun window-event-handler (w)
+  (declare (ignore w))
+  (load-assets)
+  (sdl:with-events (:poll)
+    (:quit-event () t)
+    (:video-expose-event () (sdl:update-display))
+    (:video-resize-event (:w width :h height)
+      (resize-window width height))
+    (:key-down-event (:key key)
+      (key-handler key))
+    (:idle ()
+      (step-world *world*)
+      (draw-world *world*)
+      (sdl:update-display))))
 

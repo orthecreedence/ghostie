@@ -1,5 +1,6 @@
 (in-package :game-level)
 
+(defvar *shader-program* nil)
 (defvar *shader-unif-locations* nil)
 
 (defun get-shader-unif (name)

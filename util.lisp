@@ -55,11 +55,39 @@
                       (list x-offset y-offset)))
             (values points '(0 0)))))))
 
-(defun object-leftmost-point (points)
-  (reduce (lambda (a b) (min (if (listp a) (car a) a)
-                             (if (listp b) (car b) b))) points))
-
-(defun calc-frustum-scale (fov-deg)
-  (let ((deg->rad (/ 3.14159 180)))
-    (/ 1 (tan (/ (* fov-deg deg->rad) 2)))))
-
+(defun load-triangles-from-ply (filename)
+  (let ((in-vertex-block nil)
+        (in-index-block nil)
+        (verts nil)
+        (num-verts nil)
+        (triangles nil)
+        (vert-c 0)
+        (file-data (file-contents filename)))
+    (loop for line in (split-sequence:split-sequence #\newline file-data) do
+          (cond ((equal line "end_header")
+                 (setf in-vertex-block t))
+                ((search "element vertex" line)
+                 (setf num-verts (read-from-string (subseq line 14)))
+                 (setf verts (make-array num-verts :initial-element 0)))
+                (in-index-block
+                 (unless (equal line "")
+                   (let ((index (read-from-string (format nil "(~a)" line))))
+                     (if (= (car index) 4)
+                         ;; quads, break into triangles
+                         (progn (push (list (aref verts (nth 1 index))
+                                            (aref verts (nth 2 index))
+                                            (aref verts (nth 3 index))) triangles)
+                                (push (list (aref verts (nth 3 index))
+                                            (aref verts (nth 4 index))
+                                            (aref verts (nth 1 index))) triangles))
+                         ;; straight triangles. sick brahh
+                         (push (list (aref verts (nth 1 index))
+                                     (aref verts (nth 2 index))
+                                     (aref verts (nth 3 index))) triangles)))))
+                (in-vertex-block
+                 (setf (aref verts vert-c) (subseq (read-from-string (format nil "(~a)" line)) 0 3))
+                 (incf vert-c)
+                 (when (= vert-c num-verts)
+                   (setf in-vertex-block nil)
+                   (setf in-index-block t)))))
+    triangles))
