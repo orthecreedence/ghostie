@@ -39,6 +39,6 @@
   (stop))
 
 (defun main ()
-  (unless *main-thread*
-    (setf *main-thread* (bt:make-thread #'run-app))))
+  (stop)
+  (setf *main-thread* (bt:make-thread #'run-app)))
 

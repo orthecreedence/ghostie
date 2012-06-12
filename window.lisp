@@ -39,6 +39,21 @@
   ;(gl:shade-model :smooth)
   ;(gl:enable :multisample-arb)
 
+  ;; set up our FBO n shiiii
+  (let ((fbo (car (gl:gen-framebuffers-ext 1)))
+        (tex (car (gl:gen-textures 1))))
+    (gl:bind-framebuffer :framebuffer-ext fbo)
+    (let ((rbo (car (gl:gen-renderbuffers-ext 1))))
+      (gl:bind-renderbuffer-ext :renderbuffer-ext rbo)
+      (gl:renderbuffer-storage-ext :renderbuffer-ext :depth-component width height)
+      (gl:bind-renderbuffer-ext :renderbuffer-ext 0)
+      (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)
+      (gl:framebuffer-renderbuffer-ext :framebuffer-ext :depth-attachment-ext :renderbuffer-ext rbo)
+      (gl:bind-framebuffer :framebuffer-ext 0)
+      (setf (getf *render-objs* :fbo1) fbo
+            (getf *render-objs* :fbo1-tex) tex
+            (getf *render-objs* :frb1-rbo) rbo)))
+
   ;; set the background/clear color
   (apply #'gl:clear-color background))
 
@@ -66,11 +81,13 @@
       (init-opengl background)
       ;; run the world...this calls our game loop
       (funcall draw-fn window)
+      (cleanup-opengl)
       window)))
 
 (defun resize-window (width height)
   (setf height (max height 1))
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
+  (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
   (gl:use-program *shader-program*)
   (setf *window-width* width
         *window-height* height)
@@ -80,8 +97,7 @@
   (declare (ignore w))
   (load-assets)
   (sdl:with-events (:poll)
-    (:quit-event () 
-     (cleanup-opengl))
+    (:quit-event () t)
     (:video-expose-event () (sdl:update-display))
     (:video-resize-event (:w width :h height)
       (resize-window width height))

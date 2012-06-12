@@ -2,6 +2,7 @@
 
 (defparameter *world-position* '(-17.19999 -24.00002 -36.000065))
 (defparameter *perspective-matrix* nil)
+(defparameter *ortho-matrix* nil)
 (defparameter *view-matrix* nil)
 (defvar *game-data* nil)
 
@@ -26,6 +27,7 @@
                 (multiple-value-bind (vertices offset) (load-points-from-ai file :precision 2 :center t :scale '(.1 .1 .1))
                   (make-gl-object :data (cl-triangulation:triangulate (coerce vertices 'vector)) :scale '(1 1 1) :position (append (mapcar #'- offset) (list z-offset)))))))
   (setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(1 1 1) :position '(0 0 -10)))
+  (create-test-primitives)
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()

@@ -10,7 +10,7 @@
    (vertex-buffer :accessor gl-object-vertex-buffer :initform nil)
    (index-buffer :accessor gl-object-index-buffer :initform nil)))
 
-(defun make-gl-object (&key data position scale)
+(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)))
   (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data))
 
 (defmethod set-gl-object-data (gl-object (triangles list))
