@@ -45,7 +45,7 @@
           (tex (car (gl:gen-textures 1))))
 
       ;; bind framebuffer
-      (gl:bind-framebuffer :framebuffer-ext fbo)
+      (gl:bind-framebuffer-ext :framebuffer-ext fbo)
 
       ;; setup texture we render to
       (gl:bind-texture :texture-2d tex)
