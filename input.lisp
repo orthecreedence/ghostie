@@ -15,6 +15,13 @@
     (decf (nth 0 *world-position*) .2))
   (when (sdl:key= key :sdl-key-r)
     (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
+  (when (sdl:key= key :sdl-key-m)
+    (let ((spike (getf *game-data* :spike)))
+      (when spike
+        (bt:make-thread (lambda ()
+                          (loop for d from 0 to 360 do
+                                (setf (gl-object-rotation (getf *game-data* :spike)) (list 1 0 0 d))
+                                (sleep .02)))))))
   (when (sdl:key= key :sdl-key-t)
     (test-gl-funcs))
   (when (sdl:key= key :sdl-key-l)
