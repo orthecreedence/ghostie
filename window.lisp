@@ -15,11 +15,14 @@
   (gl:cull-face :back)
   (gl:front-face :ccw)
 
-  ;; create the shader program/uniform locations
-  (setf *shader-program* (create-default-shader-program))
+  ;; create our shader programs
+  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
+                                            #P"opengl/shaders/main.frag")
+        (getf *shaders* :fov) (make-shader #P"opengl/shaders/fov.vert"
+                                           #P"opengl/shaders/fov.frag"))
 
   ;; set our camera matrix into the program
-  (gl:use-program *shader-program*)
+  (gl:use-program (getf *shaders* :main))
   (setf *view-matrix* (id-matrix 4))
 
   ;; enable depth testing
@@ -49,10 +52,13 @@
 
       ;; setup texture we render to
       (gl:bind-texture :texture-2d tex)
-      (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
       (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+      (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-edge)
+      (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-edge)
+      ;(gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+      ;(gl:generate-mipmap-ext :texture-2d)
+      ;(gl:tex-parameter :texture-2d :generate-mipmap :true)
       (gl:tex-image-2d :texture-2d 0 :rgba width height 0 :rgba :unsigned-byte (cffi:null-pointer))
-      (gl:generate-mipmap-ext :texture-2d)
       (gl:bind-texture :texture-2d 0)
       (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)
 
@@ -60,6 +66,7 @@
       (gl:bind-renderbuffer-ext :renderbuffer-ext rbo)
       (gl:renderbuffer-storage-ext :renderbuffer-ext :depth-component width height)
       (gl:framebuffer-renderbuffer-ext :framebuffer-ext :depth-attachment-ext :renderbuffer-ext rbo)
+
       (gl:bind-renderbuffer-ext :renderbuffer-ext 0)
 
       ;; check status of FBO
@@ -77,7 +84,8 @@
   (apply #'gl:clear-color background))
 
 (defun cleanup-opengl ()
-  (gl:delete-program *shader-program*))
+  (loop for (nil program) on *shaders* by #'cddr do
+        (gl:delete-program program)))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
   "Create an SDL window with the given draw function and additional options."
@@ -107,7 +115,6 @@
   (setf height (max height 1))
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
-  (gl:use-program *shader-program*)
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))

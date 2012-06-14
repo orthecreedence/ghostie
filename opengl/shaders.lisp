@@ -1,14 +1,18 @@
 (in-package :game-level)
 
-(defvar *shader-program* nil)
+(defvar *shaders* nil)
 (defvar *shader-unif-locations* nil)
 
 (defun get-shader-unif (name)
-  (multiple-value-bind (unif exists) (gethash name *shader-unif-locations*)
-    (unless exists
-      (setf unif (gl:get-uniform-location *shader-program* name))
-      (setf (gethash name *shader-unif-locations*) unif))
-    unif))
+  (unless *shader-unif-locations*
+    (setf *shader-unif-locations* (make-hash-table :test #'equal)))
+  (let* ((cur-program (gl:get-integer :current-program))
+         (hname (format nil "prog:~d:~a" cur-program name)))
+    (multiple-value-bind (unif exists) (gethash hname *shader-unif-locations*)
+      (unless exists
+        (setf unif (gl:get-uniform-location cur-program name))
+        (setf (gethash hname *shader-unif-locations*) unif))
+      unif)))
 
 (defun set-shader-matrix (name matrix &key (size 4))
   (let ((unif (get-shader-unif name)))
@@ -37,9 +41,8 @@
       (gl:delete-shader shader))
     program))
 
-(defun create-default-shader-program ()
-  (setf *shader-unif-locations* (make-hash-table :test #'equal))
-  (create-shader-program
-    `((:vertex-shader . ,(file-contents #P"opengl/shaders/vertex.v1.glsl"))
-      (:fragment-shader . ,(file-contents #P"opengl/shaders/fragment.v1.glsl")))))
+(defun make-shader (vert-filename frag-filename)
+  (create-shader-program 
+    `((:vertex-shader . ,(file-contents vert-filename))
+      (:fragment-shader . ,(file-contents frag-filename)))))
 

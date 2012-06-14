@@ -1,7 +1,8 @@
 #version 330
 
 //smooth in vec4 theColor;
-out vec4 outputColor;
+layout(location = 0) out vec4 color;
+//out vec4 color;
 
 void main()
 {
@@ -17,7 +18,7 @@ void main()
 	fog_amt		=	(fog_dist - fog_coord) / fog_dist;
 	fog_amt		=	clamp(fog_amt, 0.0, 1.0);
 
-	outputColor	=	mix(
+	color	=	mix(
 		vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		//vec4(0.33f, 0.28f, 0.25f, 1.0f),
 		vec4(0, 0, 0, 1.0f),

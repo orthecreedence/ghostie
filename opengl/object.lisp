@@ -7,13 +7,12 @@
    (position :accessor gl-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor gl-object-rotation :initarg :rotation :initform '(0 0 0 0))
    (vao :accessor gl-object-vao :initform nil)
-   (vertex-buffer :accessor gl-object-vertex-buffer :initform nil)
-   (index-buffer :accessor gl-object-index-buffer :initform nil)))
+   (vbos :accessor gl-object-vbos :initform nil)))
 
-(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)))
-  (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data))
+(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) uv-map)
+  (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data uv-map))
 
-(defmethod set-gl-object-data (gl-object (triangles list))
+(defmethod set-gl-object-data (gl-object (triangles list) &optional uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored
   with the gl-object."
   (free-gl-object gl-object)
@@ -32,6 +31,18 @@
         (gl:free-gl-array gl-arr))
       (gl:bind-buffer :array-buffer 0)
 
+      ;; set up texture map if provided
+      (when uv-map
+        (let ((vbo-uv (car (gl:gen-buffers 1))))
+          (gl:bind-buffer :array-buffer vbo-uv)
+          (let ((gl-arr (gl:alloc-gl-array :float (length uv-map))))
+            (dotimes (i (length uv-map))
+              (setf (gl:glaref gl-arr i) (coerce (aref uv-map i) 'single-float)))
+            (gl:buffer-data :array-buffer :static-draw gl-arr)
+            (gl:free-gl-array gl-arr))
+          (gl:bind-buffer :array-buffer 0)
+          (setf (getf (gl-object-vbos gl-object) :uv) vbo-uv)))
+
       ; set up index buffer
       (gl:bind-buffer :element-array-buffer index-buffer)
       (let ((gl-arr (gl:alloc-gl-array :unsigned-short (length index))))
@@ -47,17 +58,21 @@
       (gl:bind-buffer :array-buffer vertex-buffer)
       (gl:enable-vertex-attrib-array 0)
       (gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
+      (when uv-map
+        (gl:bind-buffer :array-buffer (getf (gl-object-vbos gl-object) :uv))
+        (gl:enable-vertex-attrib-array 1)
+        (gl:vertex-attrib-pointer 1 2 :float nil 0 (cffi:null-pointer)))
       (gl:bind-buffer :element-array-buffer index-buffer)
       (gl:bind-vertex-array 0)
 
       ;; set that shit
       (setf (gl-object-vertex-data gl-object) vertex-array
             (gl-object-index-data gl-object) index
-            (gl-object-vertex-buffer gl-object) vertex-buffer
-            (gl-object-index-buffer gl-object) index-buffer)))
+            (getf (gl-object-vbos gl-object) :vertex) vertex-buffer
+            (getf (gl-object-vbos gl-object) :index) index-buffer)))
   gl-object)
 
-(defmethod draw ((obj gl-object))
+(defmethod draw ((obj gl-object) &optional pre-draw)
   (let* ((position (gl-object-position obj))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
@@ -69,6 +84,8 @@
          (mv-matrix (mat* model-matrix *view-matrix*)))
     (set-shader-matrix "modelToCameraMatrix" mv-matrix))
   (gl:bind-vertex-array (gl-object-vao obj))
+  (when pre-draw
+    (funcall pre-draw obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))
 
@@ -101,16 +118,13 @@
     vert-array))
 
 (defmethod free-gl-object (gl-object)
-  (when (gl-object-index-buffer gl-object)
-    (gl:delete-buffers (list (gl-object-index-buffer gl-object)))
-    (setf (gl-object-index-buffer gl-object) nil))
-  (when (gl-object-vertex-buffer gl-object)
-    (gl:delete-buffers (list (gl-object-vertex-buffer gl-object)))
-    (setf (gl-object-vertex-buffer gl-object) nil))
+  (when (gl-object-vbos gl-object)
+    (gl:delete-buffers
+      (loop for (nil vbo) on (gl-object-vbos gl-object) by #'cddr collect vbo))
+    (setf (gl-object-vbos gl-object) nil))
   (when (gl-object-vao gl-object)
     (gl:delete-vertex-arrays (list (gl-object-vao gl-object)))
     (setf (gl-object-vao gl-object) nil)))
-
 
   ;(gl:enable-vertex-attrib-array 0)
   ;(gl:vertex-attrib-pointer 0 4 :float :false 0 (cffi:null-pointer))
