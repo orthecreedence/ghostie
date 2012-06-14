@@ -56,9 +56,12 @@
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:use-program (getf *shaders* :dof))
   (set-shader-matrix "cameraToClipMatrix" *ortho-matrix*)
-  (gl:uniformi (get-shader-unif "tex") 0)
   (gl:active-texture :texture0)
   (gl:bind-texture :texture-2d (getf *render-objs* :fbo1-tex))
+  (gl:uniformi (get-shader-unif "tex") 0)
+  (gl:active-texture :texture1)
+  (gl:bind-texture :texture-2d (getf *render-objs* :fbo1-rbo))
+  (gl:uniformi (get-shader-unif "depth") 1)
   (draw (getf *game-data* :quad))
   (gl:use-program 0))
 

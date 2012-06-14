@@ -78,7 +78,7 @@
       (gl:bind-framebuffer :framebuffer-ext 0)
       (setf (getf *render-objs* :fbo1) fbo
             (getf *render-objs* :fbo1-tex) tex
-            (getf *render-objs* :frb1-rbo) rbo)))
+            (getf *render-objs* :fbo1-rbo) rbo)))
 
   ;; set the background/clear color
   (apply #'gl:clear-color background))
