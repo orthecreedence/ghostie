@@ -54,7 +54,7 @@
   (draw (getf *game-data* :tree4))
   (gl:bind-framebuffer-ext :framebuffer 0)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (gl:use-program (getf *shaders* :fov))
+  (gl:use-program (getf *shaders* :dof))
   (set-shader-matrix "cameraToClipMatrix" *ortho-matrix*)
   (gl:uniformi (get-shader-unif "tex") 0)
   (gl:active-texture :texture0)

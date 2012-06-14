@@ -18,8 +18,8 @@
   ;; create our shader programs
   (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
                                             #P"opengl/shaders/main.frag")
-        (getf *shaders* :fov) (make-shader #P"opengl/shaders/fov.vert"
-                                           #P"opengl/shaders/fov.frag"))
+        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
+                                           #P"opengl/shaders/dof.frag"))
 
   ;; set our camera matrix into the program
   (gl:use-program (getf *shaders* :main))
