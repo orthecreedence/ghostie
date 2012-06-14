@@ -53,11 +53,11 @@
       ;; setup texture we render to
       (gl:bind-texture :texture-2d tex)
       (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+      (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+      (gl:tex-parameter :texture-2d :generate-mipmap :true)
       (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-edge)
       (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-edge)
-      ;(gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
       ;(gl:generate-mipmap-ext :texture-2d)
-      ;(gl:tex-parameter :texture-2d :generate-mipmap :true)
       (gl:tex-image-2d :texture-2d 0 :rgba width height 0 :rgba :unsigned-byte (cffi:null-pointer))
       (gl:bind-texture :texture-2d 0)
       (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)

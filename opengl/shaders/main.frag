@@ -1,8 +1,6 @@
 #version 330
 
-//smooth in vec4 theColor;
 layout(location = 0) out vec4 color;
-//out vec4 color;
 
 void main()
 {
@@ -22,7 +20,6 @@ void main()
 		vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		//vec4(0.33f, 0.28f, 0.25f, 1.0f),
 		vec4(0, 0, 0, 1.0f),
-		// 0 == all fog, 1 == all color
 		fog_amt
 	);
 }

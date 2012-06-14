@@ -72,7 +72,7 @@
             (getf (gl-object-vbos gl-object) :index) index-buffer)))
   gl-object)
 
-(defmethod draw ((obj gl-object) &optional pre-draw)
+(defmethod draw ((obj gl-object))
   (let* ((position (gl-object-position obj))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
@@ -84,8 +84,6 @@
          (mv-matrix (mat* model-matrix *view-matrix*)))
     (set-shader-matrix "modelToCameraMatrix" mv-matrix))
   (gl:bind-vertex-array (gl-object-vao obj))
-  (when pre-draw
-    (funcall pre-draw obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))
 
