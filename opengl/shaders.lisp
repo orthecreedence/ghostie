@@ -16,7 +16,8 @@
 
 (defun set-shader-matrix (name matrix &key (size 4))
   (let ((unif (get-shader-unif name)))
-    (gl:uniform-matrix unif size (vector matrix) t)))
+    (when (< 0 unif)
+      (gl:uniform-matrix unif size (vector matrix) t))))
 
 (defun create-shader (type src)
   (let ((shader (gl:create-shader type)))
