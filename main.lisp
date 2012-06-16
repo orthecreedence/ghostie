@@ -1,6 +1,9 @@
-(let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
-  (dolist (pkg packages)
-    (ql:quickload pkg)))
+(defvar *pkg-loaded* nil)
+(unless *pkg-loaded*
+  (let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
+    (dolist (pkg packages)
+      (ql:quickload pkg))
+    (setf *pkg-loaded* t)))
 
 (defpackage :game-level
   (:use :cl))
@@ -11,10 +14,12 @@
 (defparameter *quit* nil)
 
 (setf *random-state* (make-random-state t))
+(defparameter *quit* nil)
 
 (load "util")
 (load "matrix")
 (load "opengl/shaders")
+(load "opengl/fbo")
 (load "opengl/object")
 (load "input")
 (load "window")
@@ -29,11 +34,12 @@
     (setf *main-thread* nil)))
 
 (defun run-app ()
+  (setf *quit* nil)
   (setf *world* (create-world))
   (create-window #'window-event-handler
                  :title "game level"
                  ;:background '(.33 .28 .25 1)
-                 :background '(1.0 1.0 1.0 1.0)
+                 :background '(.8 .8 .8 1)
                  :width 600
                  :height 600)
   (stop))

@@ -15,6 +15,8 @@
     (decf (nth 0 *world-position*) .2))
   (when (sdl:key= key :sdl-key-r)
     (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
+  (when (sdl:key= key :sdl-key-c)
+    (recompile-shaders))
   (when (sdl:key= key :sdl-key-m)
     (let ((spike (getf *game-data* :spike)))
       (when spike

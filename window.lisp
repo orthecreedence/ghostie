@@ -3,7 +3,19 @@
 (defvar *window-width* 0)
 (defvar *window-height* 0)
 
-(defparameter *render-objs* nil)
+(defvar *render-objs* nil)
+
+(defun free-shaders ()
+  (loop for (nil program) on *shaders* by #'cddr do
+        (gl:delete-program program))
+  (setf *shaders* nil))
+
+(defun recompile-shaders ()
+  (free-shaders)
+  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
+                                            #P"opengl/shaders/main.frag")
+        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
+                                           #P"opengl/shaders/dof.frag")))
 
 (defun init-opengl (background)
   ;; set up blending
@@ -16,10 +28,8 @@
   (gl:front-face :ccw)
 
   ;; create our shader programs
-  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
-                                            #P"opengl/shaders/main.frag")
-        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
-                                           #P"opengl/shaders/dof.frag"))
+  (setf *shaders* nil)
+  (recompile-shaders)
 
   ;; set our camera matrix into the program
   (gl:use-program (getf *shaders* :main))
@@ -42,57 +52,23 @@
          (height (aref vport 3)))
     ;; set window size AND setup our view translation matrices
     (resize-window width height)
-    ;; set up our FBO n shiiii
-    (let ((fbo (car (gl:gen-framebuffers-ext 1)))
-          ;(depth (car (gl:gen-renderbuffers-ext 1)))
-          (depth (car (gl:gen-textures 1)))
-          (tex (car (gl:gen-textures 1))))
-
-      ;; bind framebuffer
-      (gl:bind-framebuffer-ext :framebuffer-ext fbo)
-
-      ;; setup texture we render to
-      (gl:bind-texture :texture-2d tex)
-      (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
-      (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
-      (gl:tex-parameter :texture-2d :generate-mipmap :true)
-      (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-edge)
-      (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-edge)
-      ;(gl:generate-mipmap-ext :texture-2d)
-      (gl:tex-image-2d :texture-2d 0 :rgba width height 0 :rgba :unsigned-byte (cffi:null-pointer))
-      (gl:bind-texture :texture-2d 0)
-      (gl:framebuffer-texture-2d-ext :framebuffer-ext :color-attachment0-ext :texture-2d tex 0)
-
-      (gl:bind-texture :texture-2d depth)
-      (gl:tex-image-2d :texture-2d 0 :depth-component width height 0 :depth-component :unsigned-short (cffi:null-pointer))
-      (gl:tex-parameter :texture-2d :texture-min-filter :nearest)
-      (gl:tex-parameter :texture-2d :texture-mag-filter :nearest)
-      (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-edge)
-      (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-edge)
-      (gl:framebuffer-texture-2d-ext :framebuffer-ext :depth-attachment-ext :texture-2d depth 0)
-      ;; set up depth buffer
-      ;(gl:bind-renderbuffer-ext :renderbuffer-ext depth)
-      ;(gl:renderbuffer-storage-ext :renderbuffer-ext :depth-component width height)
-      ;(gl:framebuffer-renderbuffer-ext :framebuffer-ext :depth-attachment-ext :renderbuffer-ext depth)
-      ;(gl:bind-renderbuffer-ext :renderbuffer-ext 0)
-
-      ;; check status of FBO
-      (let ((fbo-status (gl:check-framebuffer-status-ext :framebuffer-ext)))
-        (unless (gl::enum= fbo-status :framebuffer-complete-ext)
-          (error "Framebuffer failed: ~a" fbo-status)))
-
-      ;; unbind it and save our objs for later rendering
-      (gl:bind-framebuffer :framebuffer-ext 0)
-      (setf (getf *render-objs* :fbo1) fbo
-            (getf *render-objs* :fbo1-tex) tex
-            (getf *render-objs* :fbo1-depth) depth)))
+    (setf *render-objs* nil
+          (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex)))
 
   ;; set the background/clear color
   (apply #'gl:clear-color background))
 
+(defun window-quit ()
+  (setf *quit* t)
+  (cleanup-opengl))
+
+(defun free-fbos ()
+  (loop for (nil fbo) on *render-objs* by #'cddr do
+        (free-fbo fbo)))
+
 (defun cleanup-opengl ()
-  (loop for (nil program) on *shaders* by #'cddr do
-        (gl:delete-program program)))
+  (free-fbos)
+  (free-shaders))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
   "Create an SDL window with the given draw function and additional options."
@@ -108,20 +84,25 @@
                                                    (:sdl-gl-depth-size 24)
                                                    (:sdl-gl-multisamplebuffers 2)
                                                    (:sdl-gl-multisamplesamples 2)))))
-      ;; don't know why i'm doing this. someone said to here: http://www.cliki.net/lispbuilder-sdl
+      ;; fixes some straight up bulllllshit (http://www.cliki.net/lispbuilder-sdl) thxlol
+      ;; glfwGetProcAddress for GLFW...
       (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+
       ;; set up key repeat (so we can hold a key for rapid fire)
       (sdl:enable-key-repeat 200 30)
+
+      ;; setup opengl
       (init-opengl background)
+
       ;; run the world...this calls our game loop
       (funcall draw-fn window)
-      (cleanup-opengl)
       window)))
 
 (defun resize-window (width height)
   (setf height (max height 1))
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
+  (gl:use-program (getf *shaders* :main))
   (setf *window-width* width
         *window-height* height)
   (gl:viewport 0 0 width height))
@@ -130,7 +111,9 @@
   (declare (ignore w))
   (load-assets)
   (sdl:with-events (:poll)
-    (:quit-event () t)
+    (:quit-event ()
+     (window-quit)
+     (sdl:quit-sdl))
     (:video-expose-event () (sdl:update-display))
     (:video-resize-event (:w width :h height)
       (resize-window width height))
