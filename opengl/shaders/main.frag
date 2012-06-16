@@ -1,6 +1,6 @@
 #version 330
 
-//layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 color;
 
 void main()
 {
@@ -16,13 +16,12 @@ void main()
 	fog_amt		=	(fog_dist - fog_coord) / fog_dist;
 	fog_amt		=	clamp(fog_amt, 0.0, 1.0);
 
-	gl_FragColor	=	vec4(0, 0, 0, 1);
-	//color	=	mix(
-	//	vec4(1.0f, 1.0f, 1.0f, 1.0f),
-	//	//vec4(0.33f, 0.28f, 0.25f, 1.0f),
-	//	vec4(0, 0, 0, 1.0f),
-	//	fog_amt
-	//);
-	//gl_FragDepth	=	gl_FragCoord.z;
+	color	=	mix(
+		vec4(1.0f, 1.0f, 1.0f, 1.0f),
+		//vec4(0.33f, 0.28f, 0.25f, 1.0f),
+		vec4(0, 0, 0, 1.0f),
+		fog_amt
+	);
+	gl_FragDepth	=	gl_FragCoord.z;
 }
 

@@ -58,17 +58,16 @@ vec2 texel = vec2(1.0/width,1.0/height);
 
 //uniform variables from external script
 
-/*
 uniform float focalDepth;  //focal distance value in meters, but you may use autofocus option below
 uniform float focalLength; //focal length in mm
 uniform float fstop; //f-stop value
 uniform bool showFocus; //show debug focus point and focal range (red = focal point, green = focal range)
-*/
-//uniform float focalDepth;
+/*
 float focalDepth = 2.5;
-float focalLength = 22;
-float fstop = 2;
+float focalLength = 22.0;
+float fstop = 2.0;
 bool showFocus = false;
+*/
 
 /* 
 make sure that these two values are the same for your camera, otherwise distances will be wrong.

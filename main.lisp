@@ -39,7 +39,7 @@
   (create-window #'window-event-handler
                  :title "game level"
                  ;:background '(.33 .28 .25 1)
-                 :background '(.8 .8 .8 1)
+                 :background '(1 1 1 1)
                  :width 600
                  :height 600)
   (stop))

@@ -1,6 +1,7 @@
 (in-package :game-level)
 
-(defun key-handler (key)
+(defun key-handler (key keydownp)
+  (unless keydownp (return-from key-handler))
   (when (sdl:key= key :sdl-key-minus)
     (decf (nth 2 *world-position*) .2))
   (when (sdl:key= key :sdl-key-equals)

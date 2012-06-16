@@ -1,7 +1,7 @@
 (in-package :game-level)
 
-(defparameter *shaders* nil)
-(defparameter *shader-unif-locations* nil)
+(defvar *shaders* nil)
+(defvar *shader-unif-locations* nil)
 
 (defun get-shader-unif (name)
   (unless *shader-unif-locations*
@@ -14,9 +14,16 @@
         (setf (gethash hname *shader-unif-locations*) unif))
       unif)))
 
+(defun set-shader-var (fn location &rest args)
+  (let ((location (if (stringp location)
+                      (get-shader-unif location)
+                      location)))
+    (when (<= location 0)
+      (apply fn (append (list location) args)))))
+
 (defun set-shader-matrix (name matrix &key (size 4))
   (let ((unif (get-shader-unif name)))
-    (when (< 0 unif)
+    (when (<= 0 unif)
       (gl:uniform-matrix unif size (vector matrix) t))))
 
 (defun create-shader (type src)
@@ -24,26 +31,41 @@
     (gl:shader-source shader src)
     (gl:compile-shader shader)
     (let ((log (gl:get-shader-info-log shader)))
-      (when log (format t "Shader log (~a): ~a~%" type (gl:get-shader-info-log shader))))
+      (when log (format t "  Shader log (~a): ~a" type (gl:get-shader-info-log shader))))
     shader))
 
 (defun create-shader-program (shader-pairs)
   (let ((program (gl:create-program))
         (shaders nil))
+    (format t "----- Creating program~%")
     (loop for (type . src) in shader-pairs do
       (let ((shader (create-shader type src)))
         (push shader shaders)
         (gl:attach-shader program shader)))
     (gl:link-program program)
     (let ((log (gl:get-program-info-log program)))
-      (when log (format t "Program log: ~a~%" (gl:get-program-info-log program))))
+      (when log (format t "  Program log: ~a" (gl:get-program-info-log program))))
     (dolist (shader shaders)
       (gl:detach-shader program shader)
       (gl:delete-shader shader))
+    (format t "----- Finished compiling shader~%~%")
     program))
 
 (defun make-shader (vert-filename frag-filename)
   (create-shader-program 
     `((:vertex-shader . ,(file-contents vert-filename))
       (:fragment-shader . ,(file-contents frag-filename)))))
+
+(defun free-shaders ()
+  (loop for (nil program) on *shaders* by #'cddr do
+        (gl:delete-program program))
+  (setf *shaders* nil)
+  (setf *shader-unif-locations* (make-hash-table :test #'equal)))
+
+(defun recompile-shaders ()
+  (free-shaders)
+  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
+                                            #P"opengl/shaders/main.frag")
+        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
+                                           #P"opengl/shaders/dof.bokeh.2.4.frag")))
 

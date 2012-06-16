@@ -5,18 +5,6 @@
 
 (defvar *render-objs* nil)
 
-(defun free-shaders ()
-  (loop for (nil program) on *shaders* by #'cddr do
-        (gl:delete-program program))
-  (setf *shaders* nil))
-
-(defun recompile-shaders ()
-  (free-shaders)
-  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
-                                            #P"opengl/shaders/main.frag")
-        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
-                                           #P"opengl/shaders/dof.frag")))
-
 (defun init-opengl (background)
   ;; set up blending
   (gl:enable :blend :texture-2d)
@@ -96,6 +84,7 @@
 
       ;; run the world...this calls our game loop
       (funcall draw-fn window)
+      (sdl:quit-sdl)
       window)))
 
 (defun resize-window (width height)
@@ -113,12 +102,14 @@
   (sdl:with-events (:poll)
     (:quit-event ()
      (window-quit)
-     (sdl:quit-sdl))
+     t)
     (:video-expose-event () (sdl:update-display))
     (:video-resize-event (:w width :h height)
       (resize-window width height))
     (:key-down-event (:key key)
-      (key-handler key))
+      (key-handler key t))
+    (:key-up-event (:key key)
+      (key-handler key nil))
     (:idle ()
       (step-world *world*)
       (draw-world *world*)
