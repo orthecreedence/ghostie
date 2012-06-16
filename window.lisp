@@ -43,8 +43,8 @@
   (gl:clear-depth 1.0)
 
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
-  ;(gl:shade-model :smooth)
-  (gl:enable :multisample)
+  (gl:shade-model :smooth)
+  (gl:enable :multisample-arb)
 
   ;; set up the viewport
   (let* ((vport (gl:get-integer :viewport))
