@@ -33,9 +33,9 @@
         (bt:destroy-thread *main-thread*)))
     (setf *main-thread* nil)))
 
-(defun main-loop ()
-  (step-world *world*)
-  (draw-world *world*))
+(defun main-loop (dt)
+  (step-world *world* dt)
+  (draw-world *world* dt))
 
 (defun run-app ()
   (setf *quit* nil)

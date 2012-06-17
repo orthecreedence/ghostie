@@ -2,6 +2,7 @@
 
 (defvar *window-width* 0)
 (defvar *window-height* 0)
+(defvar *last-time* 0)
 
 (defvar *render-objs* nil)
 
@@ -66,9 +67,11 @@
                    :opengl-forward-compat t
                    :opengl-profile glfw::+opengl-core-profile+)
     ;; run our init forms
-    ((glfw:set-window-size width height)
-     ;; use the window manager's getProceAddress, which makes everything magically work
+    (;; use the window manager's getProceAddress, which makes everything magically work
      (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
+     ;(cffi:use-foreign-library glfw::libglfw)
+     ;(cffi:defcfun "glfwSetWindowSizeCallback" :void (fn :pointer))
+     ;(cffi:foreign-funcall "glfwSetWindowSizeCallback" :pointer (cffi:callback resize-window-cb) :void)
      ;(glfw:set-window-size-callback (cffi:callback resize-window))
      ;(glfw:set-window-close-callback 'window-quit)
      ;(glfw:set-key-callback #'key-pressed)
@@ -80,8 +83,11 @@
     (when *quit*
       (cleanup-opengl)
       (return-from glfw::do-open-window))
-    (funcall draw-fn)
-    (key-handler)))
+    (let* ((time (glfw:get-time))
+           (dt (- time *last-time*)))
+      (funcall draw-fn dt)
+      (key-handler dt)
+      (setf *last-time* time))))
 
 (defun resize-window (width height)
   (setf height (max height 1))

@@ -7,7 +7,7 @@
 ;(cffi:defcallback key-pressed-cb :void ((key :int) (state :int))
 ;  (key-pressed key state))
 
-(defun key-handler ()
+(defun key-handler (dt)
   (macrolet ((key-is-on (key)
                `(eql (glfw:get-key ,key) glfw:+press+))
              (key= (key &body body)
@@ -28,17 +28,17 @@
     (key|| (glfw:+key-esc+ #\Q)
       (setf *quit* t))
     (key= #\-
-      (decf (nth 2 *world-position*) .2))
+      (decf (nth 2 *world-position*) (* dt 10)))
     (key= #\=
-      (incf (nth 2 *world-position*) .2))
+      (incf (nth 2 *world-position*) (* dt 10)))
     (key= glfw:+key-up+
-      (decf (nth 1 *world-position*) .2))
+      (decf (nth 1 *world-position*) (* dt 10)))
     (key= glfw:+key-down+
-      (incf (nth 1 *world-position*) .2))
+      (incf (nth 1 *world-position*) (* dt 10)))
     (key= glfw:+key-left+
-      (incf (nth 0 *world-position*) .2))
+      (incf (nth 0 *world-position*) (* dt 10)))
     (key= glfw:+key-right+
-      (decf (nth 0 *world-position*) .2))
+      (decf (nth 0 *world-position*) (* dt 10)))
     (key= #\R
       (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
     (key= #\C
@@ -49,7 +49,7 @@
           (bt:make-thread (lambda ()
                             (loop for d from 0 to 360 do
                                   (setf (gl-object-rotation (getf *game-data* :spike)) (list 1 0 0 d))
-                                  (sleep .02)))))))
+                                  (sleep (/ dt .02))))))))
     (key= #\T
       (test-gl-funcs))
     (key= #\L

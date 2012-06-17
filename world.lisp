@@ -9,8 +9,8 @@
 (defun create-world ()
   (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
 
-(defun step-world (world)
-  (declare (ignore world)))
+(defun step-world (world dt)
+  (declare (ignore world dt)))
 
 (defun load-assets ()
   (format t "Starting asset load.~%")
@@ -38,8 +38,8 @@
     (when (subtypep (type-of obj) 'gl-object)
       (free-gl-object obj))))
 
-(defun draw-world (world)
-  (declare (ignore world))
+(defun draw-world (world dt)
+  (declare (ignore world dt))
   (when *quit* (return-from draw-world nil))
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
