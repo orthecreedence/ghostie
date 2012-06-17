@@ -2,11 +2,25 @@
 
 (defvar *shaders* nil)
 (defvar *shader-unif-locations* nil)
+(defvar *current-program* 0)
+
+(defun get-shader (program-key)
+  (getf *shaders* program-key))
+
+(defun use-shader (program-key)
+  (let ((shader (if (symbolp program-key)
+                    (get-shader program-key)
+                    program-key)))
+    (setf *current-program* shader)
+    (gl:use-program shader)))
+
+(defun (setf get-shader) (val program-key)
+  (setf (getf *shaders* program-key) val))
 
 (defun get-shader-unif (name)
   (unless *shader-unif-locations*
     (setf *shader-unif-locations* (make-hash-table :test #'equal)))
-  (let* ((cur-program (gl:get-integer :current-program))
+  (let* ((cur-program *current-program*)
          (hname (format nil "prog:~d:~a" cur-program name)))
     (multiple-value-bind (unif exists) (gethash hname *shader-unif-locations*)
       (unless exists
@@ -64,8 +78,8 @@
 
 (defun recompile-shaders ()
   (free-shaders)
-  (setf (getf *shaders* :main) (make-shader #P"opengl/shaders/main.vert"
+  (setf (get-shader :main) (make-shader #P"opengl/shaders/main.vert"
                                             #P"opengl/shaders/main.frag")
-        (getf *shaders* :dof) (make-shader #P"opengl/shaders/dof.vert"
+        (get-shader :dof) (make-shader #P"opengl/shaders/dof.vert"
                                            #P"opengl/shaders/dof.bokeh.2.4.frag")))
 

@@ -7,7 +7,7 @@
 
 (defun init-opengl (background)
   ;; set up blending
-  (gl:enable :blend :texture-2d)
+  (gl:enable :blend)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
 
   ;; set up culling
@@ -20,7 +20,7 @@
   (recompile-shaders)
 
   ;; set our camera matrix into the program
-  (gl:use-program (getf *shaders* :main))
+  (use-shader :main)
   (setf *view-matrix* (id-matrix 4))
 
   ;; enable depth testing
@@ -31,7 +31,6 @@
   (gl:clear-depth 1.0)
 
   ;; antialiasing (or just fixes gaps betwen polygon triangles)
-  (gl:shade-model :smooth)
   (gl:enable :multisample-arb)
 
   ;; set up the viewport
@@ -39,78 +38,62 @@
          (width (aref vport 2))
          (height (aref vport 3)))
     ;; set window size AND setup our view translation matrices
-    (resize-window width height)
-    (setf *render-objs* nil
-          (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex)))
+    (resize-window width height))
 
   ;; set the background/clear color
   (apply #'gl:clear-color background))
 
-(defun window-quit ()
-  (setf *quit* t)
-  (cleanup-opengl))
-
 (defun free-fbos ()
   (loop for (nil fbo) on *render-objs* by #'cddr do
-        (free-fbo fbo)))
+        (free-fbo fbo))
+  (setf *render-objs* nil))
 
 (defun cleanup-opengl ()
   (free-fbos)
   (free-shaders))
 
 (defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
-  "Create an SDL window with the given draw function and additional options."
-  (sdl:with-init ()
-    (let ((window (sdl:window width height
-                              :title-caption title
-                              :resizable t
-                              :opengl t
-                              :opengl-attributes '((:sdl-gl-doublebuffer 1)
-                                                   (:sdl-gl-red-size 8)
-                                                   (:sdl-gl-green-size 8)
-                                                   (:sdl-gl-blue-size 8)
-                                                   (:sdl-gl-depth-size 24)
-                                                   (:sdl-gl-multisamplebuffers 2)
-                                                   (:sdl-gl-multisamplesamples 2)))))
-      ;; fixes some straight up bulllllshit (http://www.cliki.net/lispbuilder-sdl) thxlol
-      ;; glfwGetProcAddress for GLFW...
-      (setf cl-opengl-bindings:*gl-get-proc-address* #'sdl-cffi::sdl-gl-get-proc-address)
+  "Create a window with an opengl context and spray vomit onto the user from the
+  new window."
+  (glfw:do-window (:width width :height height
+                   :redbits 8 :greenbits 8 :bluebits 8 :alphabits 8
+                   :depthbits 16 :stencilbits 16
+                   :mode glfw:+window+  ; glfw:+fullscreen+
+                   :title title
+                   :window-no-resize nil
+                   :opengl-version-major 3
+                   :opengl-version-minor 3
+                   :opengl-forward-compat t
+                   :opengl-profile glfw::+opengl-core-profile+)
+    ;; run our init forms
+    ((glfw:set-window-size width height)
+     ;; use the window manager's getProceAddress, which makes everything magically work
+     (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
+     ;(glfw:set-window-size-callback (cffi:callback resize-window))
+     ;(glfw:set-window-close-callback 'window-quit)
+     ;(glfw:set-key-callback #'key-pressed)
+     ;(glfw:enable glfw:+key-repeat+)
+     (init-opengl background)
+     (load-assets))
 
-      ;; set up key repeat (so we can hold a key for rapid fire)
-      (sdl:enable-key-repeat 200 30)
-
-      ;; setup opengl
-      (init-opengl background)
-
-      ;; run the world...this calls our game loop
-      (funcall draw-fn window)
-      (sdl:quit-sdl)
-      window)))
+    ;; this is our main loop (just call the draw fn over and over)
+    (when *quit*
+      (cleanup-opengl)
+      (return-from glfw::do-open-window))
+    (funcall draw-fn)
+    (key-handler)))
 
 (defun resize-window (width height)
   (setf height (max height 1))
+  (format t "Resize~%")
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
-  (gl:use-program (getf *shaders* :main))
   (setf *window-width* width
         *window-height* height)
+  (when *render-objs* (free-fbos))
+  (setf (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex))
   (gl:viewport 0 0 width height))
 
-(defun window-event-handler (w)
-  (declare (ignore w))
-  (load-assets)
-  (sdl:with-events (:poll)
-    (:quit-event ()
-     (window-quit)
-     t)
-    (:video-expose-event () (sdl:update-display))
-    (:video-resize-event (:w width :h height)
-      (resize-window width height))
-    (:key-down-event (:key key)
-      (key-handler key t))
-    (:key-up-event (:key key)
-      (key-handler key nil))
-    (:idle ()
-      (step-world *world*)
-      (draw-world *world*)
-      (sdl:update-display))))
+(cffi:defcallback resize-window-cb :void ((width :int) (height :int))
+  (resize-window width height))
+

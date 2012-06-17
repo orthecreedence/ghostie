@@ -1,3 +1,4 @@
+#version 330
 /*
 DoF with bokeh GLSL shader v2.4
 by Martins Upitis (martinsh) (devlog-martinsh.blogspot.com)

@@ -20,7 +20,7 @@
     (gl:bind-texture :texture-2d tex)
     (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
     (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
-    (gl:tex-parameter :texture-2d :generate-mipmap :true)
+    ;(gl:tex-parameter :texture-2d :generate-mipmap :true)
     (gl:tex-parameter :texture-2d :texture-wrap-s :clamp-to-edge)
     (gl:tex-parameter :texture-2d :texture-wrap-t :clamp-to-edge)
     (gl:tex-image-2d :texture-2d 0 :rgba width height 0 :rgba :unsigned-byte (cffi:null-pointer))

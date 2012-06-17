@@ -1,6 +1,6 @@
 (defvar *pkg-loaded* nil)
 (unless *pkg-loaded*
-  (let ((packages '(cl-opengl cl-glu lispbuilder-sdl png-read bordeaux-threads split-sequence cl-triangulation)))
+  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-triangulation)))
     (dolist (pkg packages)
       (ql:quickload pkg))
     (setf *pkg-loaded* t)))
@@ -33,10 +33,14 @@
         (bt:destroy-thread *main-thread*)))
     (setf *main-thread* nil)))
 
+(defun main-loop ()
+  (step-world *world*)
+  (draw-world *world*))
+
 (defun run-app ()
   (setf *quit* nil)
   (setf *world* (create-world))
-  (create-window #'window-event-handler
+  (create-window #'main-loop
                  :title "game level"
                  ;:background '(.33 .28 .25 1)
                  :background '(1 1 1 1)
