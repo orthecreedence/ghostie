@@ -69,12 +69,10 @@
     ;; run our init forms
     (;; use the window manager's getProceAddress, which makes everything magically work
      (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
-     ;(cffi:use-foreign-library glfw::libglfw)
-     ;(cffi:defcfun "glfwSetWindowSizeCallback" :void (fn :pointer))
-     ;(cffi:foreign-funcall "glfwSetWindowSizeCallback" :pointer (cffi:callback resize-window-cb) :void)
-     ;(glfw:set-window-size-callback (cffi:callback resize-window-cb))
-     ;(glfw:set-window-close-callback 'window-quit)
-     ;(glfw:set-key-callback #'key-pressed)
+     (glfw:set-window-size-callback (cffi:callback resize-window-cb))
+     (glfw:set-key-callback (cffi:callback key-pressed-cb))
+     (glfw:set-mouse-pos-callback (cffi:callback mouse-pos-cb))
+     (glfw:set-mouse-button-callback (cffi:callback mouse-button-cb))
      (init-opengl background)
      (load-assets))
 
@@ -90,6 +88,7 @@
 
 (defun resize-window (width height)
   (setf height (max height 1))
+  ;(format t "Resize window: ~ax~a~%" width height)
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.1 100.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
   (setf *window-width* width
@@ -98,7 +97,6 @@
   (setf (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex))
   (gl:viewport 0 0 width height))
 
-(cffi:defcallback resize-window-cb :void ((width :int) (height :int))
-  (format t "Resize~%")
+(def-c-callback resize-window-cb :void ((width :int) (height :int))
   (resize-window width height))
 

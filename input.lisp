@@ -1,11 +1,15 @@
 (in-package :game-level)
 
+(defvar *mouse-buttons* nil)
+(defvar *mouse-x* 0)
+(defvar *mouse-y* 0)
+
 (defun key-pressed (key state)
   ;; state == glfw:+release+ || glfw:+press+
   (declare (ignore key state)))
 
-;(cffi:defcallback key-pressed-cb :void ((key :int) (state :int))
-;  (key-pressed key state))
+(def-c-callback key-pressed-cb :void ((key :int) (state :int))
+  (key-pressed key state))
 
 (defun key-handler (dt)
   (macrolet ((key-is-on (key)
@@ -56,3 +60,22 @@
     (key= #\L
       (load-assets))))
 
+(defun mouse-pos (x y)
+  ;(format t "Mouse: ~ax~a~%" x y)
+  (setf *mouse-x* x
+        *mouse-y* y))
+
+(def-c-callback mouse-pos-cb :void ((x :int) (y :int))
+  (mouse-pos x y))
+
+(defun mouse-button-pressed (btn-num)
+  (getf *mouse-buttons* btn-num))
+
+(defun mouse-button (btn action)
+  ;(format t "Mouse btn: ~a (~a)~%" btn (if (eq action glfw:+press+) :pressed :released))
+  (if (eq action glfw:+press+)
+      (setf (getf *mouse-buttons* btn) t)
+      (setf (getf *mouse-buttons* btn) nil)))
+
+(def-c-callback mouse-button-cb :void ((btn :int) (action :int))
+  (mouse-button btn action))

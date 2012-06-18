@@ -6,13 +6,14 @@
    (scale :accessor gl-object-scale :initarg :scale :initform '(1 1 1))
    (position :accessor gl-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor gl-object-rotation :initarg :rotation :initform '(0 0 0 0))
+   (texture :accessor gl-object-texture :initform nil)
    (vao :accessor gl-object-vao :initform nil)
    (vbos :accessor gl-object-vbos :initform nil)))
 
-(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) uv-map)
-  (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data uv-map))
+(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map)
+  (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data texture uv-map))
 
-(defmethod set-gl-object-data (gl-object (triangles list) &optional uv-map)
+(defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored
   with the gl-object."
   (free-gl-object gl-object)
@@ -58,6 +59,8 @@
       (gl:bind-buffer :array-buffer vertex-buffer)
       (gl:enable-vertex-attrib-array 0)
       (gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
+      (when texture
+        (setf (gl-object-texture gl-object) texture))
       (when uv-map
         (gl:bind-buffer :array-buffer (getf (gl-object-vbos gl-object) :uv))
         (gl:enable-vertex-attrib-array 1)
@@ -116,6 +119,8 @@
     vert-array))
 
 (defmethod free-gl-object (gl-object)
+  (when (gl-object-texture gl-object)
+    (gl:delete-textures (list (gl-object-texture gl-object))))
   (when (gl-object-vbos gl-object)
     (gl:delete-buffers
       (loop for (nil vbo) on (gl-object-vbos gl-object) by #'cddr collect vbo))

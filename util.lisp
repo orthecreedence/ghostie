@@ -91,3 +91,8 @@
                    (setf in-vertex-block nil)
                    (setf in-index-block t)))))
     triangles))
+
+(defmacro def-c-callback (name &rest args)
+  (let ((cffi-name #+(or win32 windows) (list name :convention :stdcall)
+                   #-(or win32 windows) name))
+    `(cffi:defcallback ,cffi-name ,@args)))

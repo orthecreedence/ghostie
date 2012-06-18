@@ -42,9 +42,9 @@
   (setf *world* (create-world))
   (create-window #'main-loop
                  :title "game level"
-                 ;:background '(.33 .28 .25 1)
-                 :background '(1 1 1 1)
-                 :width 600
+                 :background '(.33 .28 .25 1)
+                 ;:background '(1 1 1 1)
+                 :width 900
                  :height 600)
   (stop))
 
