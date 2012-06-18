@@ -28,19 +28,20 @@
     (key|| (glfw:+key-esc+ #\Q)
       (setf *quit* t))
     (key= #\-
-      (decf (nth 2 *world-position*) (* dt 10)))
+      (decf (nth 2 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= #\=
-      (incf (nth 2 *world-position*) (* dt 10)))
+      (incf (nth 2 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= glfw:+key-up+
-      (decf (nth 1 *world-position*) (* dt 10)))
+      (decf (nth 1 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= glfw:+key-down+
-      (incf (nth 1 *world-position*) (* dt 10)))
+      (incf (nth 1 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= glfw:+key-left+
-      (incf (nth 0 *world-position*) (* dt 10)))
+      (incf (nth 0 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= glfw:+key-right+
-      (decf (nth 0 *world-position*) (* dt 10)))
+      (decf (nth 0 *world-position*) (* (coerce dt 'single-float) 10)))
     (key= #\R
-      (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
+      (setf *world-position* '(-17.19999 -24.00002 -36.000065))
+      (sleep .1))
     (key= #\C
       (recompile-shaders))
     (key= #\M

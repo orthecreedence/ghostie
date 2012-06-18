@@ -1,5 +1,7 @@
 #version 330
 
+uniform float fogAmt = 1.0;
+
 layout(location = 0) out vec4 color;
 
 void main()
@@ -20,7 +22,7 @@ void main()
 		vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		//vec4(0.33f, 0.28f, 0.25f, 1.0f),
 		vec4(0, 0, 0, 1.0f),
-		fog_amt
+		fog_amt + (1 - fogAmt)
 	);
 	gl_FragDepth	=	gl_FragCoord.z;
 }

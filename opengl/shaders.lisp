@@ -78,8 +78,8 @@
 
 (defun recompile-shaders ()
   (free-shaders)
-  (setf (get-shader :main) (make-shader #P"opengl/shaders/main.vert"
-                                            #P"opengl/shaders/main.frag")
-        (get-shader :dof) (make-shader #P"opengl/shaders/dof.vert"
-                                           #P"opengl/shaders/dof.bokeh.2.4.frag")))
+  (setf (get-shader :main) (make-shader #P"opengl/glsl/main.vert"
+                                        #P"opengl/glsl/main.frag")
+        (get-shader :dof) (make-shader #P"opengl/glsl/dof.vert"
+                                       #P"opengl/glsl/dof.frag")))
 

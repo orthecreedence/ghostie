@@ -72,10 +72,9 @@
      ;(cffi:use-foreign-library glfw::libglfw)
      ;(cffi:defcfun "glfwSetWindowSizeCallback" :void (fn :pointer))
      ;(cffi:foreign-funcall "glfwSetWindowSizeCallback" :pointer (cffi:callback resize-window-cb) :void)
-     ;(glfw:set-window-size-callback (cffi:callback resize-window))
+     ;(glfw:set-window-size-callback (cffi:callback resize-window-cb))
      ;(glfw:set-window-close-callback 'window-quit)
      ;(glfw:set-key-callback #'key-pressed)
-     ;(glfw:enable glfw:+key-repeat+)
      (init-opengl background)
      (load-assets))
 
@@ -91,8 +90,7 @@
 
 (defun resize-window (width height)
   (setf height (max height 1))
-  (format t "Resize~%")
-  (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.001 100.0))
+  (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.1 100.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
   (setf *window-width* width
         *window-height* height)
@@ -101,5 +99,6 @@
   (gl:viewport 0 0 width height))
 
 (cffi:defcallback resize-window-cb :void ((width :int) (height :int))
+  (format t "Resize~%")
   (resize-window width height))
 
