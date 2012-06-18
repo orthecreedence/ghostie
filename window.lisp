@@ -67,12 +67,11 @@
                    :opengl-forward-compat t
                    :opengl-profile glfw::+opengl-core-profile+)
     ;; run our init forms
-    (;; use the window manager's getProceAddress, which makes everything magically work
+    ((glfw:set-window-size width height)
+     ;; use the window manager's getProceAddress, which makes everything magically work
      (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
      (glfw:set-window-size-callback (cffi:callback resize-window-cb))
      (glfw:set-key-callback (cffi:callback key-pressed-cb))
-     (glfw:set-mouse-pos-callback (cffi:callback mouse-pos-cb))
-     (glfw:set-mouse-button-callback (cffi:callback mouse-button-cb))
      (init-opengl background)
      (load-assets))
 
