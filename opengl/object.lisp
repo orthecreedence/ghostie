@@ -59,8 +59,6 @@
       (gl:bind-buffer :array-buffer vertex-buffer)
       (gl:enable-vertex-attrib-array 0)
       (gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
-      (when texture
-        (setf (gl-object-texture gl-object) texture))
       (when uv-map
         (gl:bind-buffer :array-buffer (getf (gl-object-vbos gl-object) :uv))
         (gl:enable-vertex-attrib-array 1)
@@ -72,10 +70,11 @@
       (setf (gl-object-vertex-data gl-object) vertex-array
             (gl-object-index-data gl-object) index
             (getf (gl-object-vbos gl-object) :vertex) vertex-buffer
-            (getf (gl-object-vbos gl-object) :index) index-buffer)))
+            (getf (gl-object-vbos gl-object) :index) index-buffer
+            (gl-object-texture gl-object) texture)))
   gl-object)
 
-(defmethod draw ((obj gl-object))
+(defmethod draw ((obj gl-object) &key color)
   (let* ((position (gl-object-position obj))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
@@ -86,6 +85,8 @@
          (model-matrix (mat* model-matrix *view-matrix*))
          (mv-matrix (mat* model-matrix *view-matrix*)))
     (set-shader-matrix "modelToCameraMatrix" mv-matrix))
+  (when color
+    (apply #'set-shader-var (append (list #'gl:uniformf "colorIn") color)))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))

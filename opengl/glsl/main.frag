@@ -1,5 +1,6 @@
 #version 330
 
+uniform vec4 colorIn;
 uniform float fogAmt = 1.0;
 
 layout(location = 0) out vec4 color;
@@ -25,7 +26,7 @@ void main()
 	color	=	mix(
 		//vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		vec4(0.33f, 0.28f, 0.25f, 1.0f),
-		vec4(0, 0, 0, 1.0f),
+		colorIn,
 		fog_amt + (1 - fogAmt)
 	);
 	gl_FragDepth	=	gl_FragCoord.z;
