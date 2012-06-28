@@ -1,6 +1,6 @@
 (defvar *pkg-loaded* nil)
 (unless *pkg-loaded*
-  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-triangulation)))
+  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-svg-polygon cl-triangulation)))
     (dolist (pkg packages)
       (ql:quickload pkg))
     (setf *pkg-loaded* t)))

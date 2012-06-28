@@ -74,7 +74,7 @@
             (gl-object-texture gl-object) texture)))
   gl-object)
 
-(defmethod draw ((obj gl-object) &key color)
+(defmethod draw ((obj gl-object) &key (color '(0 0 0 1)))
   (let* ((position (gl-object-position obj))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
