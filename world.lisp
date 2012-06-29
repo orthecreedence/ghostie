@@ -28,22 +28,34 @@
                   (make-gl-object :data (cl-triangulation:triangulate (coerce vertices 'vector))
                                   :scale '(1 1 1)
                                   :position (append (mapcar #'- offset) (list z-offset)))))))
-  (let ((assets (svgp:parse-svg-file "resources/level/test1.svg" :curve-resolution 5 :ignore-errors t)))
-    (loop for i from 0 to 1
-          for obj in assets do
-      (when (< 0 (length (getf obj :point-data)))
-        ;; TODO: why doesnt this work?
-        (let ((triangles (cl-triangulation:triangulate (getf obj :point-data))))
-          (when (> (length triangles) 0)
-            (format t "Loading object ~a~%" i)
-            (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
-                  (make-gl-object :data triangles
-                                  :scale '(1 1 1)
-                                  :position '(-200 -300 -20))))))))
   ;; this is the quad we render out FBO texture onto
   (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0))
                                                          ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
+  ;(let* ((m (svgp::mat* (svgp::m-translate 10 10)
+  ;                      (svgp::mat* (svgp::m-rotate 30)
+  ;                                  (svgp::m-translate -10 -10))))
+  ;       (p (mapcar (lambda (pt) (butlast (svgp::matv* m pt)))
+  ;                  '((-10 -10 1) (-10 10 1) (10 10 1) (10 -10 1))))
+  ;       (tri (cl-triangulation:triangulate (coerce p 'vector))))
+  ;  (setf (getf *game-data* :svg0)
+  ;        (make-gl-object :data tri)))
+  (let ((assets (svgp:parse-svg-file "resources/level/test1.svg"
+                                     :curve-resolution 16
+                                     :invert-y t
+                                     :ignore-errors t)))
+    (loop for i from 0
+          for obj in assets do
+      (when (< 0 (length (getf obj :point-data)))
+        (handler-case
+          (let ((triangles (cl-triangulation:triangulate (getf obj :point-data))))
+            (when (> (length triangles) 0)
+              (format t "Loading object ~a~%" i)
+              (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
+                    (make-gl-object :data triangles
+                                    :scale '(.1 .1 .1)
+                                    :position '(-400 400 -60)))))
+          (error (e) (format t "err: ~a~%" e))))))
   ;(setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(1 1 1) :position '(0 0 -10)))
   ;(create-test-primitives)
   (format t "Finished asset load.~%"))
@@ -62,7 +74,7 @@
   (set-shader-var #'gl:uniformf "fogAmt" 1.0)
   (setf *view-matrix* (apply #'m-translate *world-position*))
   (set-shader-matrix "cameraToClipMatrix" *perspective-matrix*)
-  ;(draw (getf *game-data* :svg0))
+  (draw (getf *game-data* :svg0))
   ;(draw (getf *game-data* :svg2))
   ;(draw (getf *game-data* :svg3))
   ;(draw (getf *game-data* :svg4))
