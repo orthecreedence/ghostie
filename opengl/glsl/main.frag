@@ -24,13 +24,10 @@ void main()
 	//   http://www.opengl.org/wiki/Transparency_Sorting
 
 	color	=	mix(
-		//vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		vec4(0.33f, 0.28f, 0.25f, 1.0f),
-		vec4(0, 0, 0, 1),
-		//colorIn,
+		colorIn,
 		fog_amt + (1 - fogAmt)
 	);
-	color	=	vec4(0,0,0,1);
 	gl_FragDepth	=	gl_FragCoord.z;
 }
 
