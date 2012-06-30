@@ -7,11 +7,12 @@
    (position :accessor gl-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor gl-object-rotation :initarg :rotation :initform '(0 0 0 0))
    (texture :accessor gl-object-texture :initform nil)
+   (color :accessor gl-object-color :initarg :color :initform #(0 0 0 1))
    (vao :accessor gl-object-vao :initform nil)
    (vbos :accessor gl-object-vbos :initform nil)))
 
-(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map)
-  (set-gl-object-data (make-instance 'gl-object :position position :scale scale) data texture uv-map))
+(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)))
+  (set-gl-object-data (make-instance 'gl-object :position position :scale scale :color color) data texture uv-map))
 
 (defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored
@@ -74,7 +75,7 @@
             (gl-object-texture gl-object) texture)))
   gl-object)
 
-(defmethod draw ((obj gl-object) &key (color '(0 0 0 1)))
+(defmethod draw ((obj gl-object) &key color)
   (let* ((position (gl-object-position obj))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
@@ -85,8 +86,10 @@
          (model-matrix (mat* model-matrix *view-matrix*))
          (mv-matrix (mat* model-matrix *view-matrix*)))
     (set-shader-matrix "modelToCameraMatrix" mv-matrix))
-  (when color
-    (apply #'set-shader-var (append (list #'gl:uniformf "colorIn") color)))
+  (let ((color (if color
+                   color
+                   (gl-object-color obj))))
+    (set-shader-var #'gl:uniformfv "colorIn" color))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
   (gl:bind-vertex-array 0))
