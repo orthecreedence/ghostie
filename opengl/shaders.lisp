@@ -32,7 +32,7 @@
   (let ((location (if (stringp location)
                       (get-shader-unif location)
                       location)))
-    (when (<= location 0)
+    (when (<= 0 location)
       (apply fn (append (list location) args)))))
 
 (defun set-shader-matrix (name matrix &key (size 4))
