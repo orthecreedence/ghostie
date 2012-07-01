@@ -94,15 +94,17 @@
 
 (defun hex-to-rgb (hex-str)
   "Turn #a4892c into #(.64 .54 .17 1)"
-  (let ((tmp-str (make-string 2))
-        (color (make-array 4 :element-type 'single-float :initial-element 1.0))
-        (offset (if (eq (aref hex-str 0) #\#) 1 0)))
-    (dotimes (i 3)
-      (setf (aref tmp-str 0) (aref hex-str (+ offset (* i 2)))
-            (aref tmp-str 1) (aref hex-str (+ offset (* i 2) 1)))
-      (setf (aref color i)
-            (coerce (/ (parse-integer tmp-str :radix 16) 255) 'single-float)))
-    color))
+  (handler-case
+    (let ((tmp-str (make-string 2))
+          (color (make-array 4 :element-type 'single-float :initial-element 1.0))
+          (offset (if (eq (aref hex-str 0) #\#) 1 0)))
+      (dotimes (i 3)
+        (setf (aref tmp-str 0) (aref hex-str (+ offset (* i 2)))
+              (aref tmp-str 1) (aref hex-str (+ offset (* i 2) 1)))
+        (setf (aref color i)
+              (coerce (/ (parse-integer tmp-str :radix 16) 255) 'single-float)))
+      color)
+    (error () #(0 0 0 1))))
 
 (defmacro def-c-callback (name &rest args)
   (let ((cffi-name #+(or win32 windows) (list name :convention :stdcall)

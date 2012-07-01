@@ -24,9 +24,9 @@ void main()
 	//   http://www.opengl.org/wiki/Transparency_Sorting
 
 	color	=	mix(
-		vec4(0.33f, 0.28f, 0.25f, 1.0f),
 		colorIn,
-		fog_amt + (1 - fogAmt)
+		vec4(0.33f, 0.28f, 0.25f, 1.0f),
+		(1 - fog_amt) * fogAmt
 	);
 	gl_FragDepth	=	gl_FragCoord.z;
 }

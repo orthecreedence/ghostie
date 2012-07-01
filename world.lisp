@@ -40,34 +40,32 @@
   ;       (tri (cl-triangulation:triangulate (coerce p 'vector))))
   ;  (setf (getf *game-data* :svg0)
   ;        (make-gl-object :data tri)))
-  (let ((depths '(("middle_ground" 40)
-                  ("background" 60)
-                  ("ghostie" 10)
+  (let ((depths '(("background" -200)
+                  ("middle_ground" -100)
+                  ("ghostie" -20)
                   ("foreground" 0)))
-        (assets (svgp:parse-svg-file "resources/level/house2.svg"
+        (assets (svgp:parse-svg-file "resources/level/test1.svg"
                                      :curve-resolution 16
                                      :invert-y t
                                      :ignore-errors t)))
     (loop for i from 0
           for obj in assets do
       (when (< 0 (length (getf obj :point-data)))
-        (handler-case
-          (let ((color (if (getf obj :fill)
-                           (hex-to-rgb (getf obj :fill))
-                           #(0 0 0 1)))
-                (depth (let ((depth (remove-if-not (lambda (d) (equal (car d) (car (getf obj :group)))) depths)))
-                         (if depth
-                             (cadr (car depth))
-                             0)))
-                (triangles (cl-triangulation:triangulate (getf obj :point-data))))
-            (when (> (length triangles) 0)
-              (format t "Loading object ~a~%" i)
-              (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
-                    (make-gl-object :data triangles
-                                    :color color
-                                    :scale '(.1 .1 .1)
-                                    :position (list 0 0 depth)))))
-          (error (e) (format t "err: ~a~%" e))))))
+        (let ((color (if (getf obj :fill)
+                         (hex-to-rgb (getf obj :fill))
+                         #(0 0 0 1)))
+              (depth (let ((depth (remove-if-not (lambda (d) (equal (car d) (car (getf obj :group)))) depths)))
+                       (if depth
+                           (cadr (car depth))
+                           0)))
+              (triangles (tri:triangulate (getf obj :point-data))))
+          (when (> (length triangles) 0)
+            (format t "Loading object ~a~%" i)
+            (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
+                  (make-gl-object :data triangles
+                                  :color color
+                                  :scale '(.04 .04 .04)
+                                  :position (list 0 0 depth))))))))
   ;(setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(1 1 1) :position '(0 0 -10)))
   ;(create-test-primitives)
   (format t "Finished asset load.~%"))
@@ -75,7 +73,8 @@
 (defun free-assets ()
   (loop for (nil obj) on *game-data* by #'cddr do
     (when (subtypep (type-of obj) 'gl-object)
-      (free-gl-object obj))))
+      (free-gl-object obj)))
+  (setf *game-data* nil))
 
 (defun draw-world (world dt)
   (declare (ignore world dt))
@@ -83,21 +82,12 @@
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
   (use-shader :main)
-  (set-shader-var #'gl:uniformf "fogAmt" 0.0)
+  (set-shader-var #'gl:uniformf "fogAmt" 1.0)
   (setf *view-matrix* (apply #'m-translate *world-position*))
   (set-shader-matrix "cameraToClipMatrix" *perspective-matrix*)
   (loop for (name obj) on *game-data* by #'cddr do
     (when (search "SVG" (write-to-string name))
-      ;(format t "pos: ~a~%" (gl-object-position obj))
       (draw obj)))
-  ;(draw (getf *game-data* :svg0))
-  ;(draw (getf *game-data* :svg1))
-  ;(draw (getf *game-data* :svg2))
-  ;(draw (getf *game-data* :svg3))
-  ;(draw (getf *game-data* :svg4))
-  ;(draw (getf *game-data* :svg5))
-  ;(draw (getf *game-data* :svg6))
-  ;(draw (getf *game-data* :svg7))
   ;(draw (getf *game-data* :tree1) :color '(0 0 0 1))
   ;(draw (getf *game-data* :ground))
   ;(draw (getf *game-data* :ground-background))
