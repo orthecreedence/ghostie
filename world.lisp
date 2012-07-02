@@ -58,7 +58,7 @@
                        (if depth
                            (cadr (car depth))
                            0)))
-              (triangles (tri:triangulate (getf obj :point-data))))
+              (triangles (triangulate (getf obj :point-data))))
           (when (> (length triangles) 0)
             (format t "Loading object ~a~%" i)
             (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
