@@ -28,11 +28,7 @@
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
 
   ;; load the current level
-  (setf (world-level world) (load-level "house"
-                                        '(("background" -600)
-                                          ("middle_ground" -300)
-                                          ("ghostie" -20)
-                                          ("foreground" 0))))
+  (setf (world-level world) (load-level "house"))
 
   ;(let ((assets '((:ground #P"resources/ground.ai" 0)
   ;                (:ground-background #P"resources/ground-background.ai" -9)
@@ -97,7 +93,7 @@
     (gl:active-texture :texture1)
     (gl:bind-texture :texture-2d (gl-fbo-depth fbo))
     (set-shader-var #'gl:uniformi "depthTex" 1))
-  (draw (getf *game-data* :quad))
+  (draw-gl-object (getf *game-data* :quad))
   (use-shader 0))
 
 (defun test-gl-funcs ()

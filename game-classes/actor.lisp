@@ -1,8 +1,7 @@
 (in-package :game-level)
 
-(defclass actor ()
-  ((gl-objects :accessor actor-gl-objects :initform nil)))
+(defclass actor (game-object) ())
 
-(defun parse-actor-file (file)
-  (declare (ignore file))
+(defun load-actors (actors)
+  (declare (ignore actors))
   nil)

@@ -23,7 +23,7 @@
 (load "opengl/object")
 (load "input")
 (load "window")
-(load "game-classes/object")
+(load "game-classes/game-object")
 (load "game-classes/actor")
 (load "game-classes/level")
 (load "world")

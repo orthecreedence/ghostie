@@ -111,6 +111,11 @@
           color))
     (error (e) (format t "ERRRR:~A~%" e) #(0 0 0 1))))
 
+(defun read-file (filename)
+  "Read a lisp file and parse it into a lisp datastructure."
+  (read-from-string (file-contents filename)))
+
+
 (defmacro def-c-callback (name &rest args)
   (let ((cffi-name #+(or win32 windows) (list name :convention :stdcall)
                    #-(or win32 windows) name))

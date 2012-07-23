@@ -75,8 +75,8 @@
             (gl-object-texture gl-object) texture)))
   gl-object)
 
-(defmethod draw ((obj gl-object) &key color)
-  (let* ((position (gl-object-position obj))
+(defun draw-gl-object (obj &key color position)
+  (let* ((position (if position position (gl-object-position obj)))
          (rotation (gl-object-rotation obj))
          (scale (gl-object-scale obj))
          (model-matrix (id-matrix 4))
@@ -86,10 +86,7 @@
          (model-matrix (mat* model-matrix *view-matrix*))
          (mv-matrix (mat* model-matrix *view-matrix*)))
     (set-shader-matrix "modelToCameraMatrix" mv-matrix))
-  (let ((color (if color
-                   color
-                   (gl-object-color obj))))
-    ;(format t "col: ~a~%" color)
+  (let ((color (if color color (gl-object-color obj))))
     (set-shader-var #'gl:uniformfv "colorIn" color))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
