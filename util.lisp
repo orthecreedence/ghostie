@@ -92,22 +92,7 @@
                    (setf in-index-block t)))))
     triangles))
 
-(defun triangulate (points)
-  (format t "pt: ~a~%" points)
-  (let ((flat (loop for p across points append (list (car p) (cadr p)))))
-    (let ((poly (apply #'geometry:make-polygon-from-coords  flat))
-          (triangles nil))
-      (dolist (tri (geometry:decompose-complex-polygon-triangles poly))
-        (let* ((points (geometry:point-list tri))
-               (p1 (car points))
-               (p2 (cadr points))
-               (p3 (caddr points)))
-          (push (list (list (geometry:x p1) (geometry:y p1))
-                      (list (geometry:x p2) (geometry:y p2))
-                      (list (geometry:x p3) (geometry:y p3))) triangles)))
-      triangles)))
-
-(defun hex-to-rgb (hex-str)
+(defun hex-to-rgb (hex-str &key (opacity 1.0) type)
   "Turn #a4892c into #(.64 .54 .17 1)"
   (handler-case
     (let ((tmp-str (make-string 2))
@@ -118,8 +103,13 @@
               (aref tmp-str 1) (aref hex-str (+ offset (* i 2) 1)))
         (setf (aref color i)
               (coerce (/ (parse-integer tmp-str :radix 16) 255) 'single-float)))
-      color)
-    (error () #(0 0 0 1))))
+      (setf (aref color 3) (coerce (if (stringp opacity)
+                                       (read-from-string opacity)
+                                       opacity) 'single-float))
+      (if type
+          (coerce color type)
+          color))
+    (error (e) (format t "ERRRR:~A~%" e) #(0 0 0 1))))
 
 (defmacro def-c-callback (name &rest args)
   (let ((cffi-name #+(or win32 windows) (list name :convention :stdcall)

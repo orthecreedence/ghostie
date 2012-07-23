@@ -1,24 +1,39 @@
 (in-package :game-level)
 
-(defparameter *world-position* '(-17.19999 -24.00002 -36.000065))
 (defvar *perspective-matrix* nil)
 (defvar *ortho-matrix* nil)
 (defvar *view-matrix* nil)
 (defvar *game-data* nil)
 
+(defclass world ()
+  ((physics :accessor world-physics)
+   (position :accessor world-position :initform '(0 0 -10))
+   (level :accessor world-level)))
+
 (defun create-world ()
-  (setf *world-position* '(-17.19999 -24.00002 -36.000065)))
+  ;; setup physics
+  (make-instance 'world))
 
 (defun step-world (world dt)
-  (declare (ignore world dt)))
+  (declare (ignore world dt))
+  ;; step physics and update game objects
+  )
 
-(defun load-assets ()
+(defun load-assets (world)
   (format t "Starting asset load.~%")
   (free-assets)
-  ;; this is the quad we render out FBO texture onto
+  ;; this is the quad we render our FBO texture onto
   (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0))
                                                          ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
+
+  ;; load the current level
+  (setf (world-level world) (load-level "house"
+                                        '(("background" -600)
+                                          ("middle_ground" -300)
+                                          ("ghostie" -20)
+                                          ("foreground" 0))))
+
   ;(let ((assets '((:ground #P"resources/ground.ai" 0)
   ;                (:ground-background #P"resources/ground-background.ai" -9)
   ;                (:tree1 #P"resources/tree1.ai" -20.0)
@@ -40,34 +55,9 @@
   ;       (tri (cl-triangulation:triangulate (coerce p 'vector))))
   ;  (setf (getf *game-data* :svg0)
   ;        (make-gl-object :data tri)))
-  (let ((depths '(("background" -200)
-                  ("middle_ground" -100)
-                  ("ghostie" -20)
-                  ("foreground" 0)))
-        (assets (svgp:parse-svg-file "resources/level/test1.svg"
-                                     :curve-resolution 16
-                                     :invert-y t
-                                     :ignore-errors t)))
-    (loop for i from 0
-          for obj in assets do
-      (when (< 0 (length (getf obj :point-data)))
-        (let ((color (if (getf obj :fill)
-                         (hex-to-rgb (getf obj :fill))
-                         #(0 0 0 1)))
-              (depth (let ((depth (remove-if-not (lambda (d) (equal (car d) (car (getf obj :group)))) depths)))
-                       (if depth
-                           (cadr (car depth))
-                           0)))
-              (triangles (triangulate (getf obj :point-data))))
-          (when (> (length triangles) 0)
-            (format t "Loading object ~a~%" i)
-            (setf (getf *game-data* (read-from-string (format nil ":svg~a" i)))
-                  (make-gl-object :data triangles
-                                  :color color
-                                  :scale '(.04 .04 .04)
-                                  :position (list 0 0 depth))))))))
-  ;(setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(1 1 1) :position '(0 0 -10)))
-  ;(create-test-primitives)
+
+  (setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(.1 .1 .1) :position '(0 0 0)))
+  (sleep .1)
   (format t "Finished asset load.~%"))
 
 (defun free-assets ()
@@ -77,17 +67,15 @@
   (setf *game-data* nil))
 
 (defun draw-world (world dt)
-  (declare (ignore world dt))
+  (declare (ignore dt))
   (when *quit* (return-from draw-world nil))
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
   (use-shader :main)
-  (set-shader-var #'gl:uniformf "fogAmt" 1.0)
-  (setf *view-matrix* (apply #'m-translate *world-position*))
+  (set-shader-var #'gl:uniformf "fogAmt" 0)
+  (setf *view-matrix* (apply #'m-translate (world-position world)))
   (set-shader-matrix "cameraToClipMatrix" *perspective-matrix*)
-  (loop for (name obj) on *game-data* by #'cddr do
-    (when (search "SVG" (write-to-string name))
-      (draw obj)))
+  (draw-level (world-level world))
   ;(draw (getf *game-data* :tree1) :color '(0 0 0 1))
   ;(draw (getf *game-data* :ground))
   ;(draw (getf *game-data* :ground-background))
@@ -118,19 +106,3 @@
   (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
   ;(format t "Extensions: ~a~%" (gl:get-string :extensions))
   (format t "Err: ~a~%" (gl:get-error)))
-
-(defun create-test-primitives ()
-  (setf (getf *game-data* :triangle) (make-gl-object :data '(((-1.0 -1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  1.0  0.0))) :position '(0 0 -1)))
-  (setf (getf *game-data* :prism1) (make-gl-object :data '(((-1.0 -1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  0.0 -1.0) ( 1.0 -1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  1.0  0.0) ( 0.0  0.0 -1.0))
-                                                           (( 0.0  1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  0.0 -1.0))) :position '(3 6 -20)))
-  (setf (getf *game-data* :prism2) (make-gl-object :data '(((-1.0 -1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  0.0 -1.0) ( 1.0 -1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  1.0  0.0) ( 0.0  0.0 -1.0))
-                                                           (( 0.0  1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  0.0 -1.0))) :position '(-3 4 -30)))
-  (setf (getf *game-data* :prism3) (make-gl-object :data '(((-1.0 -1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  0.0 -1.0) ( 1.0 -1.0  0.0))
-                                                           ((-1.0 -1.0  0.0) ( 0.0  1.0  0.0) ( 0.0  0.0 -1.0))
-                                                           (( 0.0  1.0  0.0) ( 1.0 -1.0  0.0) ( 0.0  0.0 -1.0))) :position '(-1 -4 -25))))
-

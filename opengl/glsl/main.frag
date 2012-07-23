@@ -8,7 +8,7 @@ layout(location = 0) out vec4 color;
 void main()
 {
 	float fog_end	=	160;
-	float fog_start	=	40; //72;
+	float fog_start	=	60; //72;
 	float fog_dist	=	fog_end - fog_start;
 	float fog_amt;
 	float fog_coord;

@@ -73,7 +73,7 @@
      (glfw:set-window-size-callback (cffi:callback resize-window-cb))
      (glfw:set-key-callback (cffi:callback key-pressed-cb))
      (init-opengl background)
-     (load-assets))
+     (setup))
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*

@@ -1,6 +1,6 @@
 (defvar *pkg-loaded* nil)
 (unless *pkg-loaded*
-  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-geometry cl-svg-polygon)))
+  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-svg-polygon glu-tessellate)))
     (dolist (pkg packages)
       (ql:quickload pkg))
     (setf *pkg-loaded* t)))
@@ -21,9 +21,11 @@
 (load "opengl/shaders")
 (load "opengl/fbo")
 (load "opengl/object")
-;(load "opengl/tessellate")
 (load "input")
 (load "window")
+(load "game-classes/object")
+(load "game-classes/actor")
+(load "game-classes/level")
 (load "world")
 
 (defun stop ()
@@ -34,19 +36,24 @@
         (bt:destroy-thread *main-thread*)))
     (setf *main-thread* nil)))
 
+(defun setup ()
+  (load-assets *world*)
+  (format t "lev: ~a~%" (world-level *world*)))
+
 (defun main-loop (dt)
   (step-world *world* dt)
   (draw-world *world* dt))
 
 (defun run-app ()
-  (setf *quit* nil)
-  (setf *world* (create-world))
-  (create-window #'main-loop
-                 :title "game level"
-                 :background '(.33 .28 .25 1)
-                 ;:background '(1 1 1 1)
-                 :width 900
-                 :height 600)
+  (let ((*quit* nil)
+        (*world* (create-world)))
+    (create-window #'main-loop
+                   :title "game level"
+                   :background (hex-to-rgb "#262524" :type 'list)
+                   ;:background '(.33 .28 .25 1)
+                   ;:background '(1 1 1 1)
+                   :width 900
+                   :height 600))
   (stop))
 
 (defun main ()

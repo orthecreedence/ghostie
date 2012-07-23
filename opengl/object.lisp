@@ -89,6 +89,7 @@
   (let ((color (if color
                    color
                    (gl-object-color obj))))
+    ;(format t "col: ~a~%" color)
     (set-shader-var #'gl:uniformfv "colorIn" color))
   (gl:bind-vertex-array (gl-object-vao obj))
   (gl:draw-elements :triangles (gl:make-null-gl-array :unsigned-short) :count (length (gl-object-index-data obj)))
