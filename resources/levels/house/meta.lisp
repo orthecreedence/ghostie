@@ -1,5 +1,5 @@
 (:name "house"
- :actors ((:actor "ghosty" :start-pos (-425.329 557.587)))
+ :actors ((:actor "ghostie" :start-pos (-825.329 -50 0)))
  :scale (.04 .04 .04)
  :object-properties ((:name "background"
                       :layer-depth -600)

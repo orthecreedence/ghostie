@@ -37,8 +37,7 @@
     (setf *main-thread* nil)))
 
 (defun setup ()
-  (load-assets *world*)
-  (format t "lev: ~a~%" (world-level *world*)))
+  (load-assets *world*))
 
 (defun main-loop (dt)
   (step-world *world* dt)
@@ -58,5 +57,5 @@
 
 (defun main ()
   (stop)
-  (setf *main-thread* (bt:make-thread #'run-app)))
+  (setf *main-thread* (bt:make-thread #'run-app :name "game-thread")))
 
