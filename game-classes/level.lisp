@@ -4,6 +4,7 @@
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
+   (main-actor :accessor level-main-actor :initform nil)
    (actors :accessor level-actors :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)))
 
@@ -16,6 +17,8 @@
         (level-meta (read-file (format nil "~a/~a/meta.lisp" *level-directory* level-name))))
     (setf (level-objects level) (svg-to-game-objects objects level-meta :scale (getf level-meta :scale))
           (level-actors level) (load-actors (getf level-meta :actors) :scale (getf level-meta :scale)))
+    (setf (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
+                                            (level-actors level)))
     level))
 
 (defun draw-level (level)
