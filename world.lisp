@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defvar *perspective-matrix* nil)
 (defvar *ortho-matrix* nil)

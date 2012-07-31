@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defclass gl-object ()
   ((vertex-data :accessor gl-object-vertex-data :initarg :vertex-data :initform nil)

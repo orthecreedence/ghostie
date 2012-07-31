@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defvar *shaders* nil)
 (defvar *shader-unif-locations* nil)

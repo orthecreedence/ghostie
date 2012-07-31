@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defclass game-object ()
   ((name :accessor game-object-name :initform "game-object")

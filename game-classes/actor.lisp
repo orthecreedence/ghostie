@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defparameter *actor-directory* "resources/actors")
 

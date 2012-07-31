@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defclass gl-fbo ()
   ((fbo :accessor gl-fbo-fbo :initform nil)

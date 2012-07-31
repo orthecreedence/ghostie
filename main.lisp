@@ -1,13 +1,8 @@
-(defvar *pkg-loaded* nil)
-(unless *pkg-loaded*
-  (let ((packages '(cl-glfw cl-opengl cl-glu png-read bordeaux-threads split-sequence cl-svg-polygon glu-tessellate)))
-    (dolist (pkg packages)
-      (ql:quickload pkg))
-    (setf *pkg-loaded* t)))
+(ql:quickload :ghostie)
 
-(defpackage :game-level
+(defpackage :ghostie
   (:use :cl))
-(in-package :game-level)
+(in-package :ghostie)
 
 (defparameter *world* nil)
 (defparameter *main-thread* nil)

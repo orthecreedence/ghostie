@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defvar *window-width* 0)
 (defvar *window-height* 0)

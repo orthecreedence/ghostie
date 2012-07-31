@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defun mouse-pos ()
   (glfw:get-mouse-pos))

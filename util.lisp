@@ -1,4 +1,4 @@
-(in-package :game-level)
+(in-package :ghostie)
 
 (defun flatten-image-data (data)
   (let* ((ax (array-dimension data 0))
