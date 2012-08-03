@@ -75,6 +75,18 @@
             (gl-object-texture gl-object) texture)))
   gl-object)
 
+(defun update-gl-object-vertex-data (gl-object vertex-data)
+  "Given a set of raw vertex data, reset the buffer objects in the gl object so
+  the new data is reflected. New data *must* be the same size as the old data."
+  (let ((vertex-buffer (getf (gl-object-vbos gl-object) :vertex)))
+    (gl:bind-buffer :array-buffer vertex-buffer)
+    (let ((gl-arr (gl:alloc-gl-array :float (length vertex-data))))
+      (dotimes (i (length vertex-data))
+        (setf (gl:glaref gl-arr i) (coerce (aref vertex-data i) 'single-float)))
+      (gl:buffer-data :array-buffer :static-draw gl-arr)
+      (gl:free-gl-array gl-arr))
+    (gl:bind-buffer :array-buffer 0)))
+
 (defun draw-gl-object (obj &key color position)
   (let* ((position (if position position (gl-object-position obj)))
          (rotation (gl-object-rotation obj))

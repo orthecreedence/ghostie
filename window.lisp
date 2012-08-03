@@ -77,7 +77,7 @@
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*
-      (cleanup-opengl)
+      (cleanup)
       (return-from glfw::do-open-window))
     (let* ((time (glfw:get-time))
            (dt (- time *last-time*)))

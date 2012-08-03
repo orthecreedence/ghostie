@@ -7,7 +7,8 @@
    (is-jumping :accessor actor-is-jumping :initform nil)))
 
 (defun load-actors (actors-meta &key (scale '(1 1 1)))
-  (let ((actors nil))
+  (let ((actors nil)
+        (scale (if scale scale '(1 1 1))))
     (dolist (actor-info actors-meta)
       (let  ((svg-objs (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *actor-directory* (getf actor-info :actor))
                                             :curve-resolution 20

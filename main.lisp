@@ -12,6 +12,7 @@
 (defparameter *quit* nil)
 
 (load "util")
+(load "config")
 (load "matrix")
 (load "opengl/shaders")
 (load "opengl/fbo")
@@ -22,6 +23,20 @@
 (load "game-classes/actor")
 (load "game-classes/level")
 (load "world")
+(load "physics/phx-obj")
+(load "physics/shape")
+(load "physics/body")
+(load "physics/joint")
+(load "physics/joint-group")
+(load "physics/space")
+(load "physics/collision")
+(load "physics/world")
+(load "physics/test")
+
+(defun cleanup ()
+  (format t "Cleaning up...~%")
+  (world-cleanup *world*)
+  (cleanup-opengl))
 
 (defun stop ()
   (when (and *main-thread*
@@ -39,16 +54,18 @@
   (draw-world *world* dt))
 
 (defun run-app ()
-  (let ((*quit* nil)
-        (*world* (create-world)))
-    (create-window #'main-loop
-                   :title "game level"
-                   :background (hex-to-rgb "#262524" :type 'list)
-                   ;:background '(.33 .28 .25 1)
-                   ;:background '(1 1 1 1)
-                   :width 900
-                   :height 600))
-  (stop))
+  (setf *world* (create-world))
+  (let ((*quit* nil))
+    (unwind-protect
+      (create-window #'main-loop
+                     :title "game level"
+                     :background (hex-to-rgb "#262524" :type 'list)
+                     ;:background '(.33 .28 .25 1)
+                     ;:background '(1 1 1 1)
+                     :width 900
+                     :height 600)
+      (progn
+        (stop)))))
 
 (defun main ()
   (stop)

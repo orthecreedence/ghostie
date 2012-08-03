@@ -12,12 +12,23 @@
 
 (defun create-world ()
   ;; setup physics
-  (make-instance 'world))
+  (let ((world (make-instance 'world)))
+    (setf (world-physics world) (make-physics-world))
+    (init-physics (world-physics world))
+    world))
+
+(defun world-cleanup (world)
+  (dolist (game-object (level-objects (world-level world)))
+    (destroy-game-object game-object))
+  (ode:close-ode))
 
 (defun step-world (world dt)
-  (declare (ignore world dt))
-  ;; step physics and update game objects
-  )
+  (unless *quit*
+    (let ((phx-world (world-physics world)))
+      (collide phx-world)
+      (dotimes (i (round (+ (/ dt +physics-steps+) +physics-speed+)))
+        (ode:world-quick-step (phx-obj phx-world) +physics-steps+))
+      (joint-group-empty (phx-world-contact-group phx-world)))))
 
 (defun load-assets (world)
   (format t "Starting asset load.~%")
@@ -28,7 +39,7 @@
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
 
   ;; load the current level
-  (setf (world-level world) (load-level "house"))
+  (setf (world-level world) (load-level "physics-test"))
 
   ;(let ((assets '((:ground #P"resources/ground.ai" 0)
   ;                (:ground-background #P"resources/ground-background.ai" -9)
@@ -97,7 +108,7 @@
   (use-shader 0))
 
 (defun test-gl-funcs ()
-  (gl:clear-color 1 1 1 1)
+  ;(gl:clear-color 1 1 1 1)
   (format t "OpenGL version: ~a~%" (gl:get-string :version))
   (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
   ;(format t "Extensions: ~a~%" (gl:get-string :extensions))

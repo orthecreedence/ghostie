@@ -113,10 +113,20 @@
 
 (defun read-file (filename)
   "Read a lisp file and parse it into a lisp datastructure."
-  (read-from-string (file-contents filename)))
+  (when (probe-file filename)
+    (read-from-string (file-contents filename))))
 
 
 (defmacro def-c-callback (name &rest args)
   (let ((cffi-name #+(or win32 windows) (list name :convention :stdcall)
                    #-(or win32 windows) name))
     `(cffi:defcallback ,cffi-name ,@args)))
+
+(defmacro bit-or (&rest vals)
+  "Perform a logical OR on a set of values. Could probably be a function. Don't
+  care, really..."
+  (let ((num (length vals)))
+    `(cond ((= ,num 1) ,(nth 0 vals))
+           ((= ,num 2) (boole boole-ior ,(nth 0 vals) ,(nth 1 vals)))
+           ((> ,num 2) (boole boole-ior ,(nth 0 vals) (bit-or ,@(cdr vals)))))))
+
