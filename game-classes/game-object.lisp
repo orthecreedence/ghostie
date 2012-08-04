@@ -16,7 +16,7 @@
 (defun destroy-game-object (game-object)
   "Clear out a game object, and free all its non-lisp data (gl objects and
   physics)."
-  (body-destroy (game-object-physics-body game-object))
+  ;(body-destroy (game-object-physics-body game-object))
   (dolist (gl-object (game-object-gl-objects game-object))
     (free-gl-object gl-object)))
 
@@ -26,13 +26,7 @@
 
 (defun sync-game-object-to-physics (game-object)
   "Sync an object's position/rotation with its physics body."
-  (let ((body (game-object-physics-body game-object)))
-    (when body
-      (let ((pos (ode:body-get-position (phx-obj body))))
-        (setf (game-object-position game-object) (list (cffi:mem-aref pos :float)
-                                                       (cffi:mem-aref pos :float 1)
-                                                       (cffi:mem-aref pos :float 2)))))
-    game-object))
+  game-object)
 
 (defun parse-svg-styles (styles &key fill opacity)
   (let ((fill (if (stringp fill) fill "#000000"))

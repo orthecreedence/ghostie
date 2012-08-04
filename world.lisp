@@ -6,29 +6,29 @@
 (defvar *game-data* nil)
 
 (defclass world ()
-  ((physics :accessor world-physics)
+  ((physics :accessor world-physics :initform nil)
    (position :accessor world-position :initform '(0 0 -10))
    (level :accessor world-level)))
 
 (defun create-world ()
   ;; setup physics
   (let ((world (make-instance 'world)))
-    (setf (world-physics world) (make-physics-world))
     (init-physics (world-physics world))
     world))
 
 (defun world-cleanup (world)
   (dolist (game-object (level-objects (world-level world)))
     (destroy-game-object game-object))
-  (ode:close-ode))
+  ;;TODO: stop chipmunk
+  )
 
 (defun step-world (world dt)
   (unless *quit*
     (let ((phx-world (world-physics world)))
-      (collide phx-world)
-      (dotimes (i (round (+ (/ dt +physics-steps+) +physics-speed+)))
-        (ode:world-quick-step (phx-obj phx-world) +physics-steps+))
-      (joint-group-empty (phx-world-contact-group phx-world)))))
+      ;(dotimes (i (round (+ (/ dt +physics-steps+) +physics-speed+)))
+        ;(ode:world-quick-step (phx-obj phx-world) +physics-steps+))
+      ;(joint-group-empty (phx-world-contact-group phx-world)))))
+      )))
 
 (defun load-assets (world)
   (format t "Starting asset load.~%")

@@ -29,7 +29,6 @@
   (dolist (game-obj (level-objects level))
     (let ((body (game-object-physics-body game-obj)))
       (when body
-        (body-constrain-2d body)
         (sync-game-object-to-physics game-obj)))
     (draw game-obj))
   (dolist (actor (level-actors level))
