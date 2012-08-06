@@ -12,15 +12,16 @@
   "Load the level-name level! Does this by loading the SVG file holding the
   objects for the level, and the associated meta file that describes the scene
   and the actors in the level."
-  (let ((level (make-instance 'level))
-        (objects (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *level-directory* level-name)
-                                      :curve-resolution 20
-                                      :invert-y t
-                                      :ignore-errors t))
-        (level-meta (read-file (format nil "~a/~a/meta.lisp" *level-directory* level-name))))
-    (setf (level-objects level) (svg-to-game-objects objects level-meta :scale (getf level-meta :scale) :center-objects t)
-          (level-actors level) (load-actors (getf level-meta :actors) :scale (getf level-meta :scale)))
-    (setf (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
+  (let* ((level (make-instance 'level))
+         (level-meta (read-file (format nil "~a/~a/meta.lisp" *level-directory* level-name)))
+         (scale (getf level-meta :scale))
+         (objects (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *level-directory* level-name)
+                                       :curve-resolution 20
+                                       :scale (list (car scale) (- (cadr scale)))
+                                       :ignore-errors t)))
+    (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t)
+          (level-actors level) (load-actors (getf level-meta :actors) :scale scale)
+          (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
                                             (level-actors level)))
     level))
 

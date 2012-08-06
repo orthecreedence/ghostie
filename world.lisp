@@ -15,13 +15,6 @@
     ;; setup physics
     (let ((space (cpw:make-space :gravity-y -9.8d0)))
       (setf (cp-a:space-sleep-time-threshold (cpw:base-c space)) 3d0)
-      (let ((ground (cpw:make-shape :segment
-                                    (cpw:space-static-body space)
-                                    (lambda (body)
-                                      (cpw:shape-segment body -200 0 200 0 1)))))
-        (setf (cp-a:shape-u (cpw:base-c ground)) 0.9d0
-              (cp-a:shape-e (cpw:base-c ground)) 0.2d0)
-        (cpw:space-add-shape space ground))
       (setf (world-physics world) space))
     world))
 
@@ -50,9 +43,17 @@
   (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0))
                                                          ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
-
   ;; load the current level
-  (setf (world-level world) (load-level "physics-test"))
+  (setf (world-level world) (load-level "house"))
+  ;(let* ((bb (game-object-bb (car (level-objects (world-level world)))))
+  ;       (space (world-physics world))
+  ;       (ground (cpw:make-shape :segment
+  ;                               (cpw:space-static-body space)
+  ;                               (lambda (body) (cpw:shape-segment body (car bb) (cadr bb) (caddr bb) (cadr bb) 1)))))
+  ;  (setf (cp-a:shape-u (cpw:base-c ground)) 0.9d0
+  ;        (cp-a:shape-e (cpw:base-c ground)) 0.2d0)
+  ;  (cpw:space-add-shape space ground))
+
 
   ;(let ((assets '((:ground #P"resources/ground.ai" 0)
   ;                (:ground-background #P"resources/ground-background.ai" -9)

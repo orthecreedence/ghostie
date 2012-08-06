@@ -5,7 +5,8 @@
    (position :accessor game-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor game-object-rotation :initform 0.0)
    (gl-objects :accessor game-object-gl-objects)
-   (physics-body :accessor game-object-physics-body :initform nil)))
+   (physics-body :accessor game-object-physics-body :initform nil)
+   (bb :accessor game-object-bb :initform nil)))
 
 (defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)))
   (let ((obj (make-instance type :position position)))
@@ -16,7 +17,9 @@
 (defun destroy-game-object (game-object)
   "Clear out a game object, and free all its non-lisp data (gl objects and
   physics)."
-  ;(body-destroy (game-object-physics-body game-object))
+  (let ((body (game-object-physics-body game-object)))
+    (when body
+      (cpw:destroy (game-object-physics-body game-object))))
   (dolist (gl-object (game-object-gl-objects game-object))
     (free-gl-object gl-object)))
 
@@ -118,6 +121,7 @@
           (update-gl-object-vertex-data gl-object vertex-data)))
       (setf (game-object-position game-object) (list (- diff-x)
                                                      (- diff-y)
-                                                     (- diff-z)))))
+                                                     (caddr (game-object-position game-object)))
+            (game-object-bb game-object) (list min-x min-y max-x max-y))))
   game-object)
 
