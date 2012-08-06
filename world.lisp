@@ -11,24 +11,37 @@
    (level :accessor world-level)))
 
 (defun create-world ()
-  ;; setup physics
   (let ((world (make-instance 'world)))
-    (init-physics (world-physics world))
+    ;; setup physics
+    (let ((space (cpw:make-space :gravity-y -9.8d0)))
+      (setf (cp-a:space-sleep-time-threshold (cpw:base-c space)) 3d0)
+      (let ((ground (cpw:make-shape :segment
+                                    (cpw:space-static-body space)
+                                    (lambda (body)
+                                      (cpw:shape-segment body -200 0 200 0 1)))))
+        (setf (cp-a:shape-u (cpw:base-c ground)) 0.9d0
+              (cp-a:shape-e (cpw:base-c ground)) 0.2d0)
+        (cpw:space-add-shape space ground))
+      (setf (world-physics world) space))
     world))
 
 (defun world-cleanup (world)
   (dolist (game-object (level-objects (world-level world)))
     (destroy-game-object game-object))
-  ;;TODO: stop chipmunk
-  )
+  (let ((space (world-physics world)))
+    (dolist (obj (append (cpw:space-bodies space)
+                         (cpw:space-shapes space)
+                         (cpw:space-joints space)))
+      (cpw:destroy obj))
+    (cpw:destroy space)))
 
 (defun step-world (world dt)
-  (unless *quit*
-    (let ((phx-world (world-physics world)))
-      ;(dotimes (i (round (+ (/ dt +physics-steps+) +physics-speed+)))
-        ;(ode:world-quick-step (phx-obj phx-world) +physics-steps+))
-      ;(joint-group-empty (phx-world-contact-group phx-world)))))
-      )))
+  (when *quit* (return-from step-world nil))
+  (let ((space (world-physics world)))
+    (cpw:space-step space)
+    (cpw:sync-space-bodies space)
+    (dolist (game-object (level-objects (world-level world)))
+      (sync-game-object-to-physics game-object))))
 
 (defun load-assets (world)
   (format t "Starting asset load.~%")

@@ -7,7 +7,7 @@
    (gl-objects :accessor game-object-gl-objects)
    (physics-body :accessor game-object-physics-body :initform nil)))
 
-(defun create-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)))
+(defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)))
   (let ((obj (make-instance type :position position)))
     (setf (game-object-gl-objects obj) gl-objects
           (game-object-physics-body obj) physics)
@@ -22,11 +22,22 @@
 
 (defmethod draw ((object game-object))
   (dolist (gl-object (game-object-gl-objects object))
-    (draw-gl-object gl-object :position (game-object-position object))))
+    (let ((physics-body (game-object-physics-body object)))
+      (draw-gl-object gl-object
+                      :color (when (and physics-body (cpw:body-sleeping-p physics-body)) (hex-to-rgb "#444444"))
+                      :position (game-object-position object)
+                      :rotation (list 0 0 1 (- (game-object-rotation object)))))))
 
 (defun sync-game-object-to-physics (game-object)
   "Sync an object's position/rotation with its physics body."
-  game-object)
+  (let ((body (game-object-physics-body game-object)))
+    (when body
+      (cpw:sync-body body)
+      (setf (game-object-position game-object) (list (cpw:body-x body)
+                                                     (cpw:body-y body)
+                                                     0)
+            (game-object-rotation game-object) (cpw:body-angle body))
+      game-object)))
 
 (defun parse-svg-styles (styles &key fill opacity)
   (let ((fill (if (stringp fill) fill "#000000"))
@@ -65,9 +76,9 @@
           for gl-objects being the hash-values of obj-hash do
       (let* ((meta (find-if (lambda (p) (equal (getf p :name) group-name)) (getf objects-meta :object-properties)))
              (depth (getf meta :layer-depth)))
-        (let ((game-object (create-game-object :type object-type
-                                               :gl-objects gl-objects
-                                               :position (list 0 0 (if depth depth 0)))))
+        (let ((game-object (make-game-object :type object-type
+                                             :gl-objects gl-objects
+                                             :position (list 0 0 (if depth depth 0)))))
           (when center-objects
             (center-game-object game-object))
           (push game-object game-objects))))

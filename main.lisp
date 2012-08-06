@@ -22,11 +22,11 @@
 (load "game-classes/game-object")
 (load "game-classes/actor")
 (load "game-classes/level")
-(load "physics/test")
 (load "world")
+(load "physics")
 
 (defun cleanup ()
-  (format t "Cleaning up...~%")
+  (format t "Cleaning up.~%")
   (world-cleanup *world*)
   (cleanup-opengl))
 

@@ -49,9 +49,9 @@
           (aref matrix 11) (coerce tz 'single-float))
     matrix))
 
-(defun m-rotate (x y z theta-degrees)
+(defun m-rotate (x y z theta &key degrees)
   (let* ((matrix (id-matrix 4))
-         (angle-rad (* (mod theta-degrees 360) (/ 3.14159 180)))
+         (angle-rad (if degrees (* (mod theta 360) (/ 3.14159 180)) theta))
          (x2 (* x x))
          (y2 (* y y))
          (z2 (* z z))

@@ -87,9 +87,9 @@
       (gl:free-gl-array gl-arr))
     (gl:bind-buffer :array-buffer 0)))
 
-(defun draw-gl-object (obj &key color position)
+(defun draw-gl-object (obj &key color position rotation)
   (let* ((position (if position position (gl-object-position obj)))
-         (rotation (gl-object-rotation obj))
+         (rotation (if rotation rotation (gl-object-rotation obj)))
          (scale (gl-object-scale obj))
          (model-matrix (id-matrix 4))
          (model-matrix (mat* model-matrix (apply #'m-rotate rotation)))
