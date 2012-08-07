@@ -109,7 +109,7 @@
       (if type
           (coerce color type)
           color))
-    (error (e) (format t "ERRRR:~A~%" e) #(0 0 0 1))))
+    (error (e) (format t "Hex string -> color error: ~a~%" e) #(0 0 0 1))))
 
 (defun read-file (filename)
   "Read a lisp file and parse it into a lisp datastructure."

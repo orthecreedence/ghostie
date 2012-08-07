@@ -7,7 +7,7 @@
 
 (defclass world ()
   ((physics :accessor world-physics :initform nil)
-   (position :accessor world-position :initform '(0 0 -10))
+   (position :accessor world-position :initform '(0 0 -36))
    (level :accessor world-level)))
 
 (defun create-world ()
@@ -44,16 +44,9 @@
                                                          ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1)))
   ;; load the current level
-  (setf (world-level world) (load-level "house"))
-  ;(let* ((bb (game-object-bb (car (level-objects (world-level world)))))
-  ;       (space (world-physics world))
-  ;       (ground (cpw:make-shape :segment
-  ;                               (cpw:space-static-body space)
-  ;                               (lambda (body) (cpw:shape-segment body (car bb) (cadr bb) (caddr bb) (cadr bb) 1)))))
-  ;  (setf (cp-a:shape-u (cpw:base-c ground)) 0.9d0
-  ;        (cp-a:shape-e (cpw:base-c ground)) 0.2d0)
-  ;  (cpw:space-add-shape space ground))
-
+  (setf (world-level world) (load-level "house")
+        (world-position *world*) (getf (level-meta (world-level world)) :camera))
+  (init-level-physics-objects world)
 
   ;(let ((assets '((:ground #P"resources/ground.ai" 0)
   ;                (:ground-background #P"resources/ground-background.ai" -9)

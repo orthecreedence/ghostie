@@ -9,15 +9,19 @@
    (texture :accessor gl-object-texture :initform nil)
    (color :accessor gl-object-color :initarg :color :initform #(0 0 0 1))
    (vao :accessor gl-object-vao :initform nil)
-   (vbos :accessor gl-object-vbos :initform nil)))
+   (vbos :accessor gl-object-vbos :initform nil)
+   (shape-points :accessor gl-object-shape-points :initarg :shape-points :initform nil)
+   (shape-meta :accessor gl-object-shape-meta :initarg :shape-meta :initform nil)))
 
-(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)))
-  (set-gl-object-data (make-instance 'gl-object :position position :scale scale :color color) data texture uv-map))
+(defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
+  (set-gl-object-data (make-instance 'gl-object :position position :scale scale :color color :shape-points shape-points :shape-meta shape-meta) data texture uv-map))
 
 (defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored
   with the gl-object."
   (free-gl-object gl-object)
+  (when (zerop (length triangles))
+    (return-from set-gl-object-data gl-object))
   (multiple-value-bind (vertices index) (create-point-index triangles)
     (let* ((vertex-array (flatten-vertices-into-array vertices))
            (buffers (gl:gen-buffers 2))
@@ -85,7 +89,8 @@
         (setf (gl:glaref gl-arr i) (coerce (aref vertex-data i) 'single-float)))
       (gl:buffer-data :array-buffer :static-draw gl-arr)
       (gl:free-gl-array gl-arr))
-    (gl:bind-buffer :array-buffer 0)))
+    (gl:bind-buffer :array-buffer 0))
+  (setf (gl-object-vertex-data gl-object) vertex-data))
 
 (defun draw-gl-object (obj &key color position rotation)
   (let* ((position (if position position (gl-object-position obj)))

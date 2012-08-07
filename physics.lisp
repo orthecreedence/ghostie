@@ -3,7 +3,7 @@
 (defun add-random-box (world)
   (let ((space (world-physics world))
         (x (- (random 100d0) 50)))
-    (let* ((verts #((-2 -2) (-2 2) (2 2) (2 -2)))
+    (let* ((verts #((-1 -1) (-1 1) (1 1) (1 -1)))
            (moment (cpw:moment-for-poly 1 verts 0 0))
            (box-body (cpw:make-body (lambda () (cp:body-new 1d0 moment))))
            (box-shape (cpw:make-shape :poly box-body (lambda (body) (cpw:shape-poly body verts 0 0)))))

@@ -6,7 +6,7 @@
    (rotation :accessor game-object-rotation :initform 0.0)
    (gl-objects :accessor game-object-gl-objects)
    (physics-body :accessor game-object-physics-body :initform nil)
-   (bb :accessor game-object-bb :initform nil)))
+   (display :accessor game-object-display :initarg :display :initform t)))
 
 (defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)))
   (let ((obj (make-instance type :position position)))
@@ -25,11 +25,12 @@
 
 (defmethod draw ((object game-object))
   (dolist (gl-object (game-object-gl-objects object))
-    (let ((physics-body (game-object-physics-body object)))
-      (draw-gl-object gl-object
-                      :color (when (and physics-body (cpw:body-sleeping-p physics-body)) (hex-to-rgb "#444444"))
-                      :position (game-object-position object)
-                      :rotation (list 0 0 1 (- (game-object-rotation object)))))))
+    (unless (getf (gl-object-shape-meta gl-object) :disconnected)
+      (let ((physics-body (game-object-physics-body object)))
+        (draw-gl-object gl-object
+                        :color (when (and physics-body (cpw:body-sleeping-p physics-body)) (hex-to-rgb "#444444"))
+                        :position (game-object-position object)
+                        :rotation (list 0 0 1 (- (game-object-rotation object))))))))
 
 (defun sync-game-object-to-physics (game-object)
   "Sync an object's position/rotation with its physics body."
@@ -70,11 +71,15 @@
                (color (if (getf styles :fill)
                           (hex-to-rgb (getf styles :fill) :opacity opacity)
                           (vector 0 0 0 opacity)))
-               (triangles (glu-tessellate:tessellate (getf obj :point-data)))
-               (group-name (car (getf obj :group))))
-          (when (> (length triangles) 0)
-            (push (make-gl-object :data triangles :color color :scale scale)
+               (triangles (glu-tessellate:tessellate (getf obj :point-data) :holes (getf obj :holes)))
+               (group-name (car (getf obj :group)))
+               (meta (getf obj :meta))
+               (disconnected (getf meta :disconnected)))
+          (when (or (< 0 (length triangles))
+                    disconnected)
+            (push (make-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (if disconnected (getf obj :point-data) nil))
                   (gethash group-name obj-hash))))))
+    (format t "obj-hash: ~s~%" (loop for k being the hash-keys of obj-hash collect k))
     (loop for group-name being the hash-keys of obj-hash
           for gl-objects being the hash-values of obj-hash do
       (let* ((meta (find-if (lambda (p) (equal (getf p :name) group-name)) (getf objects-meta :object-properties)))
@@ -112,16 +117,17 @@
           (diff-y (- (- min-y) (/ (- max-y min-y) 2)))
           (diff-z (- (- min-z) (/ (- max-z min-z) 2))))
       (dolist (gl-object (game-object-gl-objects game-object))
-        (let ((vertex-data (gl-object-vertex-data gl-object)))
-          (dotimes (i (/ (length vertex-data) 3))
-            (let ((i (* i 3)))
-              (setf (aref vertex-data i) (+ (aref vertex-data i) diff-x)
-                    (aref vertex-data (+ i 1)) (+ (aref vertex-data (+ i 1)) diff-y)
-                    (aref vertex-data (+ i 2)) (+ (aref vertex-data (+ i 2)) diff-z))))
-          (update-gl-object-vertex-data gl-object vertex-data)))
+        (let ((disconnected (getf (gl-object-shape-meta gl-object) :disconnected)))
+          (unless disconnected
+            (let ((vertex-data (gl-object-vertex-data gl-object)))
+              (dotimes (i (/ (length vertex-data) 3))
+                (let ((i (* i 3)))
+                  (setf (aref vertex-data i) (+ (aref vertex-data i) diff-x)
+                        (aref vertex-data (+ i 1)) (+ (aref vertex-data (+ i 1)) diff-y)
+                        (aref vertex-data (+ i 2)) (+ (aref vertex-data (+ i 2)) diff-z))))
+              (update-gl-object-vertex-data gl-object vertex-data)))))
       (setf (game-object-position game-object) (list (- diff-x)
                                                      (- diff-y)
-                                                     (caddr (game-object-position game-object)))
-            (game-object-bb game-object) (list min-x min-y max-x max-y))))
+                                                     (caddr (game-object-position game-object))))))
   game-object)
 

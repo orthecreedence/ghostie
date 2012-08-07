@@ -25,4 +25,5 @@
 
 (defun move-actor (actor x)
   "Move the character on the HORizonal plane."
-  (incf (car (game-object-position actor)) x))
+  (when actor
+    (incf (car (game-object-position actor)) x)))
