@@ -6,7 +6,7 @@
 
 (defvar *render-objs* nil)
 
-(defun init-opengl (background)
+(defun init-opengl ()
   ;; set up blending
   (gl:enable :blend)
   (gl:blend-func :src-alpha :one-minus-src-alpha)
@@ -39,10 +39,7 @@
          (width (aref vport 2))
          (height (aref vport 3)))
     ;; set window size AND setup our view translation matrices
-    (resize-window width height))
-
-  ;; set the background/clear color
-  (apply #'gl:clear-color background))
+    (resize-window width height)))
 
 (defun free-fbos ()
   (loop for (nil fbo) on *render-objs* by #'cddr do
@@ -53,7 +50,7 @@
   (free-fbos)
   (free-shaders))
 
-(defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600) (background '(1 1 1 0)))
+(defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600))
   "Create a window with an opengl context and spray vomit onto the user from the
   new window."
   (glfw:do-window (:width width :height height
@@ -72,7 +69,7 @@
      (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
      (glfw:set-window-size-callback (cffi:callback resize-window-cb))
      (glfw:set-key-callback (cffi:callback key-pressed-cb))
-     (init-opengl background)
+     (init-opengl)
      (setup))
 
     ;; this is our main loop (just call the draw fn over and over)

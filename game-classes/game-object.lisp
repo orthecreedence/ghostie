@@ -77,9 +77,8 @@
                (disconnected (getf meta :disconnected)))
           (when (or (< 0 (length triangles))
                     disconnected)
-            (push (make-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (if disconnected (getf obj :point-data) nil))
+            (push (make-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (getf obj :point-data))
                   (gethash group-name obj-hash))))))
-    (format t "obj-hash: ~s~%" (loop for k being the hash-keys of obj-hash collect k))
     (loop for group-name being the hash-keys of obj-hash
           for gl-objects being the hash-values of obj-hash do
       (let* ((meta (find-if (lambda (p) (equal (getf p :name) group-name)) (getf objects-meta :object-properties)))

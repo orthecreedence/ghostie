@@ -130,3 +130,45 @@
            ((= ,num 2) (boole boole-ior ,(nth 0 vals) ,(nth 1 vals)))
            ((> ,num 2) (boole boole-ior ,(nth 0 vals) (bit-or ,@(cdr vals)))))))
 
+(defun svg-from-polygons (polygons &key random-colors flip-y displace cols)
+  "Given a list of polygons (a polygon is a vector of list point pairs), create
+  an SVG string that displays all of the polygons in different colors for easy
+  visualization. Great for debugging with *last-triangulation-run-log*."
+  (let ((colors '("red" "green" "blue" "orange" "yellow" "red" "pink" "navy"))
+        (c 0)
+        (displace-cols (if cols cols (round (sqrt (length polygons))))))
+    (with-output-to-string (s)
+      (format s "<?xml version=\"1.0\" standalone=\"no\"?>
+              <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">
+              <svg with=\"744\" height=\"1052\">~%")
+      (dolist (p polygons)
+        (let ((color (if random-colors (nth (mod c (length colors)) colors) "#677821"))
+              (displace-x (if displace (* displace (mod c displace-cols)) 0))
+              (displace-y (if displace (* displace (floor (/ c displace-cols))) 0)))
+          (when displace
+            (let* ((pt (aref p 0))
+                   (x (coerce (car pt) 'single-float))
+                   (y (coerce (if flip-y (- (cadr pt)) (cadr pt)) 'single-float))
+                   (dx (+ (- displace-x 10) x))
+                   (dy (+ (- displace-y 10) y)))
+              (format s "<text x=\"~a\" y=\"~a\" font-size=\"12\">~a~a (~a, ~a)</text>~%" dx dy "P" c x y)))
+          (incf c)
+          (format s "<polygon fill=\"~a\" style=\"opacity: ~a;\" points=\"" color (if displace 1 .3))
+          (loop for i from 0 for (x y) across p do
+            (let ((x (coerce x 'single-float))
+                  (y (coerce y 'single-float)))
+              (when (zerop (mod i 3)) (format s "~%      "))
+              (format s "~a,~a " (+ x displace-x) (+ (if flip-y (- y) y) displace-y))))
+          (format s "\" />~%")
+          ;(loop for i from 0 for (x y) across p do
+          ;  (format s "<rect x=\"~a\" y=\"~a\" width=\".05\" height=\".05\" fill=\"#000000\" />~%" (+ x displace-x) (+ (if flip-y (- y) y) displace-y)))
+          ))
+      (format s "</svg>"))))
+
+;(let ((files '("ground.ai" "ground-background.ai" "tree1.ai" "tree2.ai" "tree3.ai" "tree4.ai"))
+;      (polygons nil))
+;  (dolist (file files)
+;    (push (coerce (load-points-from-ai (format nil "resources/levels/trees/~a" file) :precision 2) 'vector)
+;          polygons))
+;  (with-open-file (f "resources/levels/trees/trees.svg" :direction :output :if-exists :supersede)
+;    (format f "~a" (svg-from-polygons polygons :random-colors nil :flip-y t))))

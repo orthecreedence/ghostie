@@ -51,9 +51,6 @@
     (unwind-protect
       (create-window #'main-loop
                      :title "game level"
-                     :background (hex-to-rgb "#262524" :type 'list)
-                     ;:background '(.33 .28 .25 1)
-                     ;:background '(1 1 1 1)
                      :width 900
                      :height 600)
       (progn

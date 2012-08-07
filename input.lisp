@@ -34,7 +34,7 @@
   (when (key= #\R)
     (setf (world-position *world*) '(0 0 -36))
     (sleep .1))
-  (when (key= #\P)
+  (when (key= #\L)
     (world-cleanup *world*)
     (setf *world* (create-world))
     (setup))
@@ -44,8 +44,6 @@
     (recompile-shaders))
   (when (key= #\T)
     (test-gl-funcs))
-  (when (key= #\L)
-    (load-assets *world*))
   (when (or (key= glfw:+key-esc+) (key= #\Q))
     (setf *quit* t)))
 

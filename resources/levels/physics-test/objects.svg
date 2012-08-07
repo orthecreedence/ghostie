@@ -25,15 +25,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.24748737"
-     inkscape:cx="530.30234"
-     inkscape:cy="1007.3161"
+     inkscape:cx="73.973751"
+     inkscape:cy="558.27748"
      inkscape:document-units="px"
-     inkscape:current-layer="svg2"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="962"
-     inkscape:window-height="763"
-     inkscape:window-x="167"
-     inkscape:window-y="26"
+     inkscape:window-width="944"
+     inkscape:window-height="1132"
+     inkscape:window-x="2400"
+     inkscape:window-y="0"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -43,13 +43,34 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <path
-     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m -933.38096,547.2859 210.11173,-84.85281 117.17769,44.44671 121.21831,161.62441 214.15234,-76.77159 56.56855,101.01525 343.45187,-214.15234 80.8122,-153.54319 202.03051,40.4061 101.01526,101.01526 303.04577,101.01525 113.13708,76.7716 513.15755,-137.38075 214.1523,76.7716 109.0965,294.96454"
-     id="path2985"
-     inkscape:connector-curvature="0" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g2992">
+      <g
+         transform="matrix(8.6861927,0,0,0.14285714,-3579.3086,314.80046)"
+         id="g2987">
+        <rect
+           style="fill:#808000;fill-opacity:1"
+           id="rect2985"
+           width="241.42645"
+           height="212.13203"
+           x="224.25386"
+           y="180.60054" />
+      </g>
+      <rect
+         y="413.94577"
+         x="278.80209"
+         height="24.24366"
+         width="1030.3556"
+         id="rect2990"
+         style="fill:#008080;fill-opacity:1" />
+    </g>
+  </g>
 </svg>

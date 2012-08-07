@@ -1,7 +1,7 @@
 (in-package :ghostie)
 
 (defparameter *level-directory* "resources/levels")
-(defconstant +physics-segment-thickness+ 0.1d0)
+(defconstant +physics-segment-thickness+ 1.1d0)
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
@@ -47,9 +47,8 @@
                  (verts (gl-object-shape-points gl-object))
                  (last-pt (if disconnected
                               nil
-                              (list (aref verts (- (length verts) 3))
-                                    (aref verts (- (length verts) 2))))))
-            (format t "body pos: ~s~%" (list position-x position-y))
+                              (list (car (aref verts (- (length verts) 1)))
+                                    (cadr (aref verts (- (length verts) 1)))))))
             (loop for (x y) across verts do
               (let ((x (- x position-x))
                     (y (- y position-y)))
