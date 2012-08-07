@@ -9,7 +9,7 @@
            (box-shape (cpw:make-shape :poly box-body (lambda (body) (cpw:shape-poly body verts 0 0)))))
       (setf (cp-a:shape-u (cpw:base-c box-shape)) 0.7d0
             (cp-a:shape-e (cpw:base-c box-shape)) 0.3d0)
-      (cp:body-set-pos (cpw:base-c box-body) x 100d0)
+      (cp:body-set-pos (cpw:base-c box-body) x 25d0)
       (let ((gl-objects (list (make-gl-object :data (glu-tessellate:tessellate verts)
                                               :position '(0 0 0)
                                               :color (hex-to-rgb "#22cc44")))))

@@ -88,7 +88,7 @@
 (defun resize-window (width height)
   (setf height (max height 1))
   ;(format t "Resize window: ~ax~a~%" width height)
-  (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 0.1 100.0))
+  (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 1.0 6000.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
   (setf *window-width* width
         *window-height* height)
