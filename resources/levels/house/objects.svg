@@ -38,7 +38,7 @@
    id="namedview242"
    showgrid="false"
    inkscape:zoom="0.39333334"
-   inkscape:cx="-825.7652"
+   inkscape:cx="378.03834"
    inkscape:cy="149.66631"
    inkscape:window-x="0"
    inkscape:window-y="10"
@@ -732,11 +732,13 @@
 	</g>
 </g>
 <g
-   id="g3116"><path
+   id="g3116"
+   style="fill:#000000"
+   transform="translate(0,8)"><path
      inkscape:connector-curvature="0"
      id="path3098"
      d="m -2438.1196,793.22034 4349.9603,0"
-     style="fill:none;stroke:#000000;stroke-width:1.03931081px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" /></g><g
+     style="fill:#000000;stroke:#000000;stroke-width:1.03931081px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" /></g><g
    inkscape:groupmode="layer"
    id="layer1"
    inkscape:label="physics" /><g
