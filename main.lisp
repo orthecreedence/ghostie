@@ -2,6 +2,10 @@
 ;; TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 ;;
 ;; Threading:
+;;  - completely init the game thread before doing the render thread. this way
+;;    the data is waiting for render when it comes up.
+;;  - have to create GL-OBJECTs *in* the render thread since they rely on the
+;;    OpenGL context. shit.
 ;;  - when a level is created, create a blank level in the render thread (just
 ;;    to hold the game objects)
 ;;  - when a game object is created, send it (along with its gl objects) to the
