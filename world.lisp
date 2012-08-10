@@ -29,7 +29,7 @@
       (cpw:destroy obj))
     (cpw:destroy space)))
 
-(defun step-world (world dt)
+(defun step-world (world)
   (when *quit* (return-from step-world nil))
   (let ((space (world-physics world)))
     (cpw:space-step space)
@@ -37,13 +37,20 @@
     (dolist (game-object (level-objects (world-level world)))
       (sync-game-object-to-physics game-object))))
 
-(defun load-assets (world)
-  (format t "Starting asset load.~%")
+(defun free-assets ()
+  (loop for (nil obj) on *game-data* by #'cddr do
+    (when (subtypep (type-of obj) 'gl-object)
+      (free-gl-object obj)))
+  (setf *game-data* nil))
+
+(defun init-render ()
   (free-assets)
   ;; this is the quad we render our FBO texture onto
-  (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0))
-                                                         ((1 -1 0) (1 1 0) (-1 1 0)))
-                                                 :uv-map #(0 0 1 0 0 1 1 1)))
+  (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0)) ((1 -1 0) (1 1 0) (-1 1 0)))
+                                                 :uv-map #(0 0 1 0 0 1 1 1))))
+
+(defun load-assets (world)
+  (format t "Starting asset load.~%")
   ;; load the current level
   (setf (world-level world) (load-level "trees"))
   (init-level-physics-objects world)
@@ -64,40 +71,10 @@
       (when camera
         (setf (world-position *world*) camera))))
 
-  ;(let ((assets '((:ground #P"resources/ground.ai" 0)
-  ;                (:ground-background #P"resources/ground-background.ai" -9)
-  ;                (:tree1 #P"resources/tree1.ai" -20.0)
-  ;                (:tree2 #P"resources/tree2.ai" -14.0)
-  ;                (:tree3 #P"resources/tree3.ai" -16.0)
-  ;                (:tree4 #P"resources/tree4.ai" -32.0))))
-  ;  (loop for (key file z-offset) in assets do
-  ;        (format t "Loading ~a...~%" file)
-  ;        (setf (getf *game-data* key)
-  ;              (multiple-value-bind (vertices offset) (load-points-from-ai file :precision 2 :center t :scale '(.1 .1 .1))
-  ;                (make-gl-object :data (cl-triangulation:triangulate (coerce vertices 'vector))
-  ;                                :scale '(1 1 1)
-  ;                                :position (append (mapcar #'- offset) (list z-offset)))))))
-  ;(let* ((m (svgp::mat* (svgp::m-translate 10 10)
-  ;                      (svgp::mat* (svgp::m-rotate 30)
-  ;                                  (svgp::m-translate -10 -10))))
-  ;       (p (mapcar (lambda (pt) (butlast (svgp::matv* m pt)))
-  ;                  '((-10 -10 1) (-10 10 1) (10 10 1) (10 -10 1))))
-  ;       (tri (cl-triangulation:triangulate (coerce p 'vector))))
-  ;  (setf (getf *game-data* :svg0)
-  ;        (make-gl-object :data tri)))
-
-  (setf (getf *game-data* :spike) (make-gl-object :data (load-triangles-from-ply #P"resources/spike.ply") :scale '(.1 .1 .1) :position '(0 0 0)))
   (sleep .1)
   (format t "Finished asset load.~%"))
 
-(defun free-assets ()
-  (loop for (nil obj) on *game-data* by #'cddr do
-    (when (subtypep (type-of obj) 'gl-object)
-      (free-gl-object obj)))
-  (setf *game-data* nil))
-
-(defun draw-world (world dt)
-  (declare (ignore dt))
+(defun draw-world (world)
   (when *quit* (return-from draw-world nil))
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
@@ -107,13 +84,6 @@
   (setf *view-matrix* (apply #'m-translate (world-position world)))
   (set-shader-matrix "cameraToClipMatrix" *perspective-matrix*)
   (draw-level (world-level world))
-  ;(draw (getf *game-data* :tree1) :color '(0 0 0 1))
-  ;(draw (getf *game-data* :ground))
-  ;(draw (getf *game-data* :ground-background))
-  ;(draw (getf *game-data* :tree1))
-  ;(draw (getf *game-data* :tree2))
-  ;(draw (getf *game-data* :tree3))
-  ;(draw (getf *game-data* :tree4))
   (gl:bind-framebuffer-ext :framebuffer 0)
   (let ((fbo (getf *render-objs* :fbo1)))
     (gl:clear :color-buffer-bit :depth-buffer-bit)

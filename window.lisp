@@ -50,7 +50,7 @@
   (free-fbos)
   (free-shaders))
 
-(defun create-window (draw-fn &key (title "windowLOL") (width 800) (height 600))
+(defun create-window (setup-fn render-fn &key (title "windowLOL") (width 800) (height 600))
   "Create a window with an opengl context and spray vomit onto the user from the
   new window."
   (glfw:do-window (:width width :height height
@@ -70,7 +70,7 @@
      (glfw:set-window-size-callback (cffi:callback resize-window-cb))
      (glfw:set-key-callback (cffi:callback key-pressed-cb))
      (init-opengl)
-     (setup))
+     (funcall setup-fn))
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*
@@ -78,7 +78,7 @@
       (return-from glfw::do-open-window))
     (let* ((time (glfw:get-time))
            (dt (- time *last-time*)))
-      (funcall draw-fn dt)
+      (funcall render-fn)
       (key-handler dt)
       (setf *last-time* time))))
 
