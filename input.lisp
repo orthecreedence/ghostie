@@ -40,7 +40,7 @@
     ;(setup)
     )
   (when (key= #\A)
-    (add-random-box world))
+    (enqueue (lambda (game-world) (add-random-box game-world)) :game))
   (when (key= #\C)
     (recompile-shaders))
   (when (key= #\T)

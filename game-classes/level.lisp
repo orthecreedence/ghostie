@@ -1,7 +1,7 @@
 (in-package :ghostie)
 
 (defparameter *level-directory* "resources/levels")
-(defparameter *physics-segment-thickness* 1.0d0)
+(defparameter *physics-segment-thickness* 0.0d0)
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
@@ -68,9 +68,6 @@
 (defun draw-level (level)
   "...draw the entire level..."
   (dolist (game-obj (level-objects level))
-    (let ((body (game-object-physics-body game-obj)))
-      (when body
-        (sync-game-object-to-physics game-obj)))
     (draw game-obj))
   (dolist (actor (level-actors level))
     (draw actor)))

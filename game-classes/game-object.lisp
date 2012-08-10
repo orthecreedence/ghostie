@@ -6,10 +6,12 @@
    (rotation :accessor game-object-rotation :initarg :rotation :initform 0.0)
    (gl-objects :accessor game-object-gl-objects :initarg :gl-objects :initform nil)
    (physics-body :accessor game-object-physics-body :initform nil)
-   (display :accessor game-object-display :initarg :display :initform t)))
+   (meta :accessor game-object-meta :initarg :meta :initform nil)
+   (display :accessor game-object-display :initarg :display :initform t)
+   (render-ref :accessor game-object-render-ref :initarg :render-ref :initform nil)))
 
-(defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)))
-  (let ((obj (make-instance type :position position)))
+(defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
+  (let ((obj (make-instance type :position position :rotation rotation)))
     (setf (game-object-gl-objects obj) gl-objects
           (game-object-physics-body obj) physics)
     obj))
@@ -26,22 +28,35 @@
 (defmethod draw ((object game-object))
   (dolist (gl-object (game-object-gl-objects object))
     (unless (getf (gl-object-shape-meta gl-object) :disconnected)
-      (let ((physics-body (game-object-physics-body object)))
-        (draw-gl-object gl-object
-                        :color (when (and physics-body (cpw:body-sleeping-p physics-body)) (hex-to-rgb "#444444"))
-                        :position (game-object-position object)
-                        :rotation (list 0 0 1 (- (game-object-rotation object))))))))
+      (draw-gl-object gl-object
+                      :color (when (getf (game-object-meta object) :sleeping) (hex-to-rgb "#444444"))
+                      :position (game-object-position object)
+                      :rotation (list 0 0 1 (game-object-rotation object))))))
 
 (defun sync-game-object-to-physics (game-object)
   "Sync an object's position/rotation with its physics body."
   (let ((body (game-object-physics-body game-object)))
     (when body
       (cpw:sync-body body)
-      (setf (game-object-position game-object) (list (cpw:body-x body)
-                                                     (cpw:body-y body)
-                                                     0)
-            (game-object-rotation game-object) (cpw:body-angle body))
-      game-object)))
+      (let ((position (list (cpw:body-x body)
+                            (cpw:body-y body)
+                            0))
+            (rotation (- (cpw:body-angle body)))
+            (sleeping (cpw:body-sleeping-p body)))
+        (unless (and (equal position (game-object-position game-object))
+                     (equal rotation (game-object-rotation game-object))
+                     (eq sleeping (getf (game-object-meta game-object) :sleeping)))
+          (setf (game-object-position game-object) position
+                (game-object-rotation game-object) rotation
+                (getf (game-object-meta game-object) :sleeping) sleeping)
+          (let ((render-game-object (game-object-render-ref game-object)))
+            (when (and (game-object-display game-object) render-game-object)
+              (enqueue (lambda (render-world)
+                         (declare (ignore render-world))
+                         (setf (game-object-position render-game-object) position
+                               (game-object-rotation render-game-object) rotation
+                               (getf (game-object-meta render-game-object) :sleeping) sleeping)))))))))
+  game-object)
 
 (defun parse-svg-styles (styles &key fill opacity)
   (let ((fill (if (stringp fill) fill "#000000"))
@@ -65,13 +80,14 @@
                                        for gl-object = (make-gl-object-from-fake fake-gl-object)
                                        collect gl-object)))
                  (dbg :info "Initializing game object in render.~%")
-                 (push (make-instance 'game-object
-                                      :gl-objects gl-objects
-                                      :name (game-object-name game-object)
-                                      :position (game-object-position game-object)
-                                      :rotation (game-object-rotation game-object))
-                       (level-objects level)))))
-             :render))
+                 (let ((render-game-object (make-instance 'game-object
+                                                          :gl-objects gl-objects
+                                                          :name (game-object-name game-object)
+                                                          :position (game-object-position game-object)
+                                                          :rotation (game-object-rotation game-object))))
+                   (push render-game-object (level-objects level))
+                   (setf (game-object-render-ref game-object) render-game-object))))
+    :render)))
 
 (defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) center-objects)
   (let ((obj-hash (make-hash-table :test #'equal))
@@ -104,8 +120,8 @@
           (when center-objects
             (center-game-object game-object))
           (push game-object game-objects))))
-    game-objects
-    (sync-game-objects-to-render game-objects)))
+    (sync-game-objects-to-render game-objects)
+    game-objects))
 
 (defun center-game-object (game-object)
   "Center a game object's gl objects based on the min/max sums of all of their

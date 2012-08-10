@@ -33,8 +33,8 @@
   (declare (ignore world))
   (free-gl-assets))
 
-(defun step-world (world)
-  (when *quit* (return-from step-world nil))
+(defun step-game-world (world)
+  (when *quit* (return-from step-game-world nil))
   (let ((space (world-physics world)))
     (cpw:space-step space)
     (cpw:sync-space-bodies space)
@@ -56,7 +56,7 @@
 
 (defun load-game-assets (world)
   ;; load the current level
-  (setf (world-level world) (load-level "trees"))
+  (setf (world-level world) (load-level "physics-test"))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
     (let* ((camera (getf level-meta :camera))
