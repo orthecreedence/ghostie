@@ -1,5 +1,15 @@
 (in-package :ghostie)
 
+(defconstant +log-levels+ '(:emerg 0
+                            :error 1
+                            :warning 2
+                            :notice 3
+                            :info 4
+                            :debug 5))
+(defun dbg (loglevel &rest format-args)
+  (when (<= (getf +log-levels+ loglevel) (getf +log-levels+ *log-level*))
+    (apply #'format (append (list t) format-args))))
+
 (defun flatten-image-data (data)
   (let* ((ax (array-dimension data 0))
          (ay (array-dimension data 1))
@@ -109,7 +119,7 @@
       (if type
           (coerce color type)
           color))
-    (error (e) (format t "Hex string -> color error: ~a~%" e) #(0 0 0 1))))
+    (error (e) (dbg :debug "Hex string -> color error: ~a~%" e) #(0 0 0 1))))
 
 (defun read-file (filename)
   "Read a lisp file and parse it into a lisp datastructure."

@@ -1,5 +1,7 @@
 (in-package :ghostie)
 
+(defparameter *log-level* :debug)
+
 ;; define an "infinity" value
 (defconstant +infinity-f+ most-positive-single-float)
 (defconstant +neg-infinity-f+ most-negative-single-float)

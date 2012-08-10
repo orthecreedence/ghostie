@@ -74,12 +74,11 @@
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*
-      (cleanup)
       (return-from glfw::do-open-window))
     (let* ((time (glfw:get-time))
            (dt (- time *last-time*)))
-      (funcall render-fn)
-      (key-handler dt)
+      (funcall render-fn dt)
+      ;(key-handler dt)
       (setf *last-time* time))))
 
 (defun resize-window (width height)

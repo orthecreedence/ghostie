@@ -6,15 +6,50 @@
    (scale :accessor gl-object-scale :initarg :scale :initform '(1 1 1))
    (position :accessor gl-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor gl-object-rotation :initarg :rotation :initform '(0 0 0 0))
-   (texture :accessor gl-object-texture :initform nil)
+   (texture :accessor gl-object-texture :initarg :texture :initform nil)
+   (uv-map :accessor gl-object-uv-map :initarg :uv-map :initform nil)
    (color :accessor gl-object-color :initarg :color :initform #(0 0 0 1))
    (vao :accessor gl-object-vao :initform nil)
    (vbos :accessor gl-object-vbos :initform nil)
    (shape-points :accessor gl-object-shape-points :initarg :shape-points :initform nil)
-   (shape-meta :accessor gl-object-shape-meta :initarg :shape-meta :initform nil)))
+   (shape-meta :accessor gl-object-shape-meta :initarg :shape-meta :initform nil)
+   (fake :accessor gl-object-fakep :initarg :fake :initform nil)))
 
 (defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
   (set-gl-object-data (make-instance 'gl-object :position position :scale scale :color color :shape-points shape-points :shape-meta shape-meta) data texture uv-map))
+
+(defun make-fake-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
+  (let ((vertex-data (coerce (loop for ((x1 y1) (x2 y2) (x3 y3))
+                                   in data
+                                   append (list x1 y1 0d0 x2 y2 0d0 x3 y3 0d0)) 'vector)))
+    (make-instance 'gl-object :fake t
+                              :vertex-data vertex-data
+                              :position position
+                              :scale scale
+                              :color color
+                              :shape-points shape-points
+                              :shape-meta shape-meta
+                              :texture texture
+                              :uv-map uv-map)))
+
+(defun make-gl-object-from-fake (fake-gl-object)
+  (let ((triangles (loop for (x1 y1 nil x2 y2 nil x3 y3 nil)
+                         on (coerce (gl-object-vertex-data fake-gl-object) 'list)
+                         by #'(lambda (x) (cdddr (cdddr (cdddr x))))
+                         collect (list (list x1 y1) (list x2 y2) (list x3 y3)))))
+    (make-gl-object :data triangles
+                    :position (gl-object-position fake-gl-object)
+                    :scale (gl-object-scale fake-gl-object)
+                    :color (gl-object-color fake-gl-object)
+                    :shape-points (gl-object-shape-points fake-gl-object)
+                    :shape-meta (gl-object-shape-meta fake-gl-object)
+                    :texture (gl-object-texture fake-gl-object)
+                    :uv-map (gl-object-uv-map fake-gl-object))))
+
+(loop for (x1 y1 x2 y2 x3 y3)
+      on '(0 0 0 1 1 1 1 2 3 4 5 6)
+      by #'(lambda (x) (cddddr (cdr (cdr x))))
+      collect (list (list x1 y1) (list x2 y2) (list x3 y3)))
 
 (defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored
@@ -82,15 +117,17 @@
 (defun update-gl-object-vertex-data (gl-object vertex-data)
   "Given a set of raw vertex data, reset the buffer objects in the gl object so
   the new data is reflected. New data *must* be the same size as the old data."
-  (let ((vertex-buffer (getf (gl-object-vbos gl-object) :vertex)))
-    (gl:bind-buffer :array-buffer vertex-buffer)
-    (let ((gl-arr (gl:alloc-gl-array :float (length vertex-data))))
-      (dotimes (i (length vertex-data))
-        (setf (gl:glaref gl-arr i) (coerce (aref vertex-data i) 'single-float)))
-      (gl:buffer-data :array-buffer :static-draw gl-arr)
-      (gl:free-gl-array gl-arr))
-    (gl:bind-buffer :array-buffer 0))
-  (setf (gl-object-vertex-data gl-object) vertex-data))
+  (if (gl-object-fakep gl-object)
+      (setf (gl-object-vertex-data gl-object) vertex-data)
+      (let ((vertex-buffer (getf (gl-object-vbos gl-object) :vertex)))
+        (gl:bind-buffer :array-buffer vertex-buffer)
+        (let ((gl-arr (gl:alloc-gl-array :float (length vertex-data))))
+          (dotimes (i (length vertex-data))
+            (setf (gl:glaref gl-arr i) (coerce (aref vertex-data i) 'single-float)))
+          (gl:buffer-data :array-buffer :static-draw gl-arr)
+          (gl:free-gl-array gl-arr))
+        (gl:bind-buffer :array-buffer 0)
+        (setf (gl-object-vertex-data gl-object) vertex-data))))
 
 (defun draw-gl-object (obj &key color position rotation)
   (let* ((position (if position position (gl-object-position obj)))
@@ -138,6 +175,8 @@
     vert-array))
 
 (defmethod free-gl-object (gl-object)
+  (when (gl-object-fakep gl-object)
+    (return-from free-gl-object t))
   (when (gl-object-texture gl-object)
     (gl:delete-textures (list (gl-object-texture gl-object))))
   (when (gl-object-vbos gl-object)

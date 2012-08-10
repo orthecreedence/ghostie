@@ -19,7 +19,7 @@
       (setf (world-physics world) space))
     world))
 
-(defun world-cleanup (world)
+(defun world-game-cleanup (world)
   (dolist (game-object (level-objects (world-level world)))
     (destroy-game-object game-object))
   (let ((space (world-physics world)))
@@ -29,6 +29,10 @@
       (cpw:destroy obj))
     (cpw:destroy space)))
 
+(defun world-render-cleanup (world)
+  (declare (ignore world))
+  (free-gl-assets))
+
 (defun step-world (world)
   (when *quit* (return-from step-world nil))
   (let ((space (world-physics world)))
@@ -37,20 +41,20 @@
     (dolist (game-object (level-objects (world-level world)))
       (sync-game-object-to-physics game-object))))
 
-(defun free-assets ()
+(defun free-gl-assets ()
   (loop for (nil obj) on *game-data* by #'cddr do
     (when (subtypep (type-of obj) 'gl-object)
       (free-gl-object obj)))
   (setf *game-data* nil))
 
-(defun init-render ()
-  (free-assets)
+(defun init-render (world)
+  (free-gl-assets)
+  (apply #'gl:clear-color (getf (world-draw-meta world) :background))
   ;; this is the quad we render our FBO texture onto
   (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0)) ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1))))
 
-(defun load-assets (world)
-  (format t "Starting asset load.~%")
+(defun load-game-assets (world)
   ;; load the current level
   (setf (world-level world) (load-level "trees"))
   (init-level-physics-objects world)
@@ -66,13 +70,14 @@
       (setf (getf (world-draw-meta world) :background) background
             (getf (world-draw-meta world) :fog-amt) (if fog-amt fog-amt 0.0)
             (getf (world-draw-meta world) :fog-color) fog-color)
-      (format t "meta: ~s~%" (world-draw-meta world))
-      (apply #'gl:clear-color background)
       (when camera
         (setf (world-position *world*) camera))))
 
-  (sleep .1)
-  (format t "Finished asset load.~%"))
+  (enqueue (lambda (render-world)
+             (dbg :info "Copying game world meta to render world.~%")
+             (setf (world-draw-meta render-world) (copy-tree (world-draw-meta world))))
+           :render)
+  (dbg :info "Finished asset load.~%"))
 
 (defun draw-world (world)
   (when *quit* (return-from draw-world nil))

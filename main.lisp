@@ -26,17 +26,17 @@
 (in-package :ghostie)
 
 (defparameter *world* nil)
-(defparameter *main-thread* nil)
 (defparameter *game-thread* nil)
+(defparameter *render-thread* nil)
 
 (setf *random-state* (make-random-state t))
 
 (define-condition game-quit (error) ())
 (defparameter *quit* nil)
 
+(load "config")
 (load "util")
 (load "sync")
-(load "config")
 (load "matrix")
 (load "opengl/shaders")
 (load "opengl/fbo")
@@ -49,61 +49,79 @@
 (load "world")
 (load "physics")
 
-(defun cleanup ()
-  (format t "Cleaning up.~%")
-  (world-cleanup *world*)
+(defun cleanup-game (world)
+  (dbg :info "Cleaning up game world~%")
+  (world-game-cleanup world))
+
+(defun cleanup-render (world)
+  (dbg :info "Cleaning up render world~%")
+  (world-render-cleanup world)
   (cleanup-opengl))
 
 (defun stop (&key force)
-  (dolist (thread (list *game-thread* *main-thread*))
-    (when (bt:threadp thread)
+  (setf *quit* t)
+  (dolist (thread (list *game-thread* *render-thread*))
+    (when (and (bt:threadp thread)
+               (bt:thread-alive-p thread))
       (if force
           (bt:destroy-thread thread)
-          (when (bt:thread-alive-p thread)
-            (bt:join-thread thread)))))
-  (setf *main-thread* nil
-        *game-thread* nil))
+          (bt:join-thread thread))
+      (dbg :info "Ghostie thread stopped (:force ~a)~%" force))))
 
-(defun setup ()
-  (load-assets *world*))
+(defun setup-game ()
+  (dbg :info "~%Loading Ghostie~%---------------------~%")
+  (load-game-assets *world*))
 
 (defun step-game (world)
-  (process-queue *world* :game)
-  (step-world world))
+  (handler-case
+    (progn
+      (when *quit* (error 'game-quit))
+      (process-queue *world* :game)
+      (step-world world))
+    (error (e)
+      (cleanup-game world)
+      (error e))))
 
-(defun step-render (world)
-  (process-queue world :render)
-  (draw-world world))
+(defun step-render (world dt)
+  (handler-case
+    (progn
+      (key-handler world dt)
+      (process-queue world :render)
+      (draw-world world))
+    (error (e)
+      (cleanup-render world)
+      (error e))))
 
 (defun game-thread ()
-  (setup)
   (handler-case
-    (loop
+    (loop while (not *quit*) do
       (step-game *world*))
     (game-quit ()
-      (cleanup))
+      (cleanup-game *world*))
     (error (e)
-      (format t "Uncaught error in game thread: ~a~%" e))))
+      (format t "Uncaught error in game thread: ~a~%" e)
+      (cleanup-game *world*)))
+  (dbg :info "Game thread exit.~%"))
 
 (defun render-thread ()
   (let ((world (create-world)))
-    (create-window (lambda () (init-render))
-                   (lambda () (step-render world))
+    (create-window (lambda ()
+                     (process-queue world :render)
+                     (init-render world))
+                   (lambda (dt) (step-render world dt))
                    :title "Ghostie"
                    :width 900
-                   :height 600)))
-
-(defun run-app ()
-  (setf *world* (create-world))
-  (let ((*quit* nil))
-    (unwind-protect
-      (progn
-        (init-message-queue)
-        (setf *game-thread* (bt:make-thread #'game-thread))
-        (render-thread))
-      (stop))))
+                   :height 600))
+  (dbg :info "Render thread exit.~%"))
 
 (defun main ()
-  (stop)
-  (setf *main-thread* (bt:make-thread #'run-app :name "game-thread")))
+  (bt:make-thread (lambda ()
+                    (stop :force t)
+                    (setf *world* (create-world))
+                    (setf *quit* nil)
+                    (init-message-queue)
+                    (setup-game)
+                    (setf *game-thread* (bt:make-thread #'game-thread))
+                    (setf *render-thread* (bt:make-thread #'render-thread)))))
+
 

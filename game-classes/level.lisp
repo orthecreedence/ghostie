@@ -8,7 +8,7 @@
    (main-actor :accessor level-main-actor :initform nil)
    (actors :accessor level-actors :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)
-   (meta :accessor level-meta :initform nil)))
+   (meta :accessor level-meta :initarg :meta :initform nil)))
 
 (defun load-level (level-name)
   "Load the level-name level! Does this by loading the SVG file holding the
@@ -21,6 +21,10 @@
                                        :curve-resolution 20
                                        :scale (list (car scale) (- (cadr scale)))
                                        :ignore-errors t)))
+    (enqueue (lambda (world)
+               (dbg :info "Copying level to render.~%")
+               (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
+             :render)
     (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t)
           (level-actors level) (load-actors (getf level-meta :actors) :scale scale)
           (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))

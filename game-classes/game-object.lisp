@@ -1,10 +1,10 @@
 (in-package :ghostie)
 
 (defclass game-object ()
-  ((name :accessor game-object-name :initform "game-object")
+  ((name :accessor game-object-name :initarg :name :initform "game-object")
    (position :accessor game-object-position :initarg :position :initform '(0 0 0))
-   (rotation :accessor game-object-rotation :initform 0.0)
-   (gl-objects :accessor game-object-gl-objects)
+   (rotation :accessor game-object-rotation :initarg :rotation :initform 0.0)
+   (gl-objects :accessor game-object-gl-objects :initarg :gl-objects :initform nil)
    (physics-body :accessor game-object-physics-body :initform nil)
    (display :accessor game-object-display :initarg :display :initform t)))
 
@@ -57,6 +57,22 @@
             (setf fill value)))))
     (list :fill fill :opacity opacity)))
 
+(defun sync-game-objects-to-render (game-objects)
+  (dolist (game-object game-objects)
+    (enqueue (lambda (world)
+               (let ((level (world-level world))
+                     (gl-objects (loop for fake-gl-object in (game-object-gl-objects game-object)
+                                       for gl-object = (make-gl-object-from-fake fake-gl-object)
+                                       collect gl-object)))
+                 (dbg :info "Initializing game object in render.~%")
+                 (push (make-instance 'game-object
+                                      :gl-objects gl-objects
+                                      :name (game-object-name game-object)
+                                      :position (game-object-position game-object)
+                                      :rotation (game-object-rotation game-object))
+                       (level-objects level)))))
+             :render))
+
 (defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) center-objects)
   (let ((obj-hash (make-hash-table :test #'equal))
         (game-objects nil)
@@ -75,9 +91,8 @@
                (group-name (car (getf obj :group)))
                (meta (getf obj :meta))
                (disconnected (getf meta :disconnected)))
-          (when (or (< 0 (length triangles))
-                    disconnected)
-            (push (make-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (getf obj :point-data))
+          (when (or (< 0 (length triangles)) disconnected)
+            (push (make-fake-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (getf obj :point-data))
                   (gethash group-name obj-hash))))))
     (loop for group-name being the hash-keys of obj-hash
           for gl-objects being the hash-values of obj-hash do
@@ -89,7 +104,8 @@
           (when center-objects
             (center-game-object game-object))
           (push game-object game-objects))))
-    game-objects))
+    game-objects
+    (sync-game-objects-to-render game-objects)))
 
 (defun center-game-object (game-object)
   "Center a game object's gl objects based on the min/max sums of all of their
