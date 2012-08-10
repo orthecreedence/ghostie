@@ -1,7 +1,7 @@
 (in-package :ghostie)
 
 (defparameter *level-directory* "resources/levels")
-(defconstant +physics-segment-thickness+ 1.1d0)
+(defparameter *physics-segment-thickness* 1.0d0)
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
@@ -55,7 +55,7 @@
                 (when last-pt
                   (let ((shape (cpw:make-shape :segment
                                                body
-                                               (lambda (body) (cpw:shape-segment body (car last-pt) (cadr last-pt) x y +physics-segment-thickness+)))))
+                                               (lambda (body) (cpw:shape-segment body (car last-pt) (cadr last-pt) x y *physics-segment-thickness*)))))
                     (setf (cp-a:shape-u (cpw:base-c shape)) 0.7d0
                           (cp-a:shape-e (cpw:base-c shape)) 0.1d0)
                     (cpw:space-add-shape space shape)))
