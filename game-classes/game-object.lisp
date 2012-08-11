@@ -33,7 +33,7 @@
                       :position (game-object-position object)
                       :rotation (list 0 0 1 (game-object-rotation object))))))
 
-(defun sync-game-object-to-physics (game-object)
+(defun sync-game-object-to-physics (game-object &key render)
   "Sync an object's position/rotation with its physics body."
   (let ((body (game-object-physics-body game-object)))
     (when body
@@ -43,19 +43,17 @@
                             0))
             (rotation (- (cpw:body-angle body)))
             (sleeping (cpw:body-sleeping-p body)))
-        (unless (and (equal position (game-object-position game-object))
-                     (equal rotation (game-object-rotation game-object))
-                     (eq sleeping (getf (game-object-meta game-object) :sleeping)))
-          (setf (game-object-position game-object) position
-                (game-object-rotation game-object) rotation
-                (getf (game-object-meta game-object) :sleeping) sleeping)
-          (let ((render-game-object (game-object-render-ref game-object)))
-            (when (and (game-object-display game-object) render-game-object)
-              (enqueue (lambda (render-world)
-                         (declare (ignore render-world))
-                         (setf (game-object-position render-game-object) position
-                               (game-object-rotation render-game-object) rotation
-                               (getf (game-object-meta render-game-object) :sleeping) sleeping)))))))))
+        (setf (game-object-position game-object) position
+              (game-object-rotation game-object) rotation
+              (getf (game-object-meta game-object) :sleeping) sleeping)
+        (let ((render-game-object (game-object-render-ref game-object)))
+          (when (and render (game-object-display game-object) render-game-object)
+            (enqueue (lambda (render-world)
+                       (declare (ignore render-world))
+                       (setf (game-object-position render-game-object) position
+                             (game-object-rotation render-game-object) rotation
+                             (getf (game-object-meta render-game-object) :sleeping) sleeping))
+                     :render))))))
   game-object)
 
 (defun parse-svg-styles (styles &key fill opacity)

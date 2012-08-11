@@ -29,6 +29,12 @@
       (cpw:destroy obj))
     (cpw:destroy space)))
 
+(defun game-world-sync (world)
+  (let ((level (world-level world)))
+    (dolist (game-object (append (level-objects level)
+                                 (level-actors level)))
+      (sync-game-object-to-physics game-object :render t))))
+
 (defun world-render-cleanup (world)
   (declare (ignore world))
   (free-gl-assets))

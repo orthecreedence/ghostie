@@ -77,6 +77,8 @@
 (defun step-render (world dt)
   (handler-case
     (progn
+      ;(dbg :debug "Render queue items: ~a~%" (jpl-queues:size *queue-game-to-render*))
+      (enqueue (lambda (game-world) (game-world-sync game-world)) :game)
       (key-handler world dt)
       (process-queue world :render)
       (draw-world world))
@@ -90,6 +92,7 @@
   (unwind-protect
     (handler-case
       (loop while (not *quit*) do
+        ;(dbg :debug "Stepping game!~%")
         (step-game *world*))
       (game-quit ()
         (cleanup-game *world*))

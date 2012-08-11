@@ -9,7 +9,7 @@
         *queue-render-to-game* (make-instance 'jpl-queues:synchronized-queue
                                               :queue (make-instance 'jpl-queues:unbounded-fifo-queue))))
 
-(defun enqueue (fn &optional (queue :render))
+(defun enqueue (fn queue)
   (assert (find queue '(:game :render)))
   (jpl-queues:enqueue fn (case queue
                            (:game *queue-render-to-game*)
