@@ -11,33 +11,46 @@
    (level :accessor world-level :initform nil)
    (draw-meta :accessor world-draw-meta :initform nil)))
 
-(defun create-world ()
-  (let ((world (make-instance 'world)))
+(defun create-world (&optional world)
+  (let ((world (if world world (make-instance 'world))))
     ;; setup physics
     (let ((space (cpw:make-space :gravity-y -9.8d0)))
       (setf (cp-a:space-sleep-time-threshold (cpw:base-c space)) 3d0)
       (setf (world-physics world) space))
+    (unless (world-draw-meta world)
+      (setf (getf (world-draw-meta world) :background) (hex-to-rgb "#222222" :type 'list)
+            (getf (world-draw-meta world) :fog-amt) 0.0))
     world))
 
 (defun world-game-cleanup (world)
-  (dolist (game-object (level-objects (world-level world)))
-    (destroy-game-object game-object))
+  (dbg :info "Cleaning up game world~%")
+  (when (world-level world)
+    (level-cleanup (world-level world)))
   (let ((space (world-physics world)))
     (dolist (obj (append (cpw:space-bodies space)
                          (cpw:space-shapes space)
                          (cpw:space-joints space)))
       (cpw:destroy obj))
-    (cpw:destroy space)))
+    (cpw:destroy space))
+  (setf (world-physics world) nil
+        (world-level world) nil
+        (world-draw-meta world) nil)
+  world)
+
+(defun world-render-cleanup (world)
+  (dbg :info "Cleaning up render world~%")
+  (when (world-level world)
+    (level-cleanup (world-level world)))
+  (setf (world-level world) nil
+        (world-draw-meta world) nil)
+  (free-gl-assets)
+  world)
 
 (defun game-world-sync (world)
   (let ((level (world-level world)))
     (dolist (game-object (append (level-objects level)
                                  (level-actors level)))
       (sync-game-object-to-physics game-object :render t))))
-
-(defun world-render-cleanup (world)
-  (declare (ignore world))
-  (free-gl-assets))
 
 (defun step-game-world (world)
   (when *quit* (return-from step-game-world nil))
@@ -62,7 +75,7 @@
 
 (defun load-game-assets (world)
   ;; load the current level
-  (setf (world-level world) (load-level "physics-test"))
+  (setf (world-level world) (load-level "house"))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
     (let* ((camera (getf level-meta :camera))
@@ -79,16 +92,21 @@
       (when camera
         (setf (world-position *world*) camera))))
 
-  (enqueue (lambda (render-world)
-             (dbg :info "Copying game world meta to render world.~%")
-             (setf (world-draw-meta render-world) (copy-tree (world-draw-meta world))))
-           :render)
+  (let ((meta (copy-tree (world-draw-meta world)))
+        (position (copy-tree (world-position world))))
+    (enqueue (lambda (render-world)
+               (dbg :info "Copying game world meta to render world.~%")
+               (setf (world-draw-meta render-world) meta
+                     (world-position render-world) position))
+             :render))
   (dbg :info "Finished asset load.~%"))
 
 (defun draw-world (world)
   (when *quit* (return-from draw-world nil))
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
+  (unless (world-level world)
+    (return-from draw-world nil))
   (use-shader :main)
   (set-shader-var #'gl:uniformf "fogAmt" (getf (world-draw-meta world) :fog-amt))
   (when (getf (world-draw-meta world) :fog-color)

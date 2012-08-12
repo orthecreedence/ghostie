@@ -32,6 +32,16 @@
           (level-meta level) level-meta)
     level))
 
+(defun level-cleanup (level)
+  (dolist (game-object (append (level-objects level)
+                               (level-actors level)))
+    (destroy-game-object game-object))
+  (setf (level-objects level) nil
+        (level-actors level) nil
+        (level-main-actor level) nil
+        (level-meta level) nil)
+  level)
+
 (defun init-level-physics-objects (world)
   "Determine the objects used as collision objects in this level and create
   physics bodies for them."

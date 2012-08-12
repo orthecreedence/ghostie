@@ -1,16 +1,3 @@
-;; -----------------------------------------------------------------------------
-;; TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-;;
-;; Threading:
-;;  - sync adding of new game objects
-;;  - for each game loop, if a game object's position/rotation change at all (or
-;;    anything that affects drawing) send a diff function onto the render queue.
-;;    this should only happen for diffs!
-;;  - when the world position changes in render, sync it to game.
-;;
-;; TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-;; -----------------------------------------------------------------------------
-
 (ql:quickload :ghostie)
 
 (defpackage :ghostie
@@ -42,11 +29,9 @@
 (load "physics")
 
 (defun cleanup-game (world)
-  (dbg :info "Cleaning up game world~%")
   (world-game-cleanup world))
 
 (defun cleanup-render (world)
-  (dbg :info "Cleaning up render world~%")
   (world-render-cleanup world)
   (cleanup-opengl))
 
@@ -60,9 +45,9 @@
           (bt:join-thread thread))
       (dbg :info "Ghostie thread stopped (:force ~a)~%" force))))
 
-(defun setup-game ()
+(defun setup-game (world)
   (dbg :info "~%Loading Ghostie~%---------------------~%")
-  (load-game-assets *world*))
+  (load-game-assets world))
 
 (defun step-game (world)
   (handler-case
@@ -91,9 +76,12 @@
 (defun game-thread ()
   (unwind-protect
     (handler-case
-      (loop while (not *quit*) do
-        ;(dbg :debug "Stepping game!~%")
-        (step-game *world*))
+      (progn
+        (setf *world* (create-world))
+        (setup-game *world*)
+        (loop while (not *quit*) do
+          ;(dbg :debug "Stepping game!~%")
+          (step-game *world*)))
       (game-quit ()
         (cleanup-game *world*))
       (error (e)
@@ -105,23 +93,22 @@
 
 (defun render-thread ()
   (let ((world (create-world)))
-    (create-window (lambda ()
-                     (process-queue world :render)
-                     (init-render world))
-                   (lambda (dt) (step-render world dt))
-                   :title "Ghostie"
-                   :width 900
-                   :height 600)
+    (let ((*world* world))
+      (create-window (lambda ()
+                       (process-queue world :render)
+                       (init-render world))
+                     (lambda (dt) (step-render world dt))
+                     :title "Ghostie"
+                     :width 900
+                     :height 600))
     (setf *quit* t))
   (dbg :info "Render thread exit.~%"))
 
 (defun main ()
   (bt:make-thread (lambda ()
                     (stop :force t)
-                    (setf *world* (create-world))
                     (setf *quit* nil)
                     (init-message-queue)
-                    (setup-game)
                     (setf *game-thread* (bt:make-thread #'game-thread))
                     (setf *render-thread* (bt:make-thread #'render-thread)))))
 
