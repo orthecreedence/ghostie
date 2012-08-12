@@ -8,7 +8,8 @@
    (physics-body :accessor game-object-physics-body :initform nil)
    (meta :accessor game-object-meta :initarg :meta :initform nil)
    (display :accessor game-object-display :initarg :display :initform t)
-   (render-ref :accessor game-object-render-ref :initarg :render-ref :initform nil)))
+   (render-ref :accessor game-object-render-ref :initarg :render-ref :initform nil)
+   (last-sync :accessor game-object-last-sync :initform nil)))
 
 (defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
   (let ((obj (make-instance type :position position :rotation rotation)))
@@ -42,18 +43,25 @@
                             (cpw:body-y body)
                             0))
             (rotation (- (cpw:body-angle body)))
-            (sleeping (cpw:body-sleeping-p body)))
-        (setf (game-object-position game-object) position
-              (game-object-rotation game-object) rotation
-              (getf (game-object-meta game-object) :sleeping) sleeping)
-        (let ((render-game-object (game-object-render-ref game-object)))
-          (when (and render (game-object-display game-object) render-game-object)
-            (enqueue (lambda (render-world)
-                       (declare (ignore render-world))
-                       (setf (game-object-position render-game-object) position
-                             (game-object-rotation render-game-object) rotation
-                             (getf (game-object-meta render-game-object) :sleeping) sleeping))
-                     :render))))))
+            (sleeping (cpw:body-sleeping-p body))
+            (last-sync (game-object-last-sync game-object)))
+        (unless (and (equal (getf last-sync :position) position)
+                     (equal (getf last-sync :rotation) rotation)
+                     (equal (getf last-sync :sleeping) sleeping))
+          (setf (game-object-position game-object) position
+                (game-object-rotation game-object) rotation
+                (getf (game-object-meta game-object) :sleeping) sleeping)
+          (let ((render-game-object (game-object-render-ref game-object)))
+            (when (and render (game-object-display game-object) render-game-object)
+              (setf (game-object-last-sync game-object) (list :position position
+                                                              :rotation rotation
+                                                              :sleeping sleeping))
+              (enqueue (lambda (render-world)
+                         (declare (ignore render-world))
+                         (setf (game-object-position render-game-object) position
+                               (game-object-rotation render-game-object) rotation
+                               (getf (game-object-meta render-game-object) :sleeping) sleeping))
+                       :render)))))))
   game-object)
 
 (defun parse-svg-styles (styles &key fill opacity)

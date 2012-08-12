@@ -65,6 +65,8 @@
       ;(dbg :debug "Render queue items: ~a~%" (jpl-queues:size *queue-game-to-render*))
       (enqueue (lambda (game-world) (game-world-sync game-world)) :game)
       (key-handler world dt)
+      (when (not (zerop (jpl-queues:size *queue-game-to-render*)))
+        (format t "Render queue size: ~a~%" (jpl-queues:size *queue-game-to-render*)))
       (process-queue world :render)
       (draw-world world))
     (error (e)

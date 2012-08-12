@@ -96,6 +96,7 @@
         (position (copy-tree (world-position world))))
     (enqueue (lambda (render-world)
                (dbg :info "Copying game world meta to render world.~%")
+               (apply #'gl:clear-color (getf meta :background))
                (setf (world-draw-meta render-world) meta
                      (world-position render-world) position))
              :render))
