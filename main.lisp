@@ -50,14 +50,15 @@
   (load-game-assets world))
 
 (defun step-game (world)
-  (handler-case
+  ;(handler-case
     (progn
       (when *quit* (error 'game-quit))
       (process-queue *world* :game)
       (step-game-world world))
-    (error (e)
-      (cleanup-game world)
-      (error e))))
+    ;(error (e)
+    ;  (cleanup-game world)
+    ;  (error e)))
+    )
 
 (defun step-render (world dt)
   ;(handler-case

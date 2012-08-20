@@ -2,16 +2,16 @@
  ;:actors ((:actor "ghostie" :start-pos (-480 -450 0) :main t :scale (.5 .5 .5)))
  :actors ((:actor "pill" :start-pos (-480 -470 0) :main t :scale (1 1 1)))
  :scale (1 1 1)
- :camera (99 205 -270)
+ :camera (99 205 -400)
  :background "#262524"
  :fog-color "#262524"
  :fog-amt 1.0
- :fog-start 600
- :fog-end 1600
+ :fog-start 800
+ :fog-end 1800
  :gravity -700
  :physics-iterations 10
  :object-properties ((:name "ground"
-                      :layer-depth .1)
+                      :layer-depth -.01)
                      (:name "ground-background"
                       :layer-depth -160)
                      (:name "tree1"

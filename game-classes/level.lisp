@@ -18,6 +18,7 @@
          (scale (getf level-meta :scale))
          (objects (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *level-directory* level-name)
                                        :curve-resolution 20
+                                       :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))
     (enqueue (lambda (world)
                (dbg :info "Copying level to render.~%")

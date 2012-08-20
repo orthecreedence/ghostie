@@ -67,18 +67,20 @@
     actors))
 
 (defun actor-midair-p (actor)
-  (let ((feet-shape-c (cpw:base-c (actor-feet actor))))
-    (cffi:with-foreign-object (query 'clipmunk:segment-query-info)
-      (cp:shape-segment-query feet-shape-c 0d0 0d0 0d0 (1+ (cp-a:circle-shape-r feet-shape-c)) query)
-      (dbg :debug "Hit ground: ~s~%" (list (cp-a:segment-query-info-shape query)
-                                           (cp-a:segment-query-info-n-x query)
-                                           (cp-a:segment-query-info-n-y query)))
-      nil)))
+  (when (and actor (game-object-physics-body actor))
+    (let ((feet-shape-c (cpw:base-c (actor-feet actor))))
+      (cffi:with-foreign-object (query 'clipmunk:segment-query-info)
+        (cp:shape-segment-query feet-shape-c 0d0 0d0 0d0 (1+ (cp-a:circle-shape-r feet-shape-c)) query)
+        (dbg :debug "Hit ground: ~s~%" (list (cp-a:segment-query-info-shape query)
+                                             (cp-a:segment-query-info-n-x query)
+                                             (cp-a:segment-query-info-n-y query)))
+        nil))))
 
 (defun actor-stop (actor)
-  (let ((shape-c (cpw:base-c (caddr (cpw:body-shapes (game-object-physics-body actor))))))
-    (setf (cp-a:shape-surface_v-x shape-c) 0d0
-          (cp-a:shape-surface_v-y shape-c) 0d0)))
+  (when (and actor (game-object-physics-body actor))
+    (let ((shape-c (cpw:base-c (caddr (cpw:body-shapes (game-object-physics-body actor))))))
+      (setf (cp-a:shape-surface_v-x shape-c) 0d0
+            (cp-a:shape-surface_v-y shape-c) 0d0))))
 
 (defun actor-impulse (actor x &key (max-speed-div 1))
   "Move the character on the HORizonal plane."
