@@ -38,18 +38,13 @@
                          by #'(lambda (x) (cdddr (cdddr (cdddr x))))
                          collect (list (list x1 y1) (list x2 y2) (list x3 y3)))))
     (make-gl-object :data triangles
-                    :position (gl-object-position fake-gl-object)
-                    :scale (gl-object-scale fake-gl-object)
-                    :color (gl-object-color fake-gl-object)
-                    :shape-points (gl-object-shape-points fake-gl-object)
-                    :shape-meta (gl-object-shape-meta fake-gl-object)
+                    :position (copy-tree (gl-object-position fake-gl-object))
+                    :scale (copy-tree (gl-object-scale fake-gl-object))
+                    :color (copy-tree (gl-object-color fake-gl-object))
+                    :shape-points (copy-tree (gl-object-shape-points fake-gl-object))
+                    :shape-meta (copy-tree (gl-object-shape-meta fake-gl-object))
                     :texture (gl-object-texture fake-gl-object)
                     :uv-map (gl-object-uv-map fake-gl-object))))
-
-(loop for (x1 y1 x2 y2 x3 y3)
-      on '(0 0 0 1 1 1 1 2 3 4 5 6)
-      by #'(lambda (x) (cddddr (cdr (cdr x))))
-      collect (list (list x1 y1) (list x2 y2) (list x3 y3)))
 
 (defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored

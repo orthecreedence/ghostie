@@ -16,6 +16,7 @@
     ;; setup physics
     (let ((space (cpw:make-space :gravity-y -9.8d0)))
       (setf (cp-a:space-sleep-time-threshold (cpw:base-c space)) 3d0)
+      (setf (cp-a:space-damping (cpw:base-c space)) 0.9d0)
       (setf (world-physics world) space))
     (unless (world-draw-meta world)
       (setf (getf (world-draw-meta world) :background) (hex-to-rgb "#222222" :type 'list)
@@ -50,15 +51,31 @@
   (let ((level (world-level world)))
     (dolist (game-object (append (level-objects level)
                                  (level-actors level)))
-      (sync-game-object-to-physics game-object :render t))))
+      (sync-game-object-to-physics game-object :render t))
+    (let ((pos (copy-tree (world-position world))))
+      (enqueue (lambda (render-world)
+                 (setf (world-position render-world) pos))
+               :render))))
 
 (defun step-game-world (world)
   (when *quit* (return-from step-game-world nil))
   (let ((space (world-physics world)))
-    (cpw:space-step space)
+    (cpw:space-step space :dt +dt+)
     (cpw:sync-space-bodies space)
     (dolist (game-object (level-objects (world-level world)))
-      (sync-game-object-to-physics game-object))))
+      (sync-game-object-to-physics game-object))
+    (dolist (actor (level-actors (world-level world)))
+      (update-actor-state actor))
+    (let ((actor (level-main-actor (world-level world))))
+      (when actor
+        ;(actor-stop actor)
+        (sync-window-actor-position world actor)))))
+
+(defun sync-window-actor-position (world actor)
+  (let* ((position (game-object-position actor))
+         (x (- (* (car position) .5)))
+         (y (- (* (cadr position) .5))))
+    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
 
 (defun free-gl-assets ()
   (loop for (nil obj) on *game-data* by #'cddr do
@@ -75,19 +92,29 @@
 
 (defun load-game-assets (world)
   ;; load the current level
-  (setf (world-level world) (load-level "house"))
+  (setf (world-level world) (load-level "trees"))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
     (let* ((camera (getf level-meta :camera))
+           (gravity (getf level-meta :gravity))
+           (iterations (getf level-meta :physics-iterations))
            (background (if (getf level-meta :background)
                            (hex-to-rgb (getf level-meta :background) :type 'list)
                            (hex-to-rgb "#262524" :type 'list)))
            (fog-amt (getf (level-meta (world-level world)) :fog-amt))
+           (fog-start (getf (level-meta (world-level world)) :fog-start))
+           (fog-end (getf (level-meta (world-level world)) :fog-end))
            (fog-color (if (getf level-meta :fog-color)
                           (hex-to-rgb (getf level-meta :fog-color) :type 'list)
                           background)))
+      (when iterations
+        (cp-f:space-set-iterations (cpw:base-c (world-physics world)) (round iterations)))
+      (when gravity
+        (setf (cp-a:space-gravity-y (cpw:base-c (world-physics world))) (coerce gravity 'double-float)))
       (setf (getf (world-draw-meta world) :background) background
             (getf (world-draw-meta world) :fog-amt) (if fog-amt fog-amt 0.0)
+            (getf (world-draw-meta world) :fog-start) (if fog-start fog-start 60.0)
+            (getf (world-draw-meta world) :fog-end) (if fog-end fog-end 160.0)
             (getf (world-draw-meta world) :fog-color) fog-color)
       (when camera
         (setf (world-position *world*) camera))))
@@ -110,6 +137,8 @@
     (return-from draw-world nil))
   (use-shader :main)
   (set-shader-var #'gl:uniformf "fogAmt" (getf (world-draw-meta world) :fog-amt))
+  (set-shader-var #'gl:uniformf "fogStart" (getf (world-draw-meta world) :fog-start))
+  (set-shader-var #'gl:uniformf "fogEnd" (getf (world-draw-meta world) :fog-end))
   (when (getf (world-draw-meta world) :fog-color)
     (apply #'set-shader-var (append (list #'gl:uniformf "fogColor") (getf (world-draw-meta world) :fog-color))))
   (setf *view-matrix* (apply #'m-translate (world-position world)))
@@ -139,3 +168,4 @@
   (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))
   ;(format t "Extensions: ~a~%" (gl:get-string :extensions))
   (format t "Err: ~a~%" (gl:get-error)))
+

@@ -2,19 +2,19 @@
 
 uniform vec4 colorIn;
 uniform float fogAmt = 0.0;
+uniform float fogStart = 60;
+uniform float fogEnd = 160;
 uniform vec4 fogColor = vec4(0, 0, 0, 1);
 
 layout(location = 0) out vec4 color;
 
 void main()
 {
-	float fog_end	=	160;
-	float fog_start	=	60; //72;
-	float fog_dist	=	fog_end - fog_start;
+	float fog_dist	=	fogEnd - fogStart;
 	float fog_amt;
 	float fog_coord;
 	
-	fog_coord	=	abs(gl_FragCoord.z / gl_FragCoord.w) - fog_start;
+	fog_coord	=	abs(gl_FragCoord.z / gl_FragCoord.w) - fogStart;
 	fog_coord	=	clamp(fog_coord, 0.0, fog_dist);
 
 	fog_amt		=	(fog_dist - fog_coord) / fog_dist;

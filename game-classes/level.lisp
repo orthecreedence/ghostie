@@ -1,7 +1,6 @@
 (in-package :ghostie)
 
 (defparameter *level-directory* "resources/levels")
-(defparameter *physics-segment-thickness* 0.0d0)
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
@@ -19,14 +18,13 @@
          (scale (getf level-meta :scale))
          (objects (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *level-directory* level-name)
                                        :curve-resolution 20
-                                       :scale (list (car scale) (- (cadr scale)))
-                                       :ignore-errors t)))
+                                       :scale (list (car scale) (- (cadr scale))))))
     (enqueue (lambda (world)
                (dbg :info "Copying level to render.~%")
                (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
              :render)
     (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t)
-          (level-actors level) (load-actors (getf level-meta :actors) :scale scale)
+          (level-actors level) (load-actors (getf level-meta :actors))
           (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
                                             (level-actors level))
           (level-meta level) level-meta)
@@ -70,8 +68,8 @@
                   (let ((shape (cpw:make-shape :segment
                                                body
                                                (lambda (body) (cpw:shape-segment body (car last-pt) (cadr last-pt) x y *physics-segment-thickness*)))))
-                    (setf (cp-a:shape-u (cpw:base-c shape)) 0.7d0
-                          (cp-a:shape-e (cpw:base-c shape)) 0.1d0)
+                    (setf (cp-a:shape-u (cpw:base-c shape)) 0.8d0
+                          (cp-a:shape-e (cpw:base-c shape)) 0.01d0)
                     (cpw:space-add-shape space shape)))
                 (setf last-pt (list x y))))))))))
 

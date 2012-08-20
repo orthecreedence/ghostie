@@ -11,12 +11,27 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="744.09448819"
    height="1052.3622047"
-   id="svg2"
+   id="svg4266"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="objects.svg">
   <defs
-     id="defs4" />
+     id="defs4268">
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect2991"
+       is_visible="true"
+       pattern="M 0,5 C 0,2.24 2.24,0 5,0 7.76,0 10,2.24 10,5 10,7.76 7.76,10 5,10 2.24,10 0,7.76 0,5 z"
+       copytype="single_stretched"
+       prop_scale="1"
+       scale_y_rel="false"
+       spacing="0"
+       normal_offset="0"
+       tang_offset="0"
+       prop_units="false"
+       vertical_pattern="false"
+       fuse_tolerance="0" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -24,19 +39,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.24748737"
-     inkscape:cx="73.973751"
-     inkscape:cy="558.27748"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="374.97989"
+     inkscape:cy="707.34669"
      inkscape:document-units="px"
-     inkscape:current-layer="g2992"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="848"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="931"
+     inkscape:window-height="746"
+     inkscape:window-x="50"
+     inkscape:window-y="50"
+     inkscape:window-maximized="0" />
   <metadata
-     id="metadata7">
+     id="metadata4271">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -51,27 +66,14 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <g
-       id="g2992">
-      <g
-         transform="matrix(9.9595784,1.6298071,-0.02307059,0.14098195,-4181.677,-246.89179)"
-         id="g2987">
-        <rect
-           style="fill:#808000;fill-opacity:1"
-           id="rect2985"
-           width="241.42645"
-           height="212.13203"
-           x="224.25386"
-           y="180.60054" />
-      </g>
-      <rect
-         y="688.25513"
-         x="127.68429"
-         height="24.24366"
-         width="1822.3152"
-         id="rect2990"
-         style="fill:#008080;fill-opacity:1"
-         transform="matrix(0.96244825,-0.27146522,0.27146522,0.96244825,0,0)" />
-    </g>
+    <path
+       sodipodi:type="arc"
+       style="fill:#809559;fill-opacity:1"
+       id="path2984"
+       sodipodi:cx="360.62445"
+       sodipodi:cy="531.12347"
+       sodipodi:rx="13.131983"
+       sodipodi:ry="28.284271"
+       d="m 373.75643,531.12347 a 13.131983,28.284271 0 1 1 -26.26396,0 13.131983,28.284271 0 1 1 26.26396,0 z" />
   </g>
 </svg>

@@ -60,36 +60,37 @@
       (error e))))
 
 (defun step-render (world dt)
-  (handler-case
+  ;(handler-case
     (progn
-      ;(dbg :debug "Render queue items: ~a~%" (jpl-queues:size *queue-game-to-render*))
       (enqueue (lambda (game-world) (game-world-sync game-world)) :game)
       (key-handler world dt)
-      (when (not (zerop (jpl-queues:size *queue-game-to-render*)))
-        (format t "Render queue size: ~a~%" (jpl-queues:size *queue-game-to-render*)))
+      ;(when (not (zerop (jpl-queues:size *queue-game-to-render*)))
+      ;  (format t "Render queue size: ~a~%" (jpl-queues:size *queue-game-to-render*)))
       (process-queue world :render)
       (draw-world world))
-    (error (e)
-      (dbg :error "Uncaught error in render thread: ~a~%" e)
-      (setf *quit* t)
-      (cleanup-render world)
-      (error e))))
+    ;(error (e)
+    ;  (dbg :error "Uncaught error in render thread: ~a~%" e)
+    ;  (setf *quit* t)
+    ;  (cleanup-render world)
+    ;  (error e)
+    )
 
 (defun game-thread ()
   (unwind-protect
-    (handler-case
+    ;(handler-case
       (progn
         (setf *world* (create-world))
         (setup-game *world*)
         (loop while (not *quit*) do
           ;(dbg :debug "Stepping game!~%")
           (step-game *world*)))
-      (game-quit ()
-        (cleanup-game *world*))
-      (error (e)
-        (dbg :error "Uncaught error in game thread: ~a~%" e)
-        (setf *quit* t)
-        (error e)))
+      ;(game-quit ()
+      ;  (cleanup-game *world*))
+      ;(error (e)
+      ;  (dbg :error "Uncaught error in game thread: ~a~%" e)
+      ;  (setf *quit* t)
+      ;  (error e))
+      ;)
     (cleanup-game *world*))
   (dbg :info "Game thread exit.~%"))
 
@@ -97,8 +98,8 @@
   (let ((world (create-world)))
     (let ((*world* world))
       (create-window (lambda ()
-                       (process-queue world :render)
-                       (init-render world))
+                       (init-render world)
+                       (process-queue world :render))
                      (lambda (dt) (step-render world dt))
                      :title "Ghostie"
                      :width 900

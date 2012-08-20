@@ -1,18 +1,24 @@
 (:name "trees"
- :scale (.1 .1 .1)
- :camera (7.1 20.5 -30)
- :background "#444444" ;"#262524"
- :fog-color "#444444" ;"#262524"
+ ;:actors ((:actor "ghostie" :start-pos (-480 -450 0) :main t :scale (.5 .5 .5)))
+ :actors ((:actor "pill" :start-pos (-480 -470 0) :main t :scale (1 1 1)))
+ :scale (1 1 1)
+ :camera (99 205 -270)
+ :background "#262524"
+ :fog-color "#262524"
  :fog-amt 1.0
+ :fog-start 600
+ :fog-end 1600
+ :gravity -700
+ :physics-iterations 10
  :object-properties ((:name "ground"
-                      :layer-depth 3)
+                      :layer-depth .1)
                      (:name "ground-background"
-                      :layer-depth -16)
+                      :layer-depth -160)
                      (:name "tree1"
-                      :layer-depth -12)
+                      :layer-depth -120)
                      (:name "tree2"
-                      :layer-depth -24)
+                      :layer-depth -240)
                      (:name "tree3"
-                      :layer-depth -32)
+                      :layer-depth -320)
                      (:name "tree4"
-                      :layer-depth -42)))
+                      :layer-depth -420)))

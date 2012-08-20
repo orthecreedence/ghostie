@@ -9,7 +9,8 @@
    (meta :accessor game-object-meta :initarg :meta :initform nil)
    (display :accessor game-object-display :initarg :display :initform t)
    (render-ref :accessor game-object-render-ref :initarg :render-ref :initform nil)
-   (last-sync :accessor game-object-last-sync :initform nil)))
+   (last-sync :accessor game-object-last-sync :initform nil)
+   (bb :accessor game-object-bb :initform nil)))
 
 (defun make-game-object (&key (type 'game-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
   (let ((obj (make-instance type :position position :rotation rotation)))
@@ -19,7 +20,7 @@
 
 (defun destroy-game-object (game-object)
   "Clear out a game object, and free all its non-lisp data (gl objects and
-  physics)."
+   physics)."
   (let ((body (game-object-physics-body game-object)))
     (when body
       (cpw:destroy (game-object-physics-body game-object))))
@@ -30,7 +31,7 @@
   (dolist (gl-object (game-object-gl-objects object))
     (unless (getf (gl-object-shape-meta gl-object) :disconnected)
       (draw-gl-object gl-object
-                      :color (when (getf (game-object-meta object) :sleeping) (hex-to-rgb "#444444"))
+                      :color (when (getf (game-object-meta object) :sleeping) (hex-to-rgb "#333333"))
                       :position (game-object-position object)
                       :rotation (list 0 0 1 (game-object-rotation object))))))
 
@@ -89,11 +90,11 @@
                  (let ((render-game-object (make-instance 'game-object
                                                           :gl-objects gl-objects
                                                           :name (game-object-name game-object)
-                                                          :position (game-object-position game-object)
-                                                          :rotation (game-object-rotation game-object))))
+                                                          :position (copy-tree (game-object-position game-object))
+                                                          :rotation (copy-tree (game-object-rotation game-object)))))
                    (push render-game-object (level-objects level))
                    (setf (game-object-render-ref game-object) render-game-object))))
-    :render)))
+             :render)))
 
 (defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) center-objects)
   (let ((obj-hash (make-hash-table :test #'equal))
@@ -134,37 +135,47 @@
   coords, then take that difference and apply it to the object's position. This
   effectively centers the game object around 0,0 and applies a position to it
   that puts it in its original place."
-  (let ((min-x 0)
-        (min-y 0)
-        (min-z 0)
-        (max-x 0)
-        (max-y 0)
-        (max-z 0))
+  (let ((gl-objects (remove-if (lambda (gl-object)
+                                 (zerop (length (gl-object-vertex-data gl-object))))
+                               (game-object-gl-objects game-object))))
+    (when gl-objects
+      (let* ((bb (calculate-game-object-bb game-object))
+             (min-x (car bb))
+             (min-y (cadr bb))
+             (min-z 0)
+             (max-x (caddr bb))
+             (max-y (cadddr bb))
+             (max-z 0))
+        (let ((diff-x (- (- min-x) (/ (- max-x min-x) 2)))
+              (diff-y (- (- min-y) (/ (- max-y min-y) 2)))
+              (diff-z (- (- min-z) (/ (- max-z min-z) 2))))
+          (dolist (gl-object (game-object-gl-objects game-object))
+            (let ((disconnected (getf (gl-object-shape-meta gl-object) :disconnected)))
+              (unless disconnected
+                (let ((vertex-data (gl-object-vertex-data gl-object)))
+                  (dotimes (i (/ (length vertex-data) 3))
+                    (let ((i (* i 3)))
+                      (setf (aref vertex-data i) (+ (aref vertex-data i) diff-x)
+                            (aref vertex-data (+ i 1)) (+ (aref vertex-data (+ i 1)) diff-y)
+                            (aref vertex-data (+ i 2)) (+ (aref vertex-data (+ i 2)) diff-z))))
+                  (update-gl-object-vertex-data gl-object vertex-data)))))
+          (setf (game-object-position game-object) (list (- diff-x)
+                                                         (- diff-y)
+                                                         (caddr (game-object-position game-object))))))))
+  game-object)
+
+(defun calculate-game-object-bb (game-object)
+  (let ((min-x most-positive-double-float)
+        (min-y most-positive-double-float)
+        (max-x most-negative-double-float)
+        (max-y most-negative-double-float))
     (dolist (gl-object (game-object-gl-objects game-object))
-      (loop for (x y z)
+      (loop for (x y nil)
             on (coerce (gl-object-vertex-data gl-object) 'list)
             by #'cdddr do
         (setf min-x (min x min-x)
               min-y (min y min-y)
-              min-z (min z min-z)
               max-x (max x max-x)
-              max-y (max y max-y)
-              max-z (max z max-z))))
-    (let ((diff-x (- (- min-x) (/ (- max-x min-x) 2)))
-          (diff-y (- (- min-y) (/ (- max-y min-y) 2)))
-          (diff-z (- (- min-z) (/ (- max-z min-z) 2))))
-      (dolist (gl-object (game-object-gl-objects game-object))
-        (let ((disconnected (getf (gl-object-shape-meta gl-object) :disconnected)))
-          (unless disconnected
-            (let ((vertex-data (gl-object-vertex-data gl-object)))
-              (dotimes (i (/ (length vertex-data) 3))
-                (let ((i (* i 3)))
-                  (setf (aref vertex-data i) (+ (aref vertex-data i) diff-x)
-                        (aref vertex-data (+ i 1)) (+ (aref vertex-data (+ i 1)) diff-y)
-                        (aref vertex-data (+ i 2)) (+ (aref vertex-data (+ i 2)) diff-z))))
-              (update-gl-object-vertex-data gl-object vertex-data)))))
-      (setf (game-object-position game-object) (list (- diff-x)
-                                                     (- diff-y)
-                                                     (caddr (game-object-position game-object))))))
-  game-object)
+              max-y (max y max-y))))
+    (list min-x min-y max-x max-y)))
 
