@@ -14,7 +14,7 @@
    id="svg4266"
    version="1.1"
    inkscape:version="0.48.2 r9819"
-   sodipodi:docname="New document 3">
+   sodipodi:docname="objects.svg">
   <defs
      id="defs4268" />
   <sodipodi:namedview
@@ -24,16 +24,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="374.97989"
-     inkscape:cy="519.92392"
+     inkscape:zoom="2.0688398"
+     inkscape:cx="353.90551"
+     inkscape:cy="578.82975"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="469"
-     inkscape:window-height="437"
-     inkscape:window-x="50"
-     inkscape:window-y="50"
+     inkscape:window-width="1680"
+     inkscape:window-height="998"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata4271">
@@ -43,7 +43,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -52,7 +52,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <g
-       transform="translate(798.8768,-102.8171)"
+       transform="matrix(0.35510302,0,0,0.35510302,540.57953,257.97837)"
        id="ghostie">
       <g
          id="g221">

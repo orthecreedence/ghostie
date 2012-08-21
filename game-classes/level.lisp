@@ -70,7 +70,7 @@
                                                body
                                                (lambda (body) (cpw:shape-segment body (car last-pt) (cadr last-pt) x y *physics-segment-thickness*)))))
                     (setf (cp-a:shape-u (cpw:base-c shape)) 0.8d0
-                          (cp-a:shape-e (cpw:base-c shape)) 0.01d0)
+                          (cp-a:shape-e (cpw:base-c shape)) 0.0d0)
                     (cpw:space-add-shape space shape)))
                 (setf last-pt (list x y))))))))))
 
