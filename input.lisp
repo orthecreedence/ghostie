@@ -81,7 +81,7 @@
             (rightp (key= glfw:+key-right+)))
         (enqueue (lambda (game-world)
                    (actor-jump (level-main-actor (world-level game-world))
-                               :y 360d0
+                               :y 320d0
                                :x (cond (leftp -200d0)
                                         (rightp 200d0)
                                         (t 0d0))))
