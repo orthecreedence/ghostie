@@ -80,6 +80,10 @@ Ghostie *requires* OpenGL >= 3.3 as it makes use of shaders and some other newer
 OpenGL extensions that are only available in later versions. Get with the times,
 man.
 
+Ghostie has a game thread and a render thread which are synced via
+[jpl-queues](http://www.thoughtcrime.us/software/jpl-queues/). Your
+implementation must support threading to run Ghostie.
+
 Ghostie is entirely a work in progress and there is a lot of non-trivial work to
 do on it, as outlined above. My goal is to not only provide a viable option for
 platform game programming in lisp, but make it so easy that armed with a vision
