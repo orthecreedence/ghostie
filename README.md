@@ -3,7 +3,7 @@ Ghostie
 Ghostie is a platformer engine for Common Lisp.
 
 At the moment, it is not so much an engine, as an engine with a game integrated.
-It uses chipmunk physics for colission detection and SVG files for levels.
+It uses chipmunk physics for collision detection and SVG files for levels.
 
 Ghostie is a joint effort between my friend Andy and myself.
 
