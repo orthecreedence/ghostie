@@ -1,5 +1,5 @@
 (:name "trees"
- ;:actors ((:actor "ghostie" :start-pos (-480 -450 0) :main t :scale (.5 .5 .5)))
+ ;:actors ((:actor "ghostie" :start-pos (-480 -450 0) :main t :scale (.7 .7 .7)))
  :actors ((:actor "pill" :start-pos (-480 -470 0) :main t :scale (.7 .7 .7)))
  :scale (1 1 1)
  :camera (99 205 -400)
