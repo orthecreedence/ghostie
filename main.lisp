@@ -1,7 +1,3 @@
-(ql:quickload :ghostie)
-
-(defpackage :ghostie
-  (:use :cl))
 (in-package :ghostie)
 
 (defparameter *world* nil)
@@ -12,21 +8,6 @@
 
 (define-condition game-quit (error) ())
 (defparameter *quit* nil)
-
-(load "config")
-(load "util")
-(load "sync")
-(load "matrix")
-(load "opengl/shaders")
-(load "opengl/fbo")
-(load "opengl/object")
-(load "input")
-(load "window")
-(load "game-classes/game-object")
-(load "game-classes/actor")
-(load "game-classes/level")
-(load "world")
-(load "physics")
 
 (defun cleanup-game (world)
   (world-game-cleanup world))
