@@ -11,6 +11,7 @@
 	:serial t
 	:components
 	((:file "util")
+	 (:file "event")
 	 (:file "sync")
 	 (:file "matrix")))
    (:module opengl
