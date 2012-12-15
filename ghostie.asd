@@ -22,14 +22,14 @@
 	 (:file "object")))
    (:file "input" :depends-on (lib))
    (:file "window" :depends-on (opengl))
-   (:module game-classes
+   (:module classes
 	:depends-on (lib)
     :serial t
 	:components
 	((:file "game-object")
 	 (:file "actor")
 	 (:file "level")))
-   (:file "world" :depends-on (lib opengl game-classes))
-   (:file "physics" :depends-on (lib game-classes))
+   (:file "world" :depends-on (lib opengl classes))
+   (:file "physics" :depends-on (lib classes))
    (:file "main" :depends-on ("world"))))
 
