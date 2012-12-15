@@ -6,26 +6,30 @@
   :components
   ((:file "package")
    (:file "config" :depends-on ("package"))
-   (:file "util" :depends-on ("config"))
-   (:file "sync" :depends-on ("util"))
-   (:file "matrix" :depends-on ("util"))
+   (:module lib
+    :depends-on ("config")
+	:serial t
+	:components
+	((:file "util")
+	 (:file "sync")
+	 (:file "matrix")))
    (:module opengl
-	:depends-on ("util")
+	:depends-on (lib)
     :serial t
 	:components
 	((:file "shaders")
 	 (:file "fbo")
 	 (:file "object")))
-   (:file "input" :depends-on ("util"))
+   (:file "input" :depends-on (lib))
    (:file "window" :depends-on (opengl))
    (:module game-classes
-	:depends-on ("util")
+	:depends-on (lib)
     :serial t
 	:components
 	((:file "game-object")
 	 (:file "actor")
 	 (:file "level")))
-   (:file "world" :depends-on ("util" opengl game-classes))
-   (:file "physics" :depends-on ("util" game-classes))
+   (:file "world" :depends-on (lib opengl game-classes))
+   (:file "physics" :depends-on (lib game-classes))
    (:file "main" :depends-on ("world"))))
 
