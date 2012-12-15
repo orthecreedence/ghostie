@@ -1,7 +1,5 @@
 (in-package :ghostie)
 
-(defparameter *level-directory* "resources/levels")
-
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
    (main-actor :accessor level-main-actor :initform nil)
@@ -14,9 +12,14 @@
   objects for the level, and the associated meta file that describes the scene
   and the actors in the level."
   (let* ((level (make-instance 'level))
-         (level-meta (read-file (format nil "~a/~a/meta.lisp" *level-directory* level-name)))
+         (level-directory (format nil "~a/~a/~a/~a/"
+                                  (namestring *game-directory*)
+                                  *resource-path*
+                                  *level-path*
+                                  level-name))
+         (level-meta (read-file (format nil "~a/meta.lisp" level-directory)))
          (scale (getf level-meta :scale))
-         (objects (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *level-directory* level-name)
+         (objects (svgp:parse-svg-file (format nil "~a/objects.svg" level-directory)
                                        :curve-resolution 20
                                        :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))

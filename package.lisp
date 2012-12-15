@@ -1,4 +1,8 @@
 (defpackage :ghostie
   (:use :cl)
-  (:export #:main))
+  (:export #:*game-directory*
+           #:*class-path*
+           #:*resource-path*
+           #:*level-path*
+           #:start))
 

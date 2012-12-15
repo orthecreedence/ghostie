@@ -77,8 +77,8 @@
 
 (defun recompile-shaders ()
   (free-shaders)
-  (setf (get-shader :main) (make-shader #P"opengl/glsl/main.vert"
-                                        #P"opengl/glsl/main.frag")
-        (get-shader :dof) (make-shader #P"opengl/glsl/dof.vert"
-                                       #P"opengl/glsl/dof.frag")))
+  (setf (get-shader :main) (make-shader (merge-pathnames #p"opengl/glsl/main.vert" *ghostie-directory*)
+                                        (merge-pathnames #p"opengl/glsl/main.frag" *ghostie-directory*))
+        (get-shader :dof) (make-shader (merge-pathnames #p"opengl/glsl/dof.vert" *ghostie-directory*)
+                                       (merge-pathnames #p"opengl/glsl/dof.frag" *ghostie-directory*))))
 

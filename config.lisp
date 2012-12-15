@@ -1,5 +1,16 @@
 (in-package :ghostie)
 
+(defparameter *ghostie-directory* (asdf:system-relative-pathname :ghostie #P""))
+
+(defparameter *game-directory* #P"."
+  "The directory the game files live in. All other paths are relative to this.")
+(defparameter *class-path* "classes"
+  "The name of the directory that the classes folder lives under.")
+(defparameter *resource-path* "resources"
+  "The name of the directory that the resources folder lives under.")
+(defparameter *level-path* "levels"
+  "The name of the directory (under the resources dir) that levels load from.")
+
 (defparameter *log-level* :debug)
 
 ;; define an "infinity" value
