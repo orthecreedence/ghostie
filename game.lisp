@@ -14,6 +14,7 @@
   (let ((game-world (create-world))
         (render-world (create-world))
         (game nil))  ; placeholder
+    (setf *quit* nil)
     (flet ((game-thread ()
              (unwind-protect
                ;(handler-case
@@ -31,18 +32,17 @@
                  ;)
                (world-game-cleanup game-world)))
            (render-thread ()
-             (let ((*quit* nil))
-               (create-window (lambda ()
-                                (init-render render-world)
-                                (process-queue render-world :render))
-                              (lambda (dt) (step-render-world render-world dt))
-                              (lambda ()
-                                (world-render-cleanup render-world)
-                                (cleanup-opengl))
-                              :title "Ghostie"
-                              :width 900
-                              :height 600)
-               (setf (game-quit game) t))))
+             (create-window (lambda ()
+                              (init-render render-world)
+                              (process-queue render-world :render))
+                            (lambda (dt) (step-render-world render-world dt))
+                            (lambda ()
+                              (world-render-cleanup render-world)
+                              (cleanup-opengl))
+                            :title "Ghostie"
+                            :width 900
+                            :height 600)
+             (setf (game-quit game) t)))
       (init-message-queue)
       (setf game (make-instance 'game
                    :game-world game-world
