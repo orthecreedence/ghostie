@@ -50,7 +50,7 @@
     (ghostie::stop-game game)))
 
 (defun input-key-release (game key)
-  (case key
+  (case (code-char key)
     (#\L
      (in-render (render-world)
        (ghostie::world-render-cleanup render-world)
