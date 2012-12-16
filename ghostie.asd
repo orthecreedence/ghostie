@@ -2,7 +2,7 @@
   :author "Andrew Lyon <andrew@lyonbros.com>"
   :licence "MIT"
   :version "0.1.1"
-  :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:jpl-queues #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper)
+  :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:jpl-queues #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper #:ghostie-event)
   :components
   ((:file "package")
    (:file "config" :depends-on ("package"))
@@ -11,7 +11,6 @@
 	:serial t
 	:components
 	((:file "util")
-	 (:file "event")
 	 (:file "sync")
 	 (:file "matrix")))
    (:module opengl
@@ -31,6 +30,6 @@
 	 (:file "actor")
 	 (:file "level")))
    (:file "world" :depends-on (lib opengl classes))
-   (:file "physics" :depends-on (lib classes))
-   (:file "main" :depends-on ("world"))))
+   (:file "game" :depends-on ("world"))
+   (:file "physics" :depends-on (lib classes))))
 

@@ -1,5 +1,5 @@
 (defpackage :ghostie
-  (:use :cl)
+  (:use :cl :ghostie-event)
   (:export #:*game-directory*
            #:*class-path*
            #:*resource-path*

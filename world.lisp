@@ -23,6 +23,9 @@
             (getf (world-draw-meta world) :fog-amt) 0.0))
     world))
 
+;;; ----------------------------------------------------------------------------
+;;; Game functions
+;;; ----------------------------------------------------------------------------
 (defun world-game-cleanup (world)
   (dbg :info "Cleaning up game world~%")
   (when (world-level world)
@@ -38,15 +41,6 @@
         (world-draw-meta world) nil)
   world)
 
-(defun world-render-cleanup (world)
-  (dbg :info "Cleaning up render world~%")
-  (when (world-level world)
-    (level-cleanup (world-level world)))
-  (setf (world-level world) nil
-        (world-draw-meta world) nil)
-  (free-gl-assets)
-  world)
-
 (defun game-world-sync (world)
   (let ((level (world-level world)))
     (dolist (game-object (append (level-objects level)
@@ -59,6 +53,7 @@
 
 (defun step-game-world (world)
   (when *quit* (return-from step-game-world nil))
+  (trigger :game-step world)
   (let ((space (world-physics world)))
     (cpw:space-step space :dt +dt+)
     (cpw:sync-space-bodies space)
@@ -71,28 +66,9 @@
         ;(actor-stop actor)
         (sync-window-actor-position world actor)))))
 
-(defun sync-window-actor-position (world actor)
-  (let* ((position (game-object-position actor))
-         (x (- (* (car position) .5)))
-         (y (- (* (cadr position) .5))))
-    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
-
-(defun free-gl-assets ()
-  (loop for (nil obj) on *game-data* by #'cddr do
-    (when (subtypep (type-of obj) 'gl-object)
-      (free-gl-object obj)))
-  (setf *game-data* nil))
-
-(defun init-render (world)
-  (free-gl-assets)
-  (apply #'gl:clear-color (getf (world-draw-meta world) :background))
-  ;; this is the quad we render our FBO texture onto
-  (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0)) ((1 -1 0) (1 1 0) (-1 1 0)))
-                                                 :uv-map #(0 0 1 0 0 1 1 1))))
-
-(defun load-game-assets (world)
+(defun world-load-level (world level)
   ;; load the current level
-  (setf (world-level world) (load-level "trees"))
+  (setf (world-level world) (load-level level))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
     (let* ((camera (getf level-meta :camera))
@@ -117,7 +93,7 @@
             (getf (world-draw-meta world) :fog-end) (if fog-end fog-end 160.0)
             (getf (world-draw-meta world) :fog-color) fog-color)
       (when camera
-        (setf (world-position *world*) camera))))
+        (setf (world-position world) camera))))
 
   (let ((meta (copy-tree (world-draw-meta world)))
         (position (copy-tree (world-position world))))
@@ -128,6 +104,54 @@
                      (world-position render-world) position))
              :render))
   (dbg :info "Finished asset load.~%"))
+
+;;; ----------------------------------------------------------------------------
+;;; Render functions
+;;; ----------------------------------------------------------------------------
+(defun step-render-world (world dt)
+  ;(handler-case
+    (progn
+      (enqueue (lambda (game-world)
+                 (trigger :render-step world dt)
+                 (game-world-sync game-world)) :game)
+      ;(when (not (zerop (jpl-queues:size *queue-game-to-render*)))
+      ;  (format t "Render queue size: ~a~%" (jpl-queues:size *queue-game-to-render*)))
+      (process-queue world :render)
+      (draw-world world))
+    ;(error (e)
+    ;  (dbg :error "Uncaught error in render thread: ~a~%" e)
+    ;  (setf *quit* t)
+    ;  (cleanup-render world)
+    ;  (error e)
+    )
+
+(defun world-render-cleanup (world)
+  (dbg :info "Cleaning up render world~%")
+  (when (world-level world)
+    (level-cleanup (world-level world)))
+  (setf (world-level world) nil
+        (world-draw-meta world) nil)
+  (free-gl-assets)
+  world)
+
+(defun sync-window-actor-position (world actor)
+  (let* ((position (game-object-position actor))
+         (x (- (* (car position) .5)))
+         (y (- (* (cadr position) .5))))
+    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
+
+(defun free-gl-assets ()
+  (loop for (nil obj) on *game-data* by #'cddr do
+    (when (subtypep (type-of obj) 'gl-object)
+      (free-gl-object obj)))
+  (setf *game-data* nil))
+
+(defun init-render (world)
+  (free-gl-assets)
+  (apply #'gl:clear-color (getf (world-draw-meta world) :background))
+  ;; this is the quad we render our FBO texture onto
+  (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0)) ((1 -1 0) (1 1 0) (-1 1 0)))
+                                                 :uv-map #(0 0 1 0 0 1 1 1))))
 
 (defun draw-world (world)
   (when *quit* (return-from draw-world nil))

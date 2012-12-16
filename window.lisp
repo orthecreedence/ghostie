@@ -1,5 +1,7 @@
 (in-package :ghostie)
 
+(defvar *quit* nil)
+
 (defvar *window-width* 0)
 (defvar *window-height* 0)
 (defvar *last-time* 0)
@@ -50,7 +52,7 @@
   (free-fbos)
   (free-shaders))
 
-(defun create-window (setup-fn render-fn &key (title "windowLOL") (width 800) (height 600))
+(defun create-window (setup-fn render-fn cleanup-fn &key (title "windowLOL") (width 800) (height 600))
   "Create a window with an opengl context and spray vomit onto the user from the
   new window."
   (glfw:do-window (:width width :height height
@@ -74,11 +76,11 @@
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*
+      (funcall cleanup-fn)
       (return-from glfw::do-open-window))
     (let* ((time (glfw:get-time))
            (dt (- time *last-time*)))
       (funcall render-fn dt)
-      ;(key-handler dt)
       (setf *last-time* time))))
 
 (defun resize-window (width height)
@@ -90,7 +92,8 @@
         *window-height* height)
   (when *render-objs* (free-fbos))
   (setf (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex))
-  (gl:viewport 0 0 width height))
+  (gl:viewport 0 0 width height)
+  (trigger :window-resize (list width height)))
 
 (def-c-callback resize-window-cb :void ((width :int) (height :int))
   (resize-window width height))

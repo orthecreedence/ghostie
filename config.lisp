@@ -1,5 +1,7 @@
 (in-package :ghostie)
 
+(setf *random-state* (make-random-state t))
+
 (defparameter *ghostie-directory* (asdf:system-relative-pathname :ghostie #P""))
 
 (defparameter *game-directory* #P"."

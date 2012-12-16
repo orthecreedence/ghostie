@@ -1,4 +1,11 @@
-(in-package :ghostie)
+(defpackage :ghostie-event
+  (:use :cl)
+  (:export #:trigger
+           #:bind
+           #:unbind
+           #:disable-binding
+           #:enable-binding))
+(in-package :ghostie-event)
 
 (defclass binding ()
   ((event-type :accessor binding-event :initarg :event-type :initform nil)
@@ -8,8 +15,9 @@
    (enabled :accessor binding-enabled :initarg :enabled :initform t))
   (:documentation "Describes a binding of a function to an event."))
 
-(defvar *events* (make-instance 'jpl-queues:unbounded-fifo-queue)
-  "Holds all events in the ghostie system.")
+;(defvar *events* (make-instance 'jpl-queues:unbounded-fifo-queue)
+;  "Holds all events in the ghostie system.")
+(defvar *events* nil)
 
 (defvar *event-bindings* nil
   "Holds the functions bound to event/types/args.")
@@ -50,7 +58,7 @@
             ;; the subtypep matches
             (loop for arg-type in arg-types
                   for bind-type in bind-types do
-              (unless (and bind-type (subtypep arg-type bind-type))
+              (unless (or (null bind-type) (subtypep arg-type bind-type))
                 ;; bad match, skip the binding
                 (return-from skip-binding nil)))
             ;; loop matched all types, dispatch...
@@ -68,13 +76,17 @@
 
 (defun process-events ()
   "Process all queued events."
-  (loop until (jpl-queues:empty? *events*)
-        for event = (jpl-queues:dequeue *events*) do
-    (dispatch-event event)))
+  ;(loop
+  ;  (when (jpl-queues:empty? *events*) (return))
+  ;  (dispatch-event (jpl-queues:dequeue *events*)))
+  (dolist (event (reverse *events*))
+    (dispatch-event event))
+  (setf *events* nil))
 
 (defun trigger (event-type &rest args)
   "Trigger a ghostie event"
-  (jpl-queues:enqueue (make-event event-type args) *events*)
+  (push (make-event event-type args) *events*)
+  ;(jpl-queues:enqueue (make-event event-type args) *events*)
   (process-events))
 
 (defun bind-event (event types/args fn &key binding-name)
@@ -122,31 +134,30 @@
                    :binding-name ,binding-name)
        ,fn-name)))
 
-(defun do-unbind (remove-fn)
-  (setf *event-bindings* (remove-if remove-fn *event-bindings*)))
+(defun do-unbind (event-type remove-fn)
+  (setf *event-bindings* (remove-if
+                           (lambda (binding)
+                             (and (or (null event-type)
+                                      (eq event-type (binding-event binding)))
+                                  (funcall remove-fn binding)))
+                           *event-bindings*)))
 
 (defgeneric unbind (event-type binding)
   (:documentation "Unbind a specific function from an event."))
 
 (defmethod unbind ((event-type symbol) (fn function))
-  (do-unbind (lambda (binding)
-               (and (eq event-type (binding-event binding))
-                    (equal fn (binding-fn binding))))))
+  (do-unbind event-type (lambda (binding) (equal fn (binding-fn binding)))))
 
 (defmethod unbind ((event-type symbol) (name symbol))
-  (do-unbind (lambda (binding)
-               (and (eq event-type (binding-event binding))
-                    (eq name (binding-name binding))))))
+  (do-unbind event-type (lambda (binding) (eq name (binding-name binding)))))
 
 (defmethod unbind ((event-type symbol) (name string))
-  (do-unbind (lambda (binding)
-               (and (eq event-type (binding-event binding))
-                    (string= name (binding-name binding))))))
+  (do-unbind event-type (lambda (binding) (string= name (binding-name binding)))))
 
 (defun unbind-all (&optional event-type)
   "Remove all bindings from an event. If event is nil, unbinds all events, ever."
   (if event-type
-      (do-unbind (lambda (binding) (eq event-type (binding-event binding))))
+      (do-unbind nil (lambda (binding) (eq event-type (binding-event binding))))
       (setf *event-bindings* nil)))
 
 

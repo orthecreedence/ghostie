@@ -32,6 +32,7 @@
           (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
                                             (level-actors level))
           (level-meta level) level-meta)
+    (trigger :level-load level)
     level))
 
 (defun level-cleanup (level)
