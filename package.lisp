@@ -3,6 +3,7 @@
   (:export #:*game-directory*
            #:*class-path*
            #:*resource-path*
+           #:*actor-path*
            #:*level-path*
            #:start))
 

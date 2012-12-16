@@ -1,6 +1,5 @@
 (in-package :ghostie)
-
-(defparameter *actor-directory* "resources/actors")
+;THE END.
 
 (defclass actor (game-object)
   ((is-main :accessor actor-is-main :initform nil)
@@ -57,7 +56,12 @@
       (let* ((scale (if (getf actor-info :scale)
                         (getf actor-info :scale)
                         '(1 1 1)))
-             (svg-objs (svgp:parse-svg-file (format nil "~a/~a/objects.svg" *actor-directory* (getf actor-info :actor))
+             (actor-directory (format nil "~a/~a/~a/~a/"
+                                      (namestring *game-directory*)
+                                      *resource-path*
+                                      *actor-path*
+                                      (getf actor-info :actor)))
+             (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" actor-directory)
                                             :curve-resolution 20
                                             :scale (list (car scale) (- (cadr scale))))))
         (let ((actor (car (svg-to-game-objects svg-objs nil :object-type 'actor :center-objects t))))

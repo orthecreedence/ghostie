@@ -10,6 +10,8 @@
   "The name of the directory that the classes folder lives under.")
 (defparameter *resource-path* "resources"
   "The name of the directory that the resources folder lives under.")
+(defparameter *actor-path* "actors"
+  "The name of the directory (under the resources dir) that actors load from.")
 (defparameter *level-path* "levels"
   "The name of the directory (under the resources dir) that levels load from.")
 

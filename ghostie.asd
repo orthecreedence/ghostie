@@ -1,7 +1,8 @@
 (asdf:defsystem ghostie
   :author "Andrew Lyon <andrew@lyonbros.com>"
   :licence "MIT"
-  :version "0.1.1"
+  :version "0.2.1"
+  :description "Ghostie: A platformer engine for CL."
   :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:jpl-queues #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper #:ghostie-event)
   :components
   ((:file "package")

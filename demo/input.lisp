@@ -1,0 +1,78 @@
+(in-package :ghostie-demo)
+
+(defmacro run-in-queue (queue world-var &body body)
+  (let ((has-var (car world-var))
+        (fake-var (gensym "world")))
+    `(ghostie::enqueue
+       (lambda (,(if has-var has-var fake-var))
+         ,(unless has-var `(declare (ignore ,fake-var)))
+         ,@body)
+       ,queue)))
+
+(defmacro in-render (world-var &body body)
+  `(run-in-queue :render ,world-var ,@body))
+(defmacro in-game (world-var &body body)
+  `(run-in-queue :game ,world-var ,@body))
+
+(defun input-key-handler (game render-world dt)
+  (let ((sync-position nil)
+        (game-world (ghostie::game-game-world game)))
+    (when (key= #\-)
+      (setf sync-position t)
+      (in-render (world)
+        (decf (nth 2 (ghostie::world-position world)) (* (coerce dt 'single-float) 100))))
+    (when (key= #\=)
+      (setf sync-position t)
+      (in-render (world)
+        (incf (nth 2 (ghostie::world-position world)) (* (coerce dt 'single-float) 100))))
+    (ghostie::actor-stop (ghostie::level-main-actor (ghostie::world-level game-world)))
+    (when (key= glfw:+key-left+)
+      (ghostie::actor-run (ghostie::level-main-actor (ghostie::world-level game-world)) -200.4))
+    (when (key= glfw:+key-right+)
+      (ghostie::actor-run (ghostie::level-main-actor (ghostie::world-level game-world)) 200.4))
+    (when (key= glfw:+key-up+)
+      (let ((leftp (key= glfw:+key-left+))
+            (rightp (key= glfw:+key-right+)))
+        (ghostie::actor-jump (ghostie::level-main-actor (ghostie::world-level game-world))
+                    :y 320d0
+                    :x (cond (leftp -200d0)
+                             (rightp 200d0)
+                             (t 0d0)))))
+    (when sync-position
+      (let ((position (copy-tree (ghostie::world-position render-world))))
+        (setf (ghostie::world-position game-world) position))))
+  (when (key= #\A)
+    (add-random-box game-world)))
+
+(defun input-key-press (game key)
+  (when (or (eq (code-char key) #\Q)
+            (eq key glfw:+key-esc+))
+    (ghostie::stop-game game)))
+
+(defun input-key-release (game key)
+  (case key
+    (#\L
+     (in-render (render-world)
+       (ghostie::world-render-cleanup render-world)
+       (ghostie::create-world render-world)
+       (ghostie::init-render render-world)
+       (in-game (game-world)
+         (ghostie::world-game-cleanup game-world)
+         (ghostie::create-world game-world)
+         (ghostie::world-load-level game-world "trees"))))
+    (#\C
+     (in-render ()
+       (ghostie::recompile-shaders)))
+    (#\T
+     (in-render ()
+       (ghostie::test-gl-funcs)))
+    (#\R
+     (in-render (render-world)
+       (let* ((camera (getf (ghostie::level-meta (ghostie::world-level render-world)) :camera))
+              (camera (if camera camera '(0 0 -36))))
+         (ghostie::dbg :debug "Camera reset: ~s~%" camera)
+         (setf (ghostie::world-position render-world) (copy-tree camera))
+         (let ((position (copy-tree (ghostie::world-position render-world))))
+           (in-game (game-world)
+             (setf (ghostie::world-position game-world) position))))))))
+
