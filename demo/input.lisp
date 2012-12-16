@@ -40,9 +40,9 @@
                              (t 0d0)))))
     (when sync-position
       (let ((position (copy-tree (ghostie::world-position render-world))))
-        (setf (ghostie::world-position game-world) position))))
-  (when (key= #\A)
-    (add-random-box game-world)))
+        (setf (ghostie::world-position game-world) position)))
+    (when (key= #\A)
+      (add-random-box game-world))))
 
 (defun input-key-press (game key)
   (when (or (eq (code-char key) #\Q)

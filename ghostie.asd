@@ -31,6 +31,5 @@
 	 (:file "actor")
 	 (:file "level")))
    (:file "world" :depends-on (lib opengl classes))
-   (:file "game" :depends-on ("world"))
-   (:file "physics" :depends-on (lib classes))))
+   (:file "game" :depends-on ("world"))))
 

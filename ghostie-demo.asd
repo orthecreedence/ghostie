@@ -10,4 +10,5 @@
 	:components
 	((:file "package")
 	 (:file "input")
+	 (:file "physics")
 	 (:file "main")))))

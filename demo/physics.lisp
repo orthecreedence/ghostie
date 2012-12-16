@@ -1,4 +1,4 @@
-(in-package :ghostie)
+(in-package :ghostie-demo)
 
 (defun add-poly-to-sym (world verts &key (mass 1d0) body shape (x 0d0) (y 0d0) (angle 0d0) (u 1d0) (e 0d0) (color "#000000"))
   (let* ((space (world-physics world))
@@ -43,6 +43,7 @@
         (x (- (random 300d0) 150)))
     (add-poly-to-sym world verts :mass mass :x x :y 30d0 :u 0.4 :e 0d0 :color "#559955")))
 
+#|
 (defun add-random-bridge (world)
   (let* ((game-objects nil)
          (num-segments 10)
@@ -76,4 +77,5 @@
                                                                              a1x a1y a2x a2y)))))
               (cpw:space-add-joint (world-physics world) joint))))))
     game-objects))
+|#
 
