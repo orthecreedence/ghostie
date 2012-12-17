@@ -59,13 +59,11 @@
                             (coerce v 'double-float))
                           (getf actor-meta :start-pos '(0 0 0)))))
     (let* ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
-           (body-c (cpw:base-c body)))
-      (setf (cp-a:body-v-limit body-c) max-vel)
-      (cp:body-set-pos body-c (car position) (cadr position))
+           (body-c (cpw:base-c body))
+           (moment 0d0))
       (if physics-objects
           ;; load the physics objects from the meta
-          (let ((bb-max (apply #'max bb))
-                (moment 0d0))
+          (let ((bb-max (apply #'max bb)))
             (dolist (phys-obj physics-objects)
               (destructuring-bind (&key type position radius) phys-obj
                 (let ((r (* radius bb-max))
@@ -83,7 +81,6 @@
           ;; load a default physics object (a stupid circle in the center of
           ;; the actor)
           (let* ((radius (/ (- (cadddr bb) (cadr bb)) 2.5d0))
-                 (moment 0d0)
                  (x 0d0)
                  (y 0d0))
             (incf moment (cp:moment-for-circle mass radius 0d0 x y))
@@ -92,6 +89,9 @@
                                            (cp:circle-shape-new (cpw:base-c body)
                                                                 radius x y)))))
               (setf (cp-a:shape-u (cpw:base-c shape)) friction))))
+      (setf (cp-a:body-v-limit body-c) max-vel)
+      (cp:body-set-pos body-c (car position) (cadr position))
+      (cp:body-set-moment body-c moment)
       body)))
 
 (defmacro defactor (class-name superclasses slots &rest class-options)

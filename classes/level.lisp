@@ -8,9 +8,7 @@
    (meta :accessor level-meta :initarg :meta :initform nil)))
 
 (defun load-level (level-name)
-  "Load the level-name level! Does this by loading the SVG file holding the
-  objects for the level, and the associated meta file that describes the scene
-  and the actors in the level."
+  "Load a level via its SVG/meta.lisp file."
   (let* ((level (make-instance 'level))
          (level-directory (format nil "~a/~a/~a/~a/"
                                   (namestring *game-directory*)
@@ -79,7 +77,7 @@
                 (setf last-pt (list x y))))))))))
 
 (defun draw-level (level)
-  "...draw the entire level..."
+  "Draw the entire level (all contained objects)."
   (dolist (game-obj (level-objects level))
     (draw game-obj))
   (dolist (actor (level-actors level))
