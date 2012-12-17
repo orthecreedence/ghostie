@@ -6,44 +6,6 @@
    (vel-avg-x :accessor actor-vel-avg-x :initform 0d0)
    (vel-avg-y :accessor actor-vel-avg-y :initform 0d0)))
 
-(defun load-actor-physics-body- (actor actor-meta)
-  (let ((mass (getf actor-meta :mass 50d0))
-        (num-circles (getf actor-meta :num-circles 3))
-        (bb (calculate-game-object-bb actor)))
-    (let ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
-          (position (getf actor-meta :start-pos '(0 0 0))))
-      (let* ((max-vel (getf actor-meta :max-vel 200d0))
-             (height (- (cadddr bb) (cadr bb)))
-             (radius (/ (/ height num-circles) 2d0))
-             (moment 0d0))
-        (dotimes (i num-circles)
-          (let ((x 0d0)
-                (y (- (* i (* 2 radius)) (- (/ height 2) radius))))
-            (incf moment (cp:moment-for-circle mass radius 0d0 x y))
-            (let ((shape (cpw:make-shape :circle body (lambda (body) (cp:circle-shape-new (cpw:base-c body) radius x y)))))
-              ;(when (zerop i) (setf (actor-feet actor) shape))
-              (setf (cp-a:shape-u (cpw:base-c shape)) 0.9d0))))
-        (let ((body-c (cpw:base-c body)))
-          (cp:body-set-moment body-c moment)
-          (cp:body-set-pos body-c
-                           (coerce (car position) 'double-float)
-                           (coerce (cadr position) 'double-float))
-          (setf (cp-a:body-v-limit body-c) max-vel))
-        (enqueue (lambda (world)
-                   (let ((space (world-physics world)))
-                     ;; fix the character's rotation
-                     (let ((joint (cpw:make-joint (cpw:space-static-body space) body
-                                                  (lambda (body1 body2)
-                                                    (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
-                                                                                 0d0 (* mass 240000d0) (* mass 25000d0))))))
-                       (cpw:space-add-joint space joint))
-                     ;; add the body/shapes to the world
-                     (cpw:space-add-body space body)
-                     (dolist (shape (cpw:body-shapes body))
-                       (cpw:space-add-shape space shape))))
-                 :game)
-        body))))
-
 (defgeneric load-actor-physics-body (actor actor-meta)
   (:documentation
     "Load the physics body and shapes associated with this actor (along with
