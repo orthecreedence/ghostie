@@ -39,11 +39,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="374.97989"
-     inkscape:cy="707.34669"
+     inkscape:zoom="7.9195959"
+     inkscape:cx="356.06791"
+     inkscape:cy="515.14601"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="physics"
      showgrid="false"
      inkscape:window-width="931"
      inkscape:window-height="746"
@@ -76,4 +76,39 @@
        sodipodi:ry="28.284271"
        d="m 373.75643,531.12347 a 13.131983,28.284271 0 1 1 -26.26396,0 13.131983,28.284271 0 1 1 26.26396,0 z" />
   </g>
+  <!--
+  <g
+     inkscape:label="physics"
+     inkscape:groupmode="layer"
+     id="physics">
+    <circle
+       style="fill:#cc6611"
+       cx="360.62445"
+       cy="531.12347"
+       r="13.131983"
+       id="circle10" />
+    <circle
+       transform="matrix(0.5576923,0,0,0.5576923,159.50698,214.33814)"
+       sodipodi:ry="13.131983"
+       sodipodi:rx="13.131983"
+       sodipodi:cy="531.12347"
+       sodipodi:cx="360.62445"
+       style="fill:#cc6611"
+       cx="360.62445"
+       cy="531.12347"
+       r="13.131983"
+       id="circle10-1" />
+    <circle
+       transform="matrix(0.5576923,0,0,0.5576923,159.50698,255.50186)"
+       sodipodi:ry="13.131983"
+       sodipodi:rx="13.131983"
+       sodipodi:cy="531.12347"
+       sodipodi:cx="360.62445"
+       style="fill:#cc6611"
+       cx="360.62445"
+       cy="531.12347"
+       r="13.131983"
+       id="circle10-1-7" />
+  </g>
+  -->
 </svg>

@@ -5,5 +5,25 @@
            #:*resource-path*
            #:*actor-path*
            #:*level-path*
-           #:start))
+
+           #:dbg
+
+           #:enqueue
+
+           #:start
+
+           #:game-object
+           #:calculate-game-object-bb
+           
+           #:actor
+           #:actor-vel-avg-x
+           #:actor-vel-avg-y
+           #:load-actor-physics-body
+           #:defactor
+           #:defgmethod
+           
+           #:level
+           #:world
+           #:game
+           ))
 

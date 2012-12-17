@@ -4,22 +4,16 @@
 (defclass actor (game-object)
   ((is-main :accessor actor-is-main :initform nil)
    (vel-avg-x :accessor actor-vel-avg-x :initform 0d0)
-   (vel-avg-y :accessor actor-vel-avg-y :initform 0d0)
-   (feet :accessor actor-feet :initform nil)))
+   (vel-avg-y :accessor actor-vel-avg-y :initform 0d0)))
 
-(defun load-actor-physics-body (actor actor-meta)
-  (let ((mass (if (getf actor-meta :mass)
-                  (getf actor-meta :mass)
-                  50d0))
-        (num-circles (if (getf actor-meta :num-circles)
-                         (getf actor-meta :num-circles)
-                         3))
+(defun load-actor-physics-body- (actor actor-meta)
+  (let ((mass (getf actor-meta :mass 50d0))
+        (num-circles (getf actor-meta :num-circles 3))
         (bb (calculate-game-object-bb actor)))
     (let ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
-          (position (if (getf actor-meta :start-pos)
-                        (getf actor-meta :start-pos)
-                        '(0 0 0))))
-      (let* ((height (- (cadddr bb) (cadr bb)))
+          (position (getf actor-meta :start-pos '(0 0 0))))
+      (let* ((max-vel (getf actor-meta :max-vel 200d0))
+             (height (- (cadddr bb) (cadr bb)))
              (radius (/ (/ height num-circles) 2d0))
              (moment 0d0))
         (dotimes (i num-circles)
@@ -27,14 +21,14 @@
                 (y (- (* i (* 2 radius)) (- (/ height 2) radius))))
             (incf moment (cp:moment-for-circle mass radius 0d0 x y))
             (let ((shape (cpw:make-shape :circle body (lambda (body) (cp:circle-shape-new (cpw:base-c body) radius x y)))))
-              (when (zerop i) (setf (actor-feet actor) shape))
+              ;(when (zerop i) (setf (actor-feet actor) shape))
               (setf (cp-a:shape-u (cpw:base-c shape)) 0.9d0))))
         (let ((body-c (cpw:base-c body)))
           (cp:body-set-moment body-c moment)
           (cp:body-set-pos body-c
                            (coerce (car position) 'double-float)
                            (coerce (cadr position) 'double-float))
-          (setf (cp-a:body-v-limit body-c) *character-max-vel*))
+          (setf (cp-a:body-v-limit body-c) max-vel))
         (enqueue (lambda (world)
                    (let ((space (world-physics world)))
                      ;; fix the character's rotation
@@ -50,109 +44,98 @@
                  :game)
         body))))
 
+(defgeneric load-actor-physics-body (actor actor-meta)
+  (:documentation
+    "Load the physics body and shapes associated with this actor (along with
+     any other setup the body needs)."))
+
+(defmethod load-actor-physics-body ((actor actor) actor-meta)
+  (let ((mass (coerce (getf actor-meta :mass 50d0) 'double-float))
+        (max-vel (coerce (getf actor-meta :max-velocity 200d0) 'double-float))
+        (friction (coerce (getf actor-meta :friction 0.9d0) 'double-float))
+        (bb (calculate-game-object-bb actor))
+        (physics-objects (getf actor-meta :physics))
+        (position (mapcar (lambda (v)
+                            (coerce v 'double-float))
+                          (getf actor-meta :start-pos '(0 0 0)))))
+    (let* ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
+           (body-c (cpw:base-c body)))
+      (setf (cp-a:body-v-limit body-c) max-vel)
+      (cp:body-set-pos body-c (car position) (cadr position))
+      (if physics-objects
+          ;; load the physics objects from the meta
+          (let ((bb-max (apply #'max bb))
+                (moment 0d0))
+            (dolist (phys-obj physics-objects)
+              (destructuring-bind (&key type position radius) phys-obj
+                (let ((r (* radius bb-max))
+                      (x (* (car position) bb-max))
+                      (y (* (cadr position) bb-max)))
+                  (incf moment (cp:moment-for-circle mass r 0d0 x y))
+                  (unless (eq type :circle)
+                    (error (format nil "Unsupported physics type: ~a~%" type)))
+                  (let ((shape (cpw:make-shape :circle body
+                                               (lambda (body)
+                                                 (cp:circle-shape-new (cpw:base-c body)
+                                                                      r x y)))))
+                    (setf (cp-a:shape-u (cpw:base-c shape)) friction))))))
+
+          ;; load a default physics object (a stupid circle in the center of
+          ;; the actor)
+          (let* ((radius (/ (- (cadddr bb) (cadr bb)) 2.5d0))
+                 (moment 0d0)
+                 (x 0d0)
+                 (y 0d0))
+            (incf moment (cp:moment-for-circle mass radius 0d0 x y))
+            (let ((shape (cpw:make-shape :circle body
+                                         (lambda (body)
+                                           (cp:circle-shape-new (cpw:base-c body)
+                                                                radius x y)))))
+              (setf (cp-a:shape-u (cpw:base-c shape)) friction))))
+      body)))
+
+(defmacro defactor (class-name superclasses slots &rest class-options)
+  "Abstraction of defclass, solves inter-package issues (in other words, allows
+   a game to add its own actor class, and allows ghostie to see it in its
+   namespace by importing it)."
+  `(progn
+     ,(append `(defclass ,class-name ,superclasses
+                 ,slots)
+              (when class-options
+                (list class-options)))
+     (import ',class-name :ghostie)))
+
 (defun load-actors (actors-meta)
   (let ((actors nil))
     (dolist (actor-info actors-meta)
-      (let* ((scale (if (getf actor-info :scale)
-                        (getf actor-info :scale)
-                        '(1 1 1)))
+      (let* ((scale (getf actor-info :scale '(1 1 1)))
+             (actor-name (getf actor-info :actor))
              (actor-directory (format nil "~a/~a/~a/~a/"
                                       (namestring *game-directory*)
                                       *resource-path*
                                       *actor-path*
-                                      (getf actor-info :actor)))
+                                      actor-name))
+             (meta (read-file (format nil "~a/meta.lisp" actor-directory)))
              (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" actor-directory)
                                             :curve-resolution 20
                                             :scale (list (car scale) (- (cadr scale))))))
-        (let ((actor (car (svg-to-game-objects svg-objs nil :object-type 'actor :center-objects t))))
+        ;; set the actor's global meta into the level meta
+        (setf actor-info (append actor-info meta))
+
+        ;; load the actor's class file, if it has one
+        (let ((class-file (format nil "~a/class.lisp" actor-directory)))
+          (when (probe-file class-file)
+            (load class-file)))
+
+        (let* ((actor-symbol (intern (string-upcase actor-name) :ghostie))
+               (actor-class (if (find-class actor-symbol nil)
+                                actor-symbol
+                                'actor))
+               (actor (car (svg-to-game-objects svg-objs nil :object-type actor-class :center-objects t))))
           (setf (game-object-physics-body actor) (load-actor-physics-body actor actor-info)
                 (actor-is-main actor) (getf actor-info :main))
           (push actor actors))))
     actors))
-
-(defun get-object-under-actor (actor)
-  (when (and actor (game-object-physics-body actor))
-    (let ((feet-shape-c (cpw:base-c (actor-feet actor)))
-          (space-c (cpw:base-c (cpw:shape-space (actor-feet actor)))))
-      (cffi:with-foreign-object (query 'clipmunk:segment-query-info)
-        (let ((body-x (cp-a:body-p-x (cp-a:shape-body feet-shape-c)))
-              (body-y (cp-a:body-p-y (cp-a:shape-body feet-shape-c)))
-              (shape-offset-x (cp-a:circle-shape-c-x feet-shape-c))
-              (shape-offset-y (cp-a:circle-shape-c-y feet-shape-c))
-              (shape-radius (cp-a:circle-shape-r feet-shape-c)))
-          (let* ((x1 (+ body-x shape-offset-x))
-                 (y1 (+ body-y shape-offset-y 2d0 (- shape-radius)))
-                 (x2 x1)
-                 (y2 (- y1 10)))
-            (cp:space-segment-query-first space-c x1 y1 x2 y2 99 (cffi:null-pointer) query)
-            (let* ((shape (cp-a:segment-query-info-shape query))
-                   (body (unless (cffi:null-pointer-p shape)
-                           (cpw:find-body-from-pointer (cp-a:shape-body shape)))))
-              (when (and body (not (eql body (game-object-physics-body actor))))
-                (let ((n-x (cp-a:segment-query-info-n-x query))
-                      (n-y (cp-a:segment-query-info-n-y query)))
-                  ;(dbg :debug "cn: ~s~%" (list n-x n-y))
-                  (values shape (list n-x n-y)))))))))))
-
-(defun actor-grounded-p (actor)
-  (multiple-value-bind (shape contact-normal) (get-object-under-actor actor)
-    (when shape
-      (when (< (car contact-normal) (+ (cadr contact-normal) 0.3))
-        t))))
-
-(defun actor-stop (actor)
-  (when (and actor (game-object-physics-body actor))
-    (let ((shape-c (cpw:base-c (caddr (cpw:body-shapes (game-object-physics-body actor))))))
-      (setf (cp-a:shape-surface_v-x shape-c) 0d0
-            (cp-a:shape-surface_v-y shape-c) 0d0))))
-
-(defun actor-impulse (actor x &key (max-speed-div 1))
-  "Move the character on the HORizonal plane."
-  (when (and actor (game-object-physics-body actor))
-    (let ((body-c (cpw:base-c (game-object-physics-body actor))))
-      (let ((vel (cp-a:body-v-x body-c))
-            (y (* x 0)))
-        (let ((*character-max-run* (if (actor-grounded-p actor)
-                                       *character-max-run*
-                                       (* *character-max-run* .2))))
-          (when (< (abs vel) (/ *character-max-run* max-speed-div))
-            (cp:body-apply-impulse body-c
-                                   (* x (cp-a:body-m body-c))
-                                   (* y (cp-a:body-m body-c))
-                                   0d0 0d0)))))))
-
-(defun actor-run (actor x)
-  "Move the character on the HORizonal plane."
-  (when (and actor (game-object-physics-body actor))
-    (let ((body-c (cpw:base-c (game-object-physics-body actor))))
-      (let ((vel (cp-a:body-v-x body-c))
-            (y (/ (abs x) 3)))
-        (when (< (abs vel) *character-max-run*)
-          ;(setf (cp-a:shape-u shape-c) (if (zerop x) 0.4d0 0.1d0))
-          (if (actor-grounded-p actor)
-              (let ((shape-c (cpw:base-c (actor-feet actor))))
-                (cp:body-activate body-c)
-                (setf (cp-a:shape-surface_v-x shape-c) (coerce x 'double-float)
-                      (cp-a:shape-surface_v-y shape-c) (coerce y 'double-float)))
-              (cp:body-apply-impulse body-c
-                                     (* 0.02d0 x (cp-a:body-m body-c))
-                                     0d0
-                                     0d0 0d0)))))))
-
-(defun actor-jump (actor &key (x 0d0) (y 300d0))
-  "Make the character jump."
-  (when (and actor (game-object-physics-body actor))
-    (let* ((body-c (cpw:base-c (game-object-physics-body actor))))
-      ;(dbg :debug "v-y: ~s ~s~%" (cp-a:body-v-y body-c) (actor-vel-avg-y actor))
-      (when (and (actor-grounded-p actor)
-                 (< (abs (cp-a:body-v-y body-c)) 160)
-                 (< (abs (actor-vel-avg-y actor)) 160))
-        (let* ((vel-x (cp-a:body-v-x body-c))
-               (x (* x (- 1 (/ (abs vel-x) *character-max-run*)))))
-          (cp:body-apply-impulse body-c
-                                 (* (cp-a:body-m body-c) (coerce x 'double-float))
-                                 (* (cp-a:body-m body-c) (coerce y 'double-float))
-                                 0d0 0d0))))))
 
 (defun update-actor-state (actor)
   (when (and actor (game-object-physics-body actor))
@@ -164,3 +147,4 @@
                                        (* (- 1d0 alpha) (actor-vel-avg-x actor)))
             (actor-vel-avg-y actor) (+ (* alpha vel-y)
                                        (* (- 1d0 alpha) (actor-vel-avg-y actor)))))))
+

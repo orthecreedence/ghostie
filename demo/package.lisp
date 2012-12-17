@@ -12,9 +12,12 @@
   (:import-from #:ghostie #:make-fake-gl-object)
   (:import-from #:ghostie #:hex-to-rgb)
   (:import-from #:ghostie #:make-game-object)
-  (:import-from #:ghostie #:game-object)
+
   (:import-from #:ghostie #:game-object-position)
+  (:import-from #:ghostie #:game-object-physics-body)
   (:import-from #:ghostie #:game-object-render-ref)
+
+
   (:import-from #:ghostie #:enqueue)
   (:export #:start))
 (in-package :ghostie-demo)

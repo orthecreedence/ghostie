@@ -9,6 +9,7 @@
     :serial t
 	:components
 	((:file "package")
+	 (:file "config")
 	 (:file "input")
 	 (:file "physics")
 	 (:file "main")))))
