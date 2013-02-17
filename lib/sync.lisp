@@ -1,4 +1,4 @@
-(in-package :ghostie)
+(in-package :ghostie-util)
 
 (defparameter *queue-game-to-render* nil)
 (defparameter *queue-render-to-game* nil)

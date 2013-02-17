@@ -1,11 +1,31 @@
-(in-package :ghostie)
+(defpackage :ghostie-util
+  (:use :cl :ghostie-config)
+  (:export #:dbg
+           #:flatten-image-data
+           #:file-contents
+           #:load-points-from-ai
+           #:load-triangles-from-ply
+           #:hex-to-rgb
+           #:read-file
+           #:def-c-callback
+           #:bit-or
+           #:svg-from-polygons
 
-(defconstant +log-levels+ '(:emerg 0
-                            :error 1
-                            :warning 2
-                            :notice 3
-                            :info 4
-                            :debug 5))
+           #:*queue-game-to-render*
+           #:*queue-render-to-game*
+           #:init-message-queue
+           #:enqueue
+           #:process-queue
+           
+           #:id-matrix
+           #:mat*
+           #:m-perspective
+           #:m-ortho
+           #:m-rotate
+           #:m-scale
+           #:m-translate))
+(in-package :ghostie-util)
+
 (defun dbg (loglevel &rest format-args)
   (when (<= (getf +log-levels+ loglevel) (getf +log-levels+ *log-level*))
     (apply #'format (append (list t) format-args))))

@@ -3,10 +3,11 @@
 (defun mouse-pos ()
   (glfw:get-mouse-pos))
 
-(defun mouse-btn (btn-num)
+(defun mouse-button-pressed-p (btn-num)
   (eq (glfw:get-mouse-button btn-num) glfw:+press+))
 
 (defmacro key= (key)
+  "Macro that wraps key status testing."
   (let ((key (if (characterp key)
                  (char-int key)
                  key)))

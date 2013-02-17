@@ -1,35 +1,59 @@
-(asdf:defsystem ghostie
-  :author "Andrew Lyon <andrew@lyonbros.com>"
+(asdf:defsystem ghostie-config
+  :author "Andrew Lyon <orthecreedence@gmail.com>"
   :licence "MIT"
   :version "0.2.1"
-  :description "Ghostie: A platformer engine for CL."
-  :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:jpl-queues #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper #:ghostie-event)
+  :description "Configuration for Ghostie"
+  :depends-on (#:chipmunk-wrapper)
   :components
-  ((:file "package")
-   (:file "config" :depends-on ("package"))
-   (:module lib
-    :depends-on ("config")
+  ((:file "config")))
+
+(asdf:defsystem ghostie-util
+  :author "Andrew Lyon <orthecreedence@gmail.com>"
+  :licence "MIT"
+  :version "0.2.1"
+  :description "Utility package for Ghostie"
+  :depends-on (#:split-sequence #:cffi #:jpl-queues #:ghostie-config)
+  :components
+  ((:module lib
 	:serial t
 	:components
 	((:file "util")
 	 (:file "sync")
-	 (:file "matrix")))
+	 (:file "matrix")))))
+
+(asdf:defsystem ghostie-event
+  :author "Andrew Lyon <orthecreedence@gmail.com>"
+  :licence "MIT"
+  :version "0.2.1"
+  :description "Event system for Ghostie"
+  :depends-on (#:ghostie-config #:ghostie-util)
+  :components
+  ((:file "event")))
+
+(asdf:defsystem ghostie
+  :author "Andrew Lyon <orthecreedence@gmail.com>"
+  :licence "MIT"
+  :version "0.2.1"
+  :description "Ghostie: A platformer engine for CL"
+  :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper #:ghostie-config #:ghostie-util #:ghostie-event)
+  :components
+  ((:file "package")
    (:module opengl
-	:depends-on (lib)
+	:depends-on ("package")
     :serial t
 	:components
 	((:file "shaders")
 	 (:file "fbo")
 	 (:file "object")))
-   (:file "input" :depends-on (lib))
+   (:file "input")
    (:file "window" :depends-on (opengl))
    (:module classes
-	:depends-on (lib)
+	:depends-on ("package")
     :serial t
 	:components
 	((:file "game-object")
 	 (:file "actor")
 	 (:file "level")))
-   (:file "world" :depends-on (lib opengl classes))
+   (:file "world" :depends-on ("package" opengl classes))
    (:file "game" :depends-on ("world"))))
 

@@ -7,6 +7,7 @@
            #:enable-binding))
 (in-package :ghostie-event)
 
+;; TODO: rename this. stupid name "binding" WTF does that mean?
 (defclass binding ()
   ((event-type :accessor binding-event :initarg :event-type :initform nil)
    (types :accessor binding-types :initarg :types :initform nil)

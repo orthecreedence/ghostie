@@ -1,4 +1,34 @@
-(in-package :ghostie)
+(defpackage :ghostie-config
+  (:use :cl)
+  (:export #:+log-levels+
+           
+           #:*ghostie-directory*
+           
+           #:*game-directory*
+           #:*class-path*
+           #:*resource-path*
+           #:*actor-path*
+           #:*level-path*
+           
+           #:*log-level*
+           
+           #:+infinity-f+
+           #:+neg-infinity-f+
+
+           #:+config-graphics-window-x+
+           #:+config-graphics-window-y+
+           #:+config-graphics-pixels-per-meter+
+           
+           #:+dt+
+           #:*physics-segment-thickness*))
+(in-package :ghostie-config)
+
+(defconstant +log-levels+ '(:emerg 0
+                            :error 1
+                            :warning 2
+                            :notice 3
+                            :info 4
+                            :debug 5))
 
 (setf *random-state* (make-random-state t))
 

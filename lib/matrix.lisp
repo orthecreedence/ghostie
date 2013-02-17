@@ -1,4 +1,4 @@
-(in-package :ghostie)
+(in-package :ghostie-util)
 
 (defun id-matrix (dims)
   (let ((array (make-array (* dims dims) :initial-element 0.0 :element-type 'single-float)))
