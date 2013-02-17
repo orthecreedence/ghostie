@@ -7,17 +7,14 @@
            #:enable-binding))
 (in-package :ghostie-event)
 
-;; TODO: rename this. stupid name "binding" WTF does that mean?
-(defclass binding ()
-  ((event-type :accessor binding-event :initarg :event-type :initform nil)
-   (types :accessor binding-types :initarg :types :initform nil)
-   (function :accessor binding-fn :initarg :fn :initform nil)
-   (name :accessor binding-name :initarg :name :initform nil)
-   (enabled :accessor binding-enabled :initarg :enabled :initform t))
+(defclass event-binding ()
+  ((event-type :accessor event-binding-event :initarg :event-type :initform nil)
+   (types :accessor event-binding-types :initarg :types :initform nil)
+   (function :accessor event-binding-fn :initarg :fn :initform nil)
+   (name :accessor event-binding-name :initarg :name :initform nil)
+   (enabled :accessor event-binding-enabled :initarg :enabled :initform t))
   (:documentation "Describes a binding of a function to an event."))
 
-;(defvar *events* (make-instance 'jpl-queues:unbounded-fifo-queue)
-;  "Holds all events in the ghostie system.")
 (defvar *events* nil)
 
 (defvar *event-bindings* nil
@@ -36,10 +33,10 @@
          (arg-types (loop for arg in args collect (type-of arg))))
     ;; loop over every binding, looking for matching functions
     (dolist (binding *event-bindings*)
-      (let* ((bind-event (binding-event binding))
-             (bind-types (binding-types binding))
-             (bind-fn (binding-fn binding))
-             (bind-enabled (binding-enabled binding))
+      (let* ((bind-event (event-binding-event binding))
+             (bind-types (event-binding-types binding))
+             (bind-fn (event-binding-fn binding))
+             (bind-enabled (event-binding-enabled binding))
              ;; check if the binding is, in fact, enabled (ie either enabled is
              ;; T OR the disabled-time has expired)
              (enabled (cond ((numberp bind-enabled)
@@ -48,7 +45,7 @@
                              bind-enabled))))
         ;; if the binding isn't disabled, make sure it's just set to T for fast
         ;; processing next loop
-        (when enabled (setf (binding-enabled binding) t))
+        (when enabled (setf (event-binding-enabled binding) t))
 
         (block skip-binding
           ;; make sure we have a matching event type (easiest test)
@@ -68,10 +65,10 @@
 (defun find-binding (event-type binding)
   "Given an event type"
   (let ((find-fn (if (functionp binding)
-                     (lambda (bind) (eq binding (binding-fn bind)))
-                     (lambda (bind) (equal binding (binding-name bind))))))
+                     (lambda (bind) (eq binding (event-binding-fn bind)))
+                     (lambda (bind) (equal binding (event-binding-name bind))))))
     (find-if (lambda (bind)
-               (and (eq event-type (binding-event bind))
+               (and (eq event-type (event-binding-event bind))
                     (funcall find-fn bind)))
              *event-bindings*)))
 
@@ -98,13 +95,13 @@
   (when binding-name
     (setf *event-bindings*
           (remove-if (lambda (binding)
-                       (and (eq event (binding-event binding))
-                            (or (equal binding-name (binding-name binding))
-                                (equal fn (binding-fn binding)))))
+                       (and (eq event (event-binding-event binding))
+                            (or (equal binding-name (event-binding-name binding))
+                                (equal fn (event-binding-fn binding)))))
                      *event-bindings*)))
 
   ;; add the binding to the dispatch table
-  (push (make-instance 'binding
+  (push (make-instance 'event-binding
                        :event-type event
                        :types (loop for arg in types/args
                                     if (listp arg)
@@ -139,7 +136,7 @@
   (setf *event-bindings* (remove-if
                            (lambda (binding)
                              (and (or (null event-type)
-                                      (eq event-type (binding-event binding)))
+                                      (eq event-type (event-binding-event binding)))
                                   (funcall remove-fn binding)))
                            *event-bindings*)))
 
@@ -147,18 +144,18 @@
   (:documentation "Unbind a specific function from an event."))
 
 (defmethod unbind ((event-type symbol) (fn function))
-  (do-unbind event-type (lambda (binding) (equal fn (binding-fn binding)))))
+  (do-unbind event-type (lambda (binding) (equal fn (event-binding-fn binding)))))
 
 (defmethod unbind ((event-type symbol) (name symbol))
-  (do-unbind event-type (lambda (binding) (eq name (binding-name binding)))))
+  (do-unbind event-type (lambda (binding) (eq name (event-binding-name binding)))))
 
 (defmethod unbind ((event-type symbol) (name string))
-  (do-unbind event-type (lambda (binding) (string= name (binding-name binding)))))
+  (do-unbind event-type (lambda (binding) (string= name (event-binding-name binding)))))
 
 (defun unbind-all (&optional event-type)
   "Remove all bindings from an event. If event is nil, unbinds all events, ever."
   (if event-type
-      (do-unbind nil (lambda (binding) (eq event-type (binding-event binding))))
+      (do-unbind nil (lambda (binding) (eq event-type (event-binding-event binding))))
       (setf *event-bindings* nil)))
 
 
@@ -171,12 +168,12 @@
                         (+ (get-internal-real-time)
                            (floor (* time internal-time-units-per-second)))
                         nil)))
-        (setf (binding-enabled binding) period))
+        (setf (event-binding-enabled binding) period))
       binding)))
 
 (defun enable-binding (event-type binding)
   "Enables a previously disabled binding."
   (let ((binding (find-binding event-type binding)))
     (when binding
-      (setf (binding-enabled binding) t))))
+      (setf (event-binding-enabled binding) t))))
 
