@@ -9,9 +9,13 @@
   ((physics :accessor world-physics :initform nil)
    (position :accessor world-position :initform '(0 0 -36))
    (level :accessor world-level :initform nil)
-   (draw-meta :accessor world-draw-meta :initform nil)))
+   (draw-meta :accessor world-draw-meta :initform nil))
+  (:documentation "Describes a world (physics, current level, and objects."))
 
 (defun create-world (&optional world)
+  "Create (or re-initialize) a world object. Sets up physics and some default
+   drawing characteristics for the world."
+  (dbg :debug "(world) Creating world~%")
   (let ((world (if world world (make-instance 'world))))
     ;; setup physics
     (let ((space (cpw:make-space :gravity-y -9.8d0)))
@@ -27,6 +31,8 @@
 ;;; Game functions
 ;;; ----------------------------------------------------------------------------
 (defun world-game-cleanup (world)
+  "Cleanup (ie free) any game objects in the game thread, free the physics world
+   and mark the world as empty."
   (dbg :info "Cleaning up game world~%")
   (when (world-level world)
     (level-cleanup (world-level world)))
@@ -42,16 +48,33 @@
   world)
 
 (defun game-world-sync (world)
+  "This function makes sure all objects in the game thread are synced with their
+   physics counterparts.
+   
+   It also copies some of the world's display properties over to the render
+   thread for display."
   (let ((level (world-level world)))
+    ;; sync each game object with its physics body
     (dolist (game-object (append (level-objects level)
                                  (level-actors level)))
       (sync-game-object-to-physics game-object :render t))
+    ;; update the render thread with our world display info
     (let ((pos (copy-tree (world-position world))))
       (enqueue (lambda (render-world)
                  (setf (world-position render-world) pos))
                :render))))
 
+;; TODO: move this to the app (this makes assumptions about the game)
+(defun sync-window-actor-position (world actor)
+  "Keeps the camera position in sync with an actor."
+  (let* ((position (game-object-position actor))
+         (x (- (* (car position) .5)))
+         (y (- (* (cadr position) .5))))
+    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
+
 (defun step-game-world (world)
+  "Move the game world forward by one step. Calculates the physics delta for
+   each simulated object"
   (when *quit* (return-from step-game-world nil))
   (trigger :game-step world)
   (let ((space (world-physics world)))
@@ -61,16 +84,21 @@
       (sync-game-object-to-physics game-object))
     (dolist (actor (level-actors (world-level world)))
       (update-actor-state actor))
+    ;; TODO: remove concept of "main" actor?? a game might want multiple, and
+    ;; having a main one makes too many assumptions
     (let ((actor (level-main-actor (world-level world))))
       (when actor
         ;(actor-stop actor)
         (sync-window-actor-position world actor)))))
 
-(defun world-load-level (world level)
+(defun world-load-level (world level-name)
+  "Load a level into the given world."
   ;; load the current level
-  (setf (world-level world) (load-level level))
+  (dbg :notice "(world) Loading level ~a~%" level-name)
+  (setf (world-level world) (load-level level-name))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
+    ;; grab/generate some display/physics characteristics for the level
     (let* ((camera (getf level-meta :camera))
            (gravity (getf level-meta :gravity))
            (iterations (getf level-meta :physics-iterations))
@@ -98,24 +126,24 @@
   (let ((meta (copy-tree (world-draw-meta world)))
         (position (copy-tree (world-position world))))
     (enqueue (lambda (render-world)
-               (dbg :info "Copying game world meta to render world.~%")
+               (dbg :info "(world) Copying game world meta to render world.~%")
                (apply #'gl:clear-color (getf meta :background))
                (setf (world-draw-meta render-world) meta
                      (world-position render-world) position))
-             :render))
-  (dbg :info "Finished asset load.~%"))
+             :render)))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Render functions
 ;;; ----------------------------------------------------------------------------
 (defun step-render-world (world dt)
+  "Runs all queued render items (in the render thread) and draws the world. Also
+   lets the game thread know a render happened, as well as syncs game objects to
+   their physics bodies."
   ;(handler-case
     (progn
       (enqueue (lambda (game-world)
                  (trigger :render-step world dt)
                  (game-world-sync game-world)) :game)
-      ;(when (not (zerop (jpl-queues:size *queue-game-to-render*)))
-      ;  (format t "Render queue size: ~a~%" (jpl-queues:size *queue-game-to-render*)))
       (process-queue world :render)
       (draw-world world))
     ;(error (e)
@@ -126,6 +154,8 @@
     )
 
 (defun world-render-cleanup (world)
+  "Cleanup the render thread. Frees any OpenGL objects laying around and makes
+   sure any other display objects are properly cleaned up."
   (dbg :info "Cleaning up render world~%")
   (when (world-level world)
     (level-cleanup (world-level world)))
@@ -134,26 +164,26 @@
   (free-gl-assets)
   world)
 
-(defun sync-window-actor-position (world actor)
-  (let* ((position (game-object-position actor))
-         (x (- (* (car position) .5)))
-         (y (- (* (cadr position) .5))))
-    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
-
 (defun free-gl-assets ()
+  "Free all the GL objects we're using to display our game world."
   (loop for (nil obj) on *game-data* by #'cddr do
     (when (subtypep (type-of obj) 'gl-object)
       (free-gl-object obj)))
   (setf *game-data* nil))
 
 (defun init-render (world)
+  "Init the render thread."
   (free-gl-assets)
   (apply #'gl:clear-color (getf (world-draw-meta world) :background))
   ;; this is the quad we render our FBO texture onto
   (setf (getf *game-data* :quad) (make-gl-object :data '(((-1 -1 0) (1 -1 0) (-1 1 0)) ((1 -1 0) (1 1 0) (-1 1 0)))
                                                  :uv-map #(0 0 1 0 0 1 1 1))))
 
+;; TODO: custom pipeline.
+;; TODO: move things like fog to game (makes assumptions)
 (defun draw-world (world)
+  "Draw the render world. This function processes all the shaders and GL objects
+   and draws them onto the window."
   (when *quit* (return-from draw-world nil))
   (gl:bind-framebuffer-ext :framebuffer (gl-fbo-fbo (getf *render-objs* :fbo1)))
   (gl:clear :color-buffer-bit :depth-buffer)
@@ -187,6 +217,7 @@
   (use-shader 0))
 
 (defun test-gl-funcs ()
+  "IGNORE ME!!"
   ;(gl:clear-color 1 1 1 1)
   (format t "OpenGL version: ~a~%" (gl:get-string :version))
   (format t "Shader version: ~a~%" (gl:get-string :shading-language-version))

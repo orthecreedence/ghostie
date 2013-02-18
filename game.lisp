@@ -19,6 +19,7 @@
              (unwind-protect
                ;(handler-case
                  (progn
+                   (dbg :info "(game) Starting game thread~%")
                    (world-load-level game-world level-name)
                    (loop while (not (game-quit game)) do
                      (process-queue game-world :game)
@@ -32,6 +33,7 @@
                  ;)
                (world-game-cleanup game-world)))
            (render-thread ()
+             (dbg :info "(game) Starting render thread~%")
              (create-window (lambda ()
                               (init-render render-world)
                               (process-queue render-world :render))
@@ -44,6 +46,7 @@
                             :height 600)
              (setf (game-quit game) t)))
       (init-message-queue)
+      (dbg :info "(game) Creating game object~%")
       (setf game (make-instance 'game
                    :game-world game-world
                    :game-thread (bt:make-thread #'game-thread :name "game-thread")
@@ -63,6 +66,7 @@
                    (bt:destroy-thread thread)
                    (bt:join-thread thread))
                (dbg :info "Ghostie thread stopped (:force ~a)~%" force)))))
+    (dbg :info "(game) Stopping game and render threads~%")
     (enqueue (lambda (w)
                (declare (ignore w))
                (setf *quit* t)

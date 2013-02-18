@@ -1,5 +1,5 @@
 (defpackage :ghostie-event
-  (:use :cl)
+  (:use :cl :ghostie-config :ghostie-util)
   (:export #:trigger
            #:bind
            #:unbind
@@ -84,7 +84,9 @@
 (defun trigger (event-type &rest args)
   "Trigger a ghostie event"
   (push (make-event event-type args) *events*)
-  ;(jpl-queues:enqueue (make-event event-type args) *events*)
+  (unless (or (eq event-type :game-step)
+              (eq event-type :render-step))
+    (dbg :debug "(event) Trigger: ~s~%" event-type))
   (process-events))
 
 (defun bind-event (event types/args fn &key binding-name)

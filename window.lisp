@@ -70,9 +70,14 @@
      ;; use the window manager's getProceAddress, which makes everything magically work
      (setf cl-opengl-bindings:*gl-get-proc-address* #'glfw:get-proc-address)
      (glfw:set-window-size-callback (cffi:callback resize-window-cb))
-     (glfw:set-key-callback (cffi:callback key-pressed-cb))
+     (glfw:set-key-callback (cffi:callback key-press-cb))
+     (glfw:set-mouse-pos-callback (cffi:callback mouse-move-cb))
+     (glfw:set-mouse-button-callback (cffi:callback mouse-button-cb))
+     (glfw:set-mouse-wheel-callback (cffi:callback mouse-wheel-cb))
+     (setf *last-mouse-wheel-pos* 0)    ; we track this manually, so reset it
      (init-opengl)
-     (funcall setup-fn))
+     (funcall setup-fn)
+     (dbg :info "(window) Window setup (~sx~s), starting render loop~%" width height))
 
     ;; this is our main loop (just call the draw fn over and over)
     (when *quit*
@@ -85,7 +90,6 @@
 
 (defun resize-window (width height)
   (setf height (max height 1))
-  ;(format t "Resize window: ~ax~a~%" width height)
   (setf *perspective-matrix* (m-perspective 45.0 (/ width height) 1.0 6000.0))
   (setf *ortho-matrix* (m-ortho -1.0 1.0 -1.0 1.0 -1.0 1.0))
   (setf *window-width* width

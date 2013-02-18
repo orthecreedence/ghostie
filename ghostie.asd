@@ -45,8 +45,8 @@
 	((:file "shaders")
 	 (:file "fbo")
 	 (:file "object")))
-   (:file "input")
-   (:file "window" :depends-on (opengl))
+   (:file "input" :depends-on ("package" opengl))
+   (:file "window" :depends-on ("package" opengl))
    (:module classes
 	:depends-on ("package")
     :serial t

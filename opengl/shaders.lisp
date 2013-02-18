@@ -45,7 +45,7 @@
     (gl:shader-source shader src)
     (gl:compile-shader shader)
     (let ((log (gl:get-shader-info-log shader)))
-      (when log (dbg :info "  Shader log (~a): ~a~%" type (gl:get-shader-info-log shader))))
+      (when log (dbg :info "(shader)   Shader log (~a): ~a~%" type (gl:get-shader-info-log shader))))
     shader))
 
 (defun create-shader-program (shader-pairs)
@@ -57,11 +57,11 @@
         (gl:attach-shader program shader)))
     (gl:link-program program)
     (let ((log (gl:get-program-info-log program)))
-      (when log (dbg :info "  Program log: ~a~%" (gl:get-program-info-log program))))
+      (when log (dbg :info "(shader)   Program log: ~a~%" (gl:get-program-info-log program))))
     (dolist (shader shaders)
       (gl:detach-shader program shader)
       (gl:delete-shader shader))
-    (dbg :info "Shaders (re)compiled.~%")
+    (dbg :info "(shader) Shaders (re)compiled.~%")
     program))
 
 (defun make-shader (vert-filename frag-filename)
@@ -72,6 +72,7 @@
 (defun free-shaders ()
   (loop for (nil program) on *shaders* by #'cddr do
         (gl:delete-program program))
+  (dbg :debug "(shader) Shaders freed (~a)~%" (/ (length *shaders*) 2))
   (setf *shaders* nil)
   (setf *shader-unif-locations* (make-hash-table :test #'equal)))
 
