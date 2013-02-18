@@ -47,6 +47,7 @@
 	 (:file "object")))
    (:file "input" :depends-on ("package" opengl))
    (:file "window" :depends-on ("package" opengl))
+   (:file "physics" :depends-on ("package" opengl))
    (:module classes
 	:depends-on ("package")
     :serial t
