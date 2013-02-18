@@ -5,7 +5,8 @@
    (main-actor :accessor level-main-actor :initform nil)
    (actors :accessor level-actors :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)
-   (meta :accessor level-meta :initarg :meta :initform nil)))
+   (meta :accessor level-meta :initarg :meta :initform nil))
+  (:documentation "Describes a level, and the objects in that level."))
 
 (defun load-level (level-name)
   "Load a level via its SVG/meta.lisp file."
@@ -33,7 +34,20 @@
     (trigger :level-load level)
     level))
 
+(defun add-level-object (level object)
+  "Add an object to a level. The object will be processed every game loop, and
+   if it has physics, will be simulated in the physics world."
+  (trigger :object-add level object)
+  (push object (level-objects level)))
+
+(defun remove-level-object (level object)
+  "Remove an object from a level's simulation. If the object doesn't exist in
+   the level, nothing happens."
+  (trigger :object-remove level object)
+  (setf (level-objects level) (delete object (level-objects level) :test #'equal)))
+
 (defun level-cleanup (level)
+  "Clean up the objects in a level (in the game thread) and reset the level."
   (dolist (game-object (append (level-objects level)
                                (level-actors level)))
     (destroy-game-object game-object))
@@ -45,7 +59,10 @@
 
 (defun init-level-physics-objects (world)
   "Determine the objects used as collision objects in this level and create
-  physics bodies for them."
+   physics bodies for them.
+   
+   Generally this happens for the ground/walls/etc of a level that are
+   positioned at the level's collision depth (default 0)."
   (let* ((level (world-level world))
          (collision-objects (remove-if (lambda (game-object) (not (eq (caddr (game-object-position game-object)) (level-collision-depth level))))
                                        (level-objects level)))

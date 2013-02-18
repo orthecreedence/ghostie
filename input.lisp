@@ -15,6 +15,16 @@
   "Determines if a particular mouse button is pressed."
   (eq (glfw:get-mouse-button btn-num) glfw:+press+))
 
+(defun grab-mouse ()
+  "Allows the window to hide the mouse and keep it from leaving the window. This
+   can be useful if you want the mouse cursor to control various objects in the
+   game without showing the native mouse cursor."
+  (glfw:disable glfw:+mouse-cursor+))
+
+(defun release-mouse ()
+  "Gives the mouse cursor back to the OS (opposite of grab-mouse)."
+  (glfw:enable glfw:+mouse-cursor+))
+
 (defmacro key= (key)
   "Macro that wraps key status testing."
   (let ((key (if (characterp key)

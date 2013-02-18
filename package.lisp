@@ -23,6 +23,8 @@
            #:defgmethod
            
            #:level
+           #:add-level-object
+           
            #:world
            #:game
            ))

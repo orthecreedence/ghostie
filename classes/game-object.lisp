@@ -54,6 +54,11 @@
                 (getf (game-object-meta game-object) :sleeping) sleeping)
           (let ((render-game-object (game-object-render-ref game-object)))
             (when (and render (game-object-display game-object) render-game-object)
+              ;; run the sleep/wake events for this object (if needed)
+              (cond ((and sleeping (not (getf (game-object-last-sync game-object) :sleeping)))
+                     (trigger :object-sleep game-object))
+                    ((and (not sleeping) (getf (game-object-last-sync game-object) :sleeping))
+                     (trigger :object-wake game-object)))
               (setf (game-object-last-sync game-object) (list :position position
                                                               :rotation rotation
                                                               :sleeping sleeping))

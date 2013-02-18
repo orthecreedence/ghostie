@@ -42,7 +42,10 @@
       (let ((position (copy-tree (ghostie::world-position render-world))))
         (setf (ghostie::world-position game-world) position)))
     (when (key= #\A)
-      (add-random-box game-world))))
+      (enqueue (lambda (w)
+                 (declare (ignore w))
+                 (add-random-box game-world))
+               :game))))
 
 (defun input-key-press (game key)
   (when (or (eq (code-char key) #\Q)

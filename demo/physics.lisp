@@ -21,7 +21,8 @@
                                            :physics poly-body)))
         (cpw:space-add-body space poly-body)
         (cpw:space-add-shape space poly-shape)
-        (push game-object (level-objects (world-level world)))
+        (add-level-object (world-level world) game-object)
+        ;(push game-object (level-objects (world-level world)))
         (sync-game-object-to-physics game-object)
         (let ((render-game-object (make-game-object :type 'game-object
                                                     :position (copy-tree (game-object-position game-object))
