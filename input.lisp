@@ -65,7 +65,6 @@
 (defun mouse-wheel (pos)
   "Triggered when the mouse wheel is moved."
   (let* ((change (- pos *last-mouse-wheel-pos*)))
-    (Format t "change: ~S~%" change)
     (setf *last-mouse-wheel-pos* pos)
     (enqueue (lambda (w)
                (declare (ignore w))

@@ -74,9 +74,6 @@
 
 (defun process-events ()
   "Process all queued events."
-  ;(loop
-  ;  (when (jpl-queues:empty? *events*) (return))
-  ;  (dispatch-event (jpl-queues:dequeue *events*)))
   (dolist (event (reverse *events*))
     (dispatch-event event))
   (setf *events* nil))
@@ -84,8 +81,10 @@
 (defun trigger (event-type &rest args)
   "Trigger a ghostie event"
   (push (make-event event-type args) *events*)
-  (unless (or (eq event-type :game-step)
-              (eq event-type :render-step))
+  (unless (or (eq event-type :game-step)       ; no need to bitch on every step
+              (eq event-type :render-step)
+              (eq event-type :collision-pre)   ; these two are just too noisy
+              (eq event-type :collision-post))
     (dbg :debug "(event) Trigger: ~s~%" event-type))
   (process-events))
 

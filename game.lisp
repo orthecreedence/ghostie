@@ -31,7 +31,8 @@
                  ;  (setf *quit* t)
                  ;  (error e))
                  ;)
-               (world-game-cleanup game-world)))
+               (world-game-cleanup game-world)
+               (dbg :info "(game) Game thread exiting~%")))
            (render-thread ()
              (dbg :info "(game) Starting render thread~%")
              (create-window (lambda ()
@@ -44,7 +45,8 @@
                             :title "Ghostie"
                             :width 900
                             :height 600)
-             (setf (game-quit game) t)))
+             (setf (game-quit game) t)
+             (dbg :info "(game) Render thread exiting~%")))
       (init-message-queue)
       (dbg :info "(game) Creating game object~%")
       (setf game (make-instance 'game

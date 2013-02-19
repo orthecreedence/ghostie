@@ -39,7 +39,7 @@
 (defun world-game-cleanup (world)
   "Cleanup (ie free) any game objects in the game thread, free the physics world
    and mark the world as empty."
-  (dbg :info "Cleaning up game world~%")
+  (dbg :info "(world) Cleaning up game world~%")
   (when (world-level world)
     (level-cleanup (world-level world)))
   (let ((space (world-physics world)))
@@ -162,7 +162,7 @@
 (defun world-render-cleanup (world)
   "Cleanup the render thread. Frees any OpenGL objects laying around and makes
    sure any other display objects are properly cleaned up."
-  (dbg :info "Cleaning up render world~%")
+  (dbg :info "(world) Cleaning up render world~%")
   (when (world-level world)
     (level-cleanup (world-level world)))
   (setf (world-level world) nil

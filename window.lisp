@@ -95,7 +95,9 @@
   (setf *window-width* width
         *window-height* height)
   (when *render-objs* (free-fbos))
-  ;; TODO: do we need to free the old FBO here??
+  (let ((fbo (getf *render-objs* :fbo1)))
+    (when fbo
+      (free-fbo fbo)))
   (setf (getf *render-objs* :fbo1) (make-fbo width height :depth-type :tex))
   (gl:viewport 0 0 width height)
   (trigger :window-resize (list width height)))
