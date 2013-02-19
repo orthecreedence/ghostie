@@ -5,6 +5,7 @@
            #:*resource-path*
            #:*actor-path*
            #:*level-path*
+           #:*log-level*
 
            #:dbg
 
@@ -49,7 +50,7 @@
            #:game
            #:game-game-world
            #:game-render-world
+           #:*game*
            #:create-game
-           #:stop-game
-           ))
+           #:stop-game))
 

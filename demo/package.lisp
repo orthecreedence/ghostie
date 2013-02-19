@@ -18,7 +18,6 @@
   (:import-from #:ghostie #:game-object-render-ref)
 
 
-  (:import-from #:ghostie #:enqueue)
   (:export #:start))
 (in-package :ghostie-demo)
 

@@ -28,6 +28,7 @@
                    (process-queue game-world :game)
                    (step-game-world game-world)))
                (world-game-cleanup game-world)
+               (trigger :game-exit game)
                (dbg :info "(game) Game thread exiting~%")))
            (render-thread ()
              (dbg :info "(game) Starting render thread~%")
@@ -42,6 +43,7 @@
                             :width 900
                             :height 600)
              (setf (game-quit game) t)
+             (trigger :render-exit game)
              (dbg :info "(game) Render thread exiting~%")))
       (init-message-queue)
       (dbg :info "(game) Creating game object~%")
@@ -72,12 +74,7 @@
              (setf *game* nil
                    *event-queue* nil))))
     (dbg :info "(game) Stopping game and render threads~%")
-    (enqueue (lambda (w)
-               (declare (ignore w))
-               (setf *quit* t)
-               (enqueue (lambda (w)
-                          (declare (ignore w))
-                          (do-quit))
-                        :game))
-             :render)))
-
+    (in-render ()
+      (setf *quit* t)
+      (in-game ()
+        (do-quit)))))

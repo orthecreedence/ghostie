@@ -34,30 +34,21 @@
 
 (defun key-press (key state)
   "Triggered when a key is pressed. More or less just forwards the event."
-  (enqueue (lambda (w)
-             (declare (ignore w))
-             (trigger (if (eq state glfw:+press+)
-                          :key-press
-                          :key-release)
-                      key))
-           :game))
+  (trigger (if (eq state glfw:+press+)
+             :key-press
+             :key-release)
+           key))
 
 (defun mouse-move (x y)
   "Triggered when the mouse changes position."
-  (enqueue (lambda (w)
-             (declare (ignore w))
-             (trigger :mouse-position x y))
-           :game))
+  (trigger :mouse-position x y))
 
 (defun mouse-button (button status)
   "Triggered when a mouse button is pressed/released."
-  (let ((state (if (= status glfw:+press+)
-                   :press
-                   :release)))
-    (enqueue (lambda (w)
-               (declare (ignore w))
-               (trigger :mouse-button button state))
-             :game)))
+  (trigger (if (= status glfw:+press+)
+               :mouse-button-press
+               :mouse-button-release)
+           button))
 
 (defvar *last-mouse-wheel-pos* 0
   "Used to track the mouse wheel position.")
@@ -66,10 +57,10 @@
   "Triggered when the mouse wheel is moved."
   (let* ((change (- pos *last-mouse-wheel-pos*)))
     (setf *last-mouse-wheel-pos* pos)
-    (enqueue (lambda (w)
-               (declare (ignore w))
-               (trigger :mouse-wheel change pos))
-             :game)))
+    (trigger (if (< 0 change)
+                 :mouse-wheel-up
+                 :mouse-wheel-down)
+             pos)))
 
 (def-c-callback key-press-cb :void ((key :int) (state :int))
   (key-press key state))

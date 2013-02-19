@@ -5,12 +5,10 @@
         (game-world (game-game-world game)))
     (when (key= #\-)
       (setf sync-position t)
-      (in-render (world)
-        (decf (nth 2 (world-position world)) (* (coerce dt 'single-float) 100))))
+      (decf (nth 2 (world-position world)) (* (coerce dt 'single-float) 100)))
     (when (key= #\=)
       (setf sync-position t)
-      (in-render (world)
-        (incf (nth 2 (world-position world)) (* (coerce dt 'single-float) 100))))
+      (incf (nth 2 (world-position world)) (* (coerce dt 'single-float) 100)))
     (in-game ()
       (pill-stop main-actor))
     (when (key= glfw:+key-left+)
@@ -41,24 +39,21 @@
     (stop-game game)))
 
 (defun input-key-release (game key)
-  (case (code-char key)
-    (#\L
-     (in-render (render-world)
+  (let ((render-world (game-render-world game)))
+    (case (code-char key)
+      (#\L
        (ghostie::world-render-cleanup render-world)
        (ghostie::create-world render-world)
        (ghostie::init-render render-world)
        (in-game (game-world)
          (ghostie::world-game-cleanup game-world)
          (ghostie::create-world game-world)
-         (ghostie::world-load-level game-world "trees"))))
-    (#\C
-     (in-render ()
-       (recompile-shaders)))
-    (#\T
-     (in-render ()
-       (ghostie::test-gl-funcs)))
-    (#\R
-     (in-render (render-world)
+         (ghostie::world-load-level game-world "trees")))
+      (#\C
+       (recompile-shaders))
+      (#\T
+       (ghostie::test-gl-funcs))
+      (#\R
        (let* ((camera (getf (level-meta (world-level render-world)) :camera))
               (camera (if camera camera '(0 0 -36))))
          (dbg :debug "(input) Camera reset: ~s~%" camera)

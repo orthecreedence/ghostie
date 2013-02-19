@@ -27,10 +27,9 @@
                                        :curve-resolution 20
                                        :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))
-    (enqueue (lambda (world)
-               (dbg :info "(level) Copying level to render~%")
-               (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
-             :render)
+    (in-render (world)
+      (dbg :info "(level) Copying level to render~%")
+      (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
     (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
           (level-actors level) (load-actors (getf level-meta :actors))
           (level-meta level) level-meta)

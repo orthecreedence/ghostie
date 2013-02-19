@@ -7,19 +7,18 @@
   (let ((body (call-next-method))
         (mass (coerce (getf actor-meta :mass 50d0) 'double-float)))
     (setf (pill-feet pill) (caddr (cpw:body-shapes body)))
-    (enqueue (lambda (world)
-               (let ((space (world-physics world)))
-                 ;; fix the character's rotation
-                 (let ((joint (cpw:make-joint (cpw:space-static-body space) body
-                                              (lambda (body1 body2)
-                                                (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
-                                                                             0d0 (* mass 240000d0) (* mass 25000d0))))))
-                   (cpw:space-add-joint space joint))
-                 ;; add the body/shapes to the world
-                 (cpw:space-add-body space body)
-                 (dolist (shape (cpw:body-shapes body))
-                   (cpw:space-add-shape space shape))))
-             :game)
+    (in-game (world)
+      (let ((space (world-physics world)))
+        ;; fix the character's rotation
+        (let ((joint (cpw:make-joint (cpw:space-static-body space) body
+                                     (lambda (body1 body2)
+                                       (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
+                                                                    0d0 (* mass 240000d0) (* mass 25000d0))))))
+          (cpw:space-add-joint space joint))
+        ;; add the body/shapes to the world
+        (cpw:space-add-body space body)
+        (dolist (shape (cpw:body-shapes body))
+          (cpw:space-add-shape space shape))))
     body))
 
 (defun get-object-under-pill (pill)

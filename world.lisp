@@ -66,9 +66,8 @@
       (sync-game-object-to-physics game-object :render t))
     ;; update the render thread with our world display info
     (let ((pos (copy-tree (world-position world))))
-      (enqueue (lambda (render-world)
-                 (setf (world-position render-world) pos))
-               :render))))
+      (in-render (render-world)
+        (setf (world-position render-world) pos)))))
 
 (defun step-game-world (world)
   "Move the game world forward by one step. Calculates the physics delta for
@@ -117,12 +116,11 @@
 
   (let ((meta (copy-tree (world-draw-meta world)))
         (position (copy-tree (world-position world))))
-    (enqueue (lambda (render-world)
-               (dbg :info "(world) Copying game world meta to render world.~%")
-               (apply #'gl:clear-color (getf meta :background))
-               (setf (world-draw-meta render-world) meta
-                     (world-position render-world) position))
-             :render)))
+    (in-render (render-world)
+      (dbg :info "(world) Copying game world meta to render world.~%")
+      (apply #'gl:clear-color (getf meta :background))
+      (setf (world-draw-meta render-world) meta
+            (world-position render-world) position))))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Render functions
@@ -132,11 +130,10 @@
    lets the game thread know a render happened, as well as syncs game objects to
    their physics bodies."
   (progn
-    (enqueue (lambda (game-world)
-               (trigger :render-step world dt)
-               (game-world-sync game-world))
-             :game)
+    (in-game (game-world)
+      (game-world-sync game-world))
     (process-queue world :render)
+    (trigger :render-step world dt)
     (draw-world world)))
 
 (defun world-render-cleanup (world)

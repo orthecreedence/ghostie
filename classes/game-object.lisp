@@ -24,7 +24,8 @@
     (when body
       (cpw:destroy (game-object-physics-body game-object))))
   (dolist (gl-object (game-object-gl-objects game-object))
-    (free-gl-object gl-object)))
+    (in-render ()
+      (free-gl-object gl-object))))
 
 (defmethod draw ((object game-object))
   (dolist (gl-object (game-object-gl-objects object))
@@ -61,12 +62,10 @@
               (setf (game-object-last-sync game-object) (list :position position
                                                               :rotation rotation
                                                               :sleeping sleeping))
-              (enqueue (lambda (render-world)
-                         (declare (ignore render-world))
-                         (setf (game-object-position render-game-object) position
-                               (game-object-rotation render-game-object) rotation
-                               (getf (game-object-meta render-game-object) :sleeping) sleeping))
-                       :render)))))))
+              (in-render ()
+                (setf (game-object-position render-game-object) position
+                      (game-object-rotation render-game-object) rotation
+                      (getf (game-object-meta render-game-object) :sleeping) sleeping))))))))
   game-object)
 
 (defun parse-svg-styles (styles &key fill opacity)
@@ -85,19 +84,18 @@
 
 (defun sync-game-objects-to-render (game-objects)
   (dolist (game-object game-objects)
-    (enqueue (lambda (world)
-               (let ((level (world-level world))
-                     (gl-objects (loop for fake-gl-object in (game-object-gl-objects game-object)
-                                       for gl-object = (make-gl-object-from-fake fake-gl-object)
-                                       collect gl-object)))
-                 (dbg :info "Initializing game object in render.~%")
-                 (let ((render-game-object (make-instance 'game-object
-                                                          :gl-objects gl-objects
-                                                          :position (copy-tree (game-object-position game-object))
-                                                          :rotation (copy-tree (game-object-rotation game-object)))))
-                   (push render-game-object (level-objects level))
-                   (setf (game-object-render-ref game-object) render-game-object))))
-             :render)))
+    (in-render (world)
+      (let ((level (world-level world))
+            (gl-objects (loop for fake-gl-object in (game-object-gl-objects game-object)
+                              for gl-object = (make-gl-object-from-fake fake-gl-object)
+                              collect gl-object)))
+        (dbg :info "Initializing game object in render.~%")
+        (let ((render-game-object (make-instance 'game-object
+                                                 :gl-objects gl-objects
+                                                 :position (copy-tree (game-object-position game-object))
+                                                 :rotation (copy-tree (game-object-rotation game-object)))))
+          (push render-game-object (level-objects level))
+          (setf (game-object-render-ref game-object) render-game-object))))))
 
 (defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) center-objects)
   (let ((obj-hash (make-hash-table :test #'equal))

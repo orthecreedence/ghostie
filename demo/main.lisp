@@ -10,6 +10,11 @@
 (defun start ()
   (let* ((game (ghostie::create-game "trees"))
          (pill nil))
+
+    ;(setf *log-level* :notice)
+
+    ;; grab the "main actor" from the level (it has the name :pilly defined in
+    ;; the level meta)
     (bind :level-load (level)
       (setf pill (find-if (lambda (actor)
                             (eq (actor-name actor) :pilly))
@@ -21,7 +26,7 @@
     (bind :key-press (key)
       (input-key-press game key))
 
-    (bind (:render-step 'render-step-key-handler) (world dt)
+    (bind :render-step (world dt)
       (input-key-handler game world dt pill)
       (sync-actor-position-window (game-game-world game) pill))))
 

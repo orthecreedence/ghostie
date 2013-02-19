@@ -10,8 +10,7 @@
 (in-package :ghostie-event)
 
 (defclass event-queue ()
-  ((events :accessor event-queue-events :initform nil)
-   (bindings :accessor event-queue-bindings :initform nil)))
+  ((bindings :accessor event-queue-bindings :initform nil)))
 
 (defclass event-binding ()
   ((event-type :accessor event-binding-event :initarg :event-type :initform nil)
@@ -76,21 +75,20 @@
                     (funcall find-fn bind)))
              (event-queue-bindings *event-queue*))))
 
-(defun process-events ()
+(defun process-events (events)
   "Process all queued events."
-  (dolist (event (reverse (event-queue-events *event-queue*)))
-    (dispatch-event event))
-  (setf (event-queue-events *event-queue*) nil))
+  (dolist (event events)
+    (dispatch-event event)))
 
 (defun trigger (event-type &rest args)
   "Trigger a ghostie event"
-  (push (make-event event-type args) (event-queue-events *event-queue*))
-  (unless (or (eq event-type :game-step)       ; no need to bitch on every step
-              (eq event-type :render-step)
-              (eq event-type :collision-pre)   ; these two are just too noisy
-              (eq event-type :collision-post))
-    (dbg :debug "(event) Trigger: ~s~%" event-type))
-  (process-events))
+  (let ((event (make-event event-type args)))
+    (unless (or (eq event-type :game-step)       ; no need to bitch on every step
+                (eq event-type :render-step)
+                (eq event-type :collision-pre)   ; these two are just too noisy
+                (eq event-type :collision-post))
+      (dbg :debug "(event) Trigger: ~s~%" event-type))
+    (process-events (list event))))
 
 (defun bind-event (event types/args fn &key binding-name)
   "Bind a function to an event and a set of types/arguments. The function will
