@@ -14,7 +14,7 @@
     ;(setf *log-level* :notice)
 
     ;; grab the "main actor" from the level (it has the name :pilly defined in
-    ;; the level meta)
+    ;; the level meta) once the level has loaded
     (bind :level-load (level)
       (setf pill (find-if (lambda (actor)
                             (eq (actor-name actor) :pilly))
