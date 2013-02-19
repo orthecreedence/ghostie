@@ -23,3 +23,23 @@
       (let ((fn (jpl-queues:dequeue queue)))
         (funcall fn data)))))
 
+(defmacro run-in-queue (queue world-var &body body)
+  "Macro that wraps running code in a specific queue."
+  (let ((has-var (car world-var))
+        (fake-var (gensym "world")))
+    `(enqueue
+       (lambda (,(if has-var has-var fake-var))
+         ,(unless has-var `(declare (ignore ,fake-var)))
+         ,@body)
+       ,queue)))
+
+(defmacro in-game (world-var &body body)
+  "Run the given body in the game queue, binding the world object to the given
+   binding variable."
+  `(run-in-queue :game ,world-var ,@body))
+
+(defmacro in-render (world-var &body body)
+  "Run the given body in the render queue, binding the world object to the given
+   binding variable."
+  `(run-in-queue :render ,world-var ,@body))
+

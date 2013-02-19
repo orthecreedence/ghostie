@@ -1,11 +1,15 @@
 (in-package :ghostie)
 
+(defvar *game* nil
+  "Holds the main game object, created by create-game.")
+
 (defclass game ()
   ((game-world :accessor game-game-world :initarg :game-world :initform nil)
    (game-thread :accessor game-game-thread :initarg :game-thread :initform nil)
    (render-world :accessor game-render-world :initarg :render-world :initform nil)
    (render-thread :accessor game-render-thread :initarg :render-thread :initform nil)
-   (quit :accessor game-quit :initform nil))
+   (quit :accessor game-quit :initform nil)
+   (event-queue :accessor game-event-queue :initarg :event-queue :initform nil))
   (:documentation
    "Holds a game world, a render world, and their corresponding threads."))
 
@@ -17,20 +21,12 @@
     (setf *quit* nil)
     (flet ((game-thread ()
              (unwind-protect
-               ;(handler-case
-                 (progn
-                   (dbg :info "(game) Starting game thread~%")
-                   (world-load-level game-world level-name)
-                   (loop while (not (game-quit game)) do
-                     (process-queue game-world :game)
-                     (step-game-world game-world)))
-                 ;(game-quit ()
-                 ;  (cleanup-game *world*))
-                 ;(error (e)
-                 ;  (dbg :error "Uncaught error in game thread: ~a~%" e)
-                 ;  (setf *quit* t)
-                 ;  (error e))
-                 ;)
+               (progn
+                 (dbg :info "(game) Starting game thread~%")
+                 (world-load-level game-world level-name)
+                 (loop while (not (game-quit game)) do
+                   (process-queue game-world :game)
+                   (step-game-world game-world)))
                (world-game-cleanup game-world)
                (dbg :info "(game) Game thread exiting~%")))
            (render-thread ()
@@ -53,7 +49,11 @@
                    :game-world game-world
                    :game-thread (bt:make-thread #'game-thread :name "game-thread")
                    :render-world render-world
-                   :render-thread (bt:make-thread #'render-thread :name "render-thread")))
+                   :render-thread (bt:make-thread #'render-thread :name "render-thread")
+                   :event-queue (make-instance 'event-queue)))
+      (unless *game*
+        (setf *game* game)
+        (setf *event-queue* (game-event-queue game)))
       game)))
 
 (defun stop-game (game &key force)
@@ -67,7 +67,10 @@
                (if force
                    (bt:destroy-thread thread)
                    (bt:join-thread thread))
-               (dbg :info "Ghostie thread stopped (:force ~a)~%" force)))))
+               (dbg :info "Ghostie thread stopped (:force ~a)~%" force)))
+           (when (equal *game* game)
+             (setf *game* nil
+                   *event-queue* nil))))
     (dbg :info "(game) Stopping game and render threads~%")
     (enqueue (lambda (w)
                (declare (ignore w))

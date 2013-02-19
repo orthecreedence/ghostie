@@ -16,6 +16,8 @@
            #:init-message-queue
            #:enqueue
            #:process-queue
+           #:in-game
+           #:in-render
            
            #:id-matrix
            #:mat*

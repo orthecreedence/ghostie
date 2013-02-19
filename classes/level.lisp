@@ -2,7 +2,6 @@
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
-   (main-actor :accessor level-main-actor :initform nil)
    (actors :accessor level-actors :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)
    (meta :accessor level-meta :initarg :meta :initform nil))
@@ -29,13 +28,11 @@
                                        :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))
     (enqueue (lambda (world)
-               (dbg :info "Copying level to render.~%")
+               (dbg :info "(level) Copying level to render~%")
                (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
              :render)
     (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
           (level-actors level) (load-actors (getf level-meta :actors))
-          (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
-                                            (level-actors level))
           (level-meta level) level-meta)
     (trigger :level-load level)
     level))
@@ -59,7 +56,6 @@
     (destroy-game-object game-object))
   (setf (level-objects level) nil
         (level-actors level) nil
-        (level-main-actor level) nil
         (level-meta level) nil)
   level)
 

@@ -58,21 +58,6 @@
       (setf (cp-a:shape-surface_v-x shape-c) 0d0
             (cp-a:shape-surface_v-y shape-c) 0d0))))
 
-(defun pill-impulse (pill x &key (max-speed-div 1))
-  "Move the character on the HORizonal plane."
-  (when (and pill (game-object-physics-body pill))
-    (let ((body-c (cpw:base-c (game-object-physics-body pill))))
-      (let ((vel (cp-a:body-v-x body-c))
-            (y (* x 0)))
-        (let ((*character-max-run* (if (pill-grounded-p pill)
-                                       *character-max-run*
-                                       (* *character-max-run* .2))))
-          (when (< (abs vel) (/ *character-max-run* max-speed-div))
-            (cp:body-apply-impulse body-c
-                                   (* x (cp-a:body-m body-c))
-                                   (* y (cp-a:body-m body-c))
-                                   0d0 0d0)))))))
-
 (defun pill-run (pill x)
   "Move the character on the HORizonal plane."
   (when (and pill (game-object-physics-body pill))
@@ -89,7 +74,8 @@
               (cp:body-apply-impulse body-c
                                      (* 0.02d0 x (cp-a:body-m body-c))
                                      0d0
-                                     0d0 0d0)))))))
+                                     0d0 0d0))
+          (trigger :actor-move pill))))))
 
 (defun pill-jump (pill &key (x 0d0) (y 300d0))
   "Make the character jump."
@@ -104,5 +90,6 @@
           (cp:body-apply-impulse body-c
                                  (* (cp-a:body-m body-c) (coerce x 'double-float))
                                  (* (cp-a:body-m body-c) (coerce y 'double-float))
-                                 0d0 0d0))))))
+                                 0d0 0d0)
+          (trigger :actor-move pill))))))
 

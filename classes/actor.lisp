@@ -2,7 +2,7 @@
 ;THE END.
 
 (defclass actor (game-object)
-  ((is-main :accessor actor-is-main :initform nil)
+  ((name :accessor actor-name :initarg :name :initform nil)
    (vel-avg-x :accessor actor-vel-avg-x :initform 0d0)
    (vel-avg-y :accessor actor-vel-avg-y :initform 0d0)))
 
@@ -71,12 +71,13 @@
   (let ((actors nil))
     (dolist (actor-info actors-meta)
       (let* ((scale (getf actor-info :scale '(1 1 1)))
-             (actor-name (getf actor-info :actor))
+             (actor-type (getf actor-info :actor))
+             (actor-name (getf actor-info :name))
              (actor-directory (format nil "~a/~a/~a/~a/"
                                       (namestring *game-directory*)
                                       *resource-path*
                                       *actor-path*
-                                      actor-name))
+                                      actor-type))
              (meta (read-file (format nil "~a/meta.lisp" actor-directory)))
              (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" actor-directory)
                                             :curve-resolution 20
@@ -89,13 +90,14 @@
           (when (probe-file class-file)
             (load class-file)))
 
-        (let* ((actor-symbol (intern (string-upcase actor-name) :ghostie))
+        (let* ((actor-symbol (intern (string-upcase actor-type) :ghostie))
                (actor-class (if (find-class actor-symbol nil)
                                 actor-symbol
                                 'actor))
                (actor (car (svg-to-game-objects svg-objs nil :object-type actor-class :center-objects t))))
-          (setf (game-object-physics-body actor) (load-actor-physics-body actor actor-info)
-                (actor-is-main actor) (getf actor-info :main))
+          (when actor-name
+            (setf (actor-name actor) actor-name))
+          (setf (game-object-physics-body actor) (load-actor-physics-body actor actor-info))
           (push actor actors))))
     actors))
 

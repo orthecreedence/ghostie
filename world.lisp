@@ -70,14 +70,6 @@
                  (setf (world-position render-world) pos))
                :render))))
 
-;; TODO: move this to the app (this makes assumptions about the game)
-(defun sync-window-actor-position (world actor)
-  "Keeps the camera position in sync with an actor."
-  (let* ((position (game-object-position actor))
-         (x (- (* (car position) .5)))
-         (y (- (* (cadr position) .5))))
-    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
-
 (defun step-game-world (world)
   "Move the game world forward by one step. Calculates the physics delta for
    each simulated object"
@@ -89,13 +81,7 @@
     (dolist (game-object (level-objects (world-level world)))
       (sync-game-object-to-physics game-object))
     (dolist (actor (level-actors (world-level world)))
-      (update-actor-state actor))
-    ;; TODO: remove concept of "main" actor?? a game might want multiple, and
-    ;; having a main one makes too many assumptions
-    (let ((actor (level-main-actor (world-level world))))
-      (when actor
-        ;(actor-stop actor)
-        (sync-window-actor-position world actor)))))
+      (update-actor-state actor))))
 
 (defun world-load-level (world level-name)
   "Load a level into the given world."
@@ -145,19 +131,13 @@
   "Runs all queued render items (in the render thread) and draws the world. Also
    lets the game thread know a render happened, as well as syncs game objects to
    their physics bodies."
-  ;(handler-case
-    (progn
-      (enqueue (lambda (game-world)
-                 (trigger :render-step world dt)
-                 (game-world-sync game-world)) :game)
-      (process-queue world :render)
-      (draw-world world))
-    ;(error (e)
-    ;  (dbg :error "Uncaught error in render thread: ~a~%" e)
-    ;  (setf *quit* t)
-    ;  (cleanup-render world)
-    ;  (error e)
-    )
+  (progn
+    (enqueue (lambda (game-world)
+               (trigger :render-step world dt)
+               (game-world-sync game-world))
+             :game)
+    (process-queue world :render)
+    (draw-world world)))
 
 (defun world-render-cleanup (world)
   "Cleanup the render thread. Frees any OpenGL objects laying around and makes

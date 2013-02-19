@@ -1,8 +1,7 @@
 (in-package :ghostie)
 
 (defclass game-object ()
-  ((name :accessor game-object-name :initarg :name :initform "game-object")
-   (position :accessor game-object-position :initarg :position :initform '(0 0 0))
+  ((position :accessor game-object-position :initarg :position :initform '(0 0 0))
    (rotation :accessor game-object-rotation :initarg :rotation :initform 0.0)
    (gl-objects :accessor game-object-gl-objects :initarg :gl-objects :initform nil)
    (physics-body :accessor game-object-physics-body :initform nil)
@@ -94,7 +93,6 @@
                  (dbg :info "Initializing game object in render.~%")
                  (let ((render-game-object (make-instance 'game-object
                                                           :gl-objects gl-objects
-                                                          :name (game-object-name game-object)
                                                           :position (copy-tree (game-object-position game-object))
                                                           :rotation (copy-tree (game-object-rotation game-object)))))
                    (push render-game-object (level-objects level))
@@ -124,7 +122,8 @@
                   (gethash group-name obj-hash))))))
     (loop for group-name being the hash-keys of obj-hash
           for gl-objects being the hash-values of obj-hash do
-      (let* ((meta (find-if (lambda (p) (equal (getf p :name) group-name)) (getf objects-meta :object-properties)))
+      (let* ((meta (find-if (lambda (property) (equal (getf property :name) group-name))
+                            (getf objects-meta :object-properties)))
              (depth (getf meta :layer-depth)))
         (let ((game-object (make-game-object :type object-type
                                              :gl-objects gl-objects

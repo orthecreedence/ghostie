@@ -27,6 +27,13 @@
          (dbg :error "(physics) Collision event error (begin): ~a~%" e)))
      cp:+true+))
 
+;; TODO call make-arbiter only once, and store the result in the arbiter c obj
+;; itself. note that creating a pointer, setting it into a hash table, and
+;; dereferencing it to get the arbiter data might be slower than just calling
+;; make-arbiter for each collission call (but need to benchmark before assuming)
+;; TODO sync data in arbiter-data object to arbiter c object so collision
+;; callbacks can modify collision values (friction, elasticity, surface
+;; velocity, ignore this collision)
 (define-collision-callback collision-begin (body1 body2)
   (let ((arbiter-data (cpw:make-arbiter arbiter)))
     (trigger :collision-begin body1 body2 arbiter-data)
