@@ -8,6 +8,12 @@
    (meta :accessor level-meta :initarg :meta :initform nil))
   (:documentation "Describes a level, and the objects in that level."))
 
+(defclass level-object (game-object) ()
+  (:documentation
+    "A direct extension of game-object, helps collision handlers tell if an
+     object is interacting with part of the level, or with an object inside the
+     level."))
+
 (defun load-level (level-name)
   "Load a level via its SVG/meta.lisp file."
   (let* ((level (make-instance 'level))
@@ -26,7 +32,7 @@
                (dbg :info "Copying level to render.~%")
                (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
              :render)
-    (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t)
+    (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
           (level-actors level) (load-actors (getf level-meta :actors))
           (level-main-actor level) (find-if (lambda (actor) (actor-is-main actor))
                                             (level-actors level))
@@ -64,7 +70,10 @@
    Generally this happens for the ground/walls/etc of a level that are
    positioned at the level's collision depth (default 0)."
   (let* ((level (world-level world))
-         (collision-objects (remove-if (lambda (game-object) (not (eq (caddr (game-object-position game-object)) (level-collision-depth level))))
+         (collision-objects (remove-if (lambda (game-object)
+                                         ;; grab objects in the same plane as collision-depth
+                                         (not (eq (caddr (game-object-position game-object))
+                                                  (level-collision-depth level))))
                                        (level-objects level)))
          (space (world-physics world)))
     (dolist (object collision-objects)
