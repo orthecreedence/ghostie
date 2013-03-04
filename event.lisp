@@ -9,6 +9,7 @@
            #:enable-binding))
 (in-package :ghostie-event)
 
+;; TODO: rename event-queue, *event-queue* ...we no longer use a queue!!
 (defclass event-queue ()
   ((bindings :accessor event-queue-bindings :initform nil)))
 
