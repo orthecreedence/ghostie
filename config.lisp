@@ -44,6 +44,8 @@
   "The name of the directory (under the resources dir) that actors load from.")
 (defparameter *level-path* "levels"
   "The name of the directory (under the resources dir) that levels load from.")
+(defparameter *object-path* "objects"
+  "The name of the directory (under the resources dir) that objects load from.")
 
 (defparameter *log-level* :debug)
 

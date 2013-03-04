@@ -27,14 +27,27 @@
                                        :curve-resolution 20
                                        :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))
+    ;; make sure the level in the render world as a copy of our meta
     (in-render (world)
       (dbg :info "(level) Copying level to render~%")
       (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
-    (setf (level-objects level) (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
+    ;; here, we convert the objects in the level SVG to displayable/collidable
+    ;; objects, load the actors for the level, and store the level meta info
+    (setf (level-objects level) (append (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
+                                        (load-objects level level-meta))
           (level-actors level) (load-actors (getf level-meta :actors))
           (level-meta level) level-meta)
+    ;; level loaded!
     (trigger :level-load level)
     level))
+
+(defun load-meta-objects (level level-meta)
+  "Load objects out of the level meta. These must exist and directories with
+   class.lisp files in the *resource-path*/*object-path* directory in order to
+   load properly. These are usually things like moving platforms, plants, etc:
+   dynamic objects that are not part of the terrain, but exist as a part of the
+   level."
+  )
 
 (defun add-level-object (level object)
   "Add an object to a level. The object will be processed every game loop, and

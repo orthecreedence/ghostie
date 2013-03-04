@@ -21,4 +21,6 @@
                      (:name "tree3"
                       :layer-depth -320)
                      (:name "tree4"
-                      :layer-depth -420)))
+                      :layer-depth -420))
+ :objects ((:type "platform"
+            :position (500 -300 1))))
