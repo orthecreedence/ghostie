@@ -131,6 +131,7 @@
                                       path
                                       object-type))
              (meta (read-file (format nil "~a/meta.lisp" object-directory)))
+             (draw-offset (getf meta :draw-offset '(0 0 0)))
              (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" object-directory)
                                             :curve-resolution 20
                                             :scale (list (car scale) (- (cadr scale))))))
@@ -148,11 +149,12 @@
                (object-class (if (find-class object-symbol nil)
                                 object-symbol
                                 'object))
-               (object (car (svg-to-game-objects svg-objs nil :object-type object-class :center-objects t))))
+               (object (car (svg-to-game-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
           (when object-id
             (setf (object-id object) object-id))
           ;; load the object's physics body
-          (setf (game-object-physics-body object) (load-physics-body object object-info))
+          (setf (game-object-physics-body object) (load-physics-body object object-info)
+                (game-object-draw-offset object) draw-offset)
           (push object objects))))
     objects))
 

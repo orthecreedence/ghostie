@@ -7,6 +7,7 @@
    (physics-body :accessor game-object-physics-body :initform nil)
    (meta :accessor game-object-meta :initarg :meta :initform nil)
    (display :accessor game-object-display :initarg :display :initform t)
+   (draw-offset :accessor game-object-draw-offset :initarg :draw-offset :initform '(0 0 0))
    (render-ref :accessor game-object-render-ref :initarg :render-ref :initform nil)
    (last-sync :accessor game-object-last-sync :initform nil)
    (bb :accessor game-object-bb :initform nil)))
@@ -40,9 +41,11 @@
   (let ((body (game-object-physics-body game-object)))
     (when body
       (cpw:sync-body body)
-      (let ((position (list (cpw:body-x body)
-                            (cpw:body-y body)
-                            0))
+      (let ((position (mapcar #'+
+                              (list (cpw:body-x body)
+                                    (cpw:body-y body)
+                                    0)
+                              (game-object-draw-offset game-object)))
             (rotation (- (cpw:body-angle body)))
             (sleeping (cpw:body-sleeping-p body))
             (last-sync (game-object-last-sync game-object)))
@@ -97,7 +100,7 @@
           (push render-game-object (level-objects level))
           (setf (game-object-render-ref game-object) render-game-object))))))
 
-(defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) center-objects)
+(defun svg-to-game-objects (svg-objects objects-meta &key (object-type 'game-object) (scale '(1 1 1)) (draw-offset '(0 0)) center-objects)
   (let ((obj-hash (make-hash-table :test #'equal))
         (game-objects nil)
         (scale (if scale scale '(1 1 1))))
