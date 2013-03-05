@@ -5,7 +5,10 @@
   (let* ((position (game-object-position actor))
          (x (- (* (car position) .5)))
          (y (- (* (cadr position) .5))))
-    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))))
+    (setf (world-position world) (list x (- y 50) (caddr (world-position world))))
+    (let ((pos (copy-tree (world-position world))))
+      (in-game (game-world)
+        (setf (world-position game-world) pos)))))
 
 (defun start ()
   (let* ((game (ghostie::create-game "trees"))
@@ -17,7 +20,7 @@
     ;; the level meta) once the level has loaded
     (bind :level-load (level)
       (setf pill (find-if (lambda (actor)
-                            (eq (actor-name actor) :pilly))
+                            (eq (object-name actor) :pilly))
                           (level-actors level))))
 
     (bind :key-release (key)
@@ -28,5 +31,5 @@
 
     (bind :render-step (world dt)
       (input-key-handler game world dt pill)
-      (sync-actor-position-window (game-game-world game) pill))))
+      (sync-actor-position-window (game-render-world game) pill))))
 

@@ -3,7 +3,7 @@
 (defactor pill (actor)
   ((feet :accessor pill-feet :initform nil)))
 
-(defmethod load-actor-physics-body ((pill pill) actor-meta)
+(defmethod load-physics-body ((pill pill) actor-meta)
   (let ((body (call-next-method))
         (mass (coerce (getf actor-meta :mass 50d0) 'double-float)))
     (setf (pill-feet pill) (caddr (cpw:body-shapes body)))
