@@ -34,3 +34,14 @@
       (input-key-handler game world dt pill)
       (sync-actor-position-window (game-render-world game) pill))))
 
+;(defun update-actor-state (actor)
+;  (when (and actor (game-object-physics-body actor))
+;    (let ((alpha 1/1000)
+;          (vel-x (cp-a:body-v-x (cpw:base-c (game-object-physics-body actor))))
+;          (vel-y (cp-a:body-v-y (cpw:base-c (game-object-physics-body actor)))))
+;      ;(dbg :debug "avg-y: ~s~%" (+ (* alpha vel-y) (* (- 1d0 alpha) (actor-vel-avg-y actor))))
+;      (setf (actor-vel-avg-x actor) (+ (* alpha vel-x)
+;                                       (* (- 1d0 alpha) (actor-vel-avg-x actor)))
+;            (actor-vel-avg-y actor) (+ (* alpha vel-y)
+;                                       (* (- 1d0 alpha) (actor-vel-avg-y actor)))))))
+

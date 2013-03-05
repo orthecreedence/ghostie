@@ -73,10 +73,7 @@
     (cpw:space-step space :dt +dt+)
     (cpw:sync-space-bodies space)
     (dolist (game-object (level-objects (world-level world)))
-      (sync-game-object-to-physics game-object))
-    ;(dolist (actor (level-actors (world-level world)))
-      ;(update-actor-state actor))
-    ))
+      (sync-game-object-to-physics game-object))))
 
 (defun world-load-level (world level-name)
   "Load a level into the given world."
