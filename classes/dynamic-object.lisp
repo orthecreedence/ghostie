@@ -29,7 +29,51 @@
      any other setup the body needs)."))
 
 (defmethod load-physics-body ((object dynamic-object) object-meta)
-  (declare (ignore object object-meta)))
+  (let ((mass (coerce (getf object-meta :mass 50d0) 'double-float))
+        (max-vel (coerce (getf object-meta :max-velocity 1000d0) 'double-float))
+        (friction (coerce (getf object-meta :friction 0.9d0) 'double-float))
+        (bb (calculate-game-object-bb object))
+        (physics-objects (getf object-meta :physics))
+        (position (mapcar (lambda (v)
+                            (coerce v 'double-float))
+                          (getf object-meta :start-position '(0 0 0)))))
+    (let* ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
+           (body-c (cpw:base-c body))
+           (moment 0d0))
+      (if physics-objects
+          ;; load the physics objects from the meta
+          (let ((bb-max (apply #'max bb)))
+            (dolist (phys-obj physics-objects)
+              (case (getf phys-obj :type)
+                (:circle
+                  (destructuring-bind (&key type position radius) phys-obj
+                    (let ((r (* radius bb-max))
+                          (x (* (car position) bb-max))
+                          (y (* (cadr position) bb-max)))
+                      (incf moment (cp:moment-for-circle mass r 0d0 x y))
+                      (let ((shape (cpw:make-shape :circle body
+                                                   (lambda (body)
+                                                     (cp:circle-shape-new (cpw:base-c body)
+                                                                          r x y)))))
+                        (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
+                  (t
+                    (error (format nil "Unsupported physics type: ~a~%" type))))))
+
+          ;; load a default physics object (a stupid circle in the center of
+          ;; the object)
+          (let* ((radius (/ (- (cadddr bb) (cadr bb)) 2.5d0))
+                 (x 0d0)
+                 (y 0d0))
+            (incf moment (cp:moment-for-circle mass radius 0d0 x y))
+            (let ((shape (cpw:make-shape :circle body
+                                         (lambda (body)
+                                           (cp:circle-shape-new (cpw:base-c body)
+                                                                radius x y)))))
+              (setf (cp-a:shape-u (cpw:base-c shape)) friction))))
+      (setf (cp-a:body-v-limit body-c) max-vel)
+      (cp:body-set-pos body-c (car position) (cadr position))
+      (cp:body-set-moment body-c moment)
+      body)))
 
 (defun load-objects (objects-meta &key (type :objects))
   "Load objects in a level defined by that level's meta. This can be dynamic
