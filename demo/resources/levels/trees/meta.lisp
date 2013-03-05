@@ -1,6 +1,7 @@
 (:name "trees"
- ;:actors ((:type "ghostie" :start-pos (-480 -450 0) :main t :scale (.7 .7 .7)))
- :actors ((:type "pill" :start-position (-480 -450 0) :name :pilly :scale (.7 .7 .7)))
+ ;:actors ((:type "ghostie" :start-pos (-480 -450) :main t :scale (.7 .7 .7)))
+ :actors ((:id :pilly :type "pill" :start-position (-480 -450) :scale (.7 .7 .7)))
+ :objects ((:id :boxy :type "platform" :start-position (-300 -460) :scale (.7 .7 .7)))
  :scale (1 1 1)
  :camera (99 205 -400)
  :background "#262524"
@@ -21,6 +22,4 @@
                      (:name "tree3"
                       :layer-depth -320)
                      (:name "tree4"
-                      :layer-depth -420))
- :objects ((:type "platform"
-            :start-position (500 -300 1))))
+                      :layer-depth -420)))

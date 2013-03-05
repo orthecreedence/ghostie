@@ -28,7 +28,7 @@
            #:calculate-game-object-bb
            
            #:dynamic-object
-           #:object-name
+           #:object-id
            #:defobject
            #:load-physics-body
 
@@ -39,7 +39,6 @@
            
            #:level
            #:level-objects
-           #:level-actors
            #:level-meta
            #:add-level-object
            #:remove-level-object

@@ -10,13 +10,14 @@
                          shape
                          (cpw:make-shape :poly poly-body (lambda (body) (cpw:shape-poly body verts 0 0))))))
     (setf (cp-a:shape-u (cpw:base-c poly-shape)) (coerce u 'double-float)
-          (cp-a:shape-e (cpw:base-c poly-shape)) (coerce e 'double-float))
+          (cp-a:shape-e (cpw:base-c poly-shape)) (coerce e 'double-float)
+          (cp-a:body-v-limit (cpw:base-c poly-body)) 600d0)
     (cp:body-set-angle (cpw:base-c poly-body) angle)
     (cp:body-set-pos (cpw:base-c poly-body) x y)
     (let ((gl-objects (list (make-fake-gl-object :data (glu-tessellate:tessellate verts)
                                                  :position '(0 0 0)
                                                  :color (hex-to-rgb color)))))
-      (let ((game-object (make-game-object :type 'game-object
+      (let ((game-object (make-game-object :type 'dynamic-object
                                            :gl-objects gl-objects
                                            :physics poly-body)))
         (cpw:space-add-body space poly-body)
@@ -37,11 +38,10 @@
               (push render-game-object (level-objects (world-level render-world))))))
         game-object))))
 
-(defun add-random-box (world)
+(defun add-random-box (world &key (x (- (random 300d0) 150)) (y 30d0))
   (let ((verts #((-10 -10) (-10 10) (10 10) (10 -10)))
-        (mass 1.1d0)
-        (x (- (random 300d0) 150)))
-    (add-poly-to-sym world verts :mass mass :x x :y 30d0 :u 0.4 :e 0d0 :color "#559955")))
+        (mass 1.1d0))
+    (add-poly-to-sym world verts :mass mass :x x :y y :u 0.4 :e 0d0 :color "#559955")))
 
 #|
 (defun add-random-bridge (world)

@@ -4,8 +4,9 @@
   ((feet :accessor pill-feet :initform nil)))
 
 (defmethod load-physics-body ((pill pill) actor-meta)
-  (let ((body (call-next-method))
-        (mass (coerce (getf actor-meta :mass 50d0) 'double-float)))
+  (declare (ignore actor-meta))
+  (let* ((body (call-next-method))
+         (mass (cp-a:body-m (cpw:base-c body))))
     (setf (pill-feet pill) (caddr (cpw:body-shapes body)))
     (in-game (world)
       (let ((space (world-physics world)))
@@ -14,11 +15,7 @@
                                      (lambda (body1 body2)
                                        (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
                                                                     0d0 (* mass 240000d0) (* mass 25000d0))))))
-          (cpw:space-add-joint space joint))
-        ;; add the body/shapes to the world
-        (cpw:space-add-body space body)
-        (dolist (shape (cpw:body-shapes body))
-          (cpw:space-add-shape space shape))))
+          (cpw:space-add-joint space joint))))
     body))
 
 (defun get-object-under-pill (pill)

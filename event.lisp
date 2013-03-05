@@ -87,7 +87,9 @@
     (unless (or (eq event-type :game-step)       ; no need to bitch on every step
                 (eq event-type :render-step)
                 (eq event-type :collision-pre)   ; these two are just too noisy
-                (eq event-type :collision-post))
+                (eq event-type :collision-post)
+                (eq event-type :collision-begin)
+                (eq event-type :collision-separate))
       (dbg :debug "(event) Trigger: ~s~%" event-type))
     (process-events (list event))))
 

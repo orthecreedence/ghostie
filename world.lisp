@@ -61,8 +61,7 @@
    thread for display."
   (let ((level (world-level world)))
     ;; sync each game object with its physics body
-    (dolist (game-object (append (level-objects level)
-                                 (level-actors level)))
+    (dolist (game-object (level-objects level))
       (sync-game-object-to-physics game-object :render t))))
 
 (defun step-game-world (world)
@@ -75,13 +74,14 @@
     (cpw:sync-space-bodies space)
     (dolist (game-object (level-objects (world-level world)))
       (sync-game-object-to-physics game-object))
-    (dolist (actor (level-actors (world-level world)))
-      (update-actor-state actor))))
+    ;(dolist (actor (level-actors (world-level world)))
+      ;(update-actor-state actor))
+    ))
 
 (defun world-load-level (world level-name)
   "Load a level into the given world."
   ;; load the current level
-  (dbg :notice "(world) Loading level ~a~%" level-name)
+  (dbg :notice "(world) Loading level ~s~%" level-name)
   (setf (world-level world) (load-level level-name))
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))

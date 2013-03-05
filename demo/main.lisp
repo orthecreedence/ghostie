@@ -19,9 +19,10 @@
     ;; grab the "main actor" from the level (it has the name :pilly defined in
     ;; the level meta) once the level has loaded
     (bind :level-load (level)
-      (setf pill (find-if (lambda (actor)
-                            (eq (object-name actor) :pilly))
-                          (level-actors level))))
+      (setf pill (find-if (lambda (obj)
+                            (and (subtypep (type-of obj) 'dynamic-object)
+                                 (eq (object-id obj) :pilly)))
+                          (level-objects level))))
 
     (bind :key-release (key)
       (input-key-release game key))

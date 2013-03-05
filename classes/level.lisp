@@ -2,7 +2,6 @@
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
-   (actors :accessor level-actors :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)
    (meta :accessor level-meta :initarg :meta :initform nil))
   (:documentation "Describes a level, and the objects in that level."))
@@ -32,11 +31,11 @@
       (dbg :info "(level) Copying level to render~%")
       (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
     ;; here, we convert the objects in the level SVG to displayable/collidable
-    ;; objects, load the actors for the level, and store the level meta info
+    ;; objects, load the dynamic objects/actors for the level, and store the
+    ;; level meta info
     (setf (level-objects level) (append (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
-                                        ;(load-objects (getf level-meta :objects))
-                                        )
-          (level-actors level) (load-objects (getf level-meta :actors) :type :actors) ;(load-actors (getf level-meta :actors))
+                                        (load-objects (getf level-meta :objects))
+                                        (load-objects (getf level-meta :actors) :type :actors))
           (level-meta level) level-meta)
     ;; level loaded!
     (trigger :level-load level)
@@ -56,11 +55,9 @@
 
 (defun level-cleanup (level)
   "Clean up the objects in a level (in the game thread) and reset the level."
-  (dolist (game-object (append (level-objects level)
-                               (level-actors level)))
+  (dolist (game-object (level-objects level))
     (destroy-game-object game-object))
   (setf (level-objects level) nil
-        (level-actors level) nil
         (level-meta level) nil)
   level)
 
@@ -73,8 +70,9 @@
   (let* ((level (world-level world))
          (collision-objects (remove-if (lambda (game-object)
                                          ;; grab objects in the same plane as collision-depth
-                                         (not (eq (caddr (game-object-position game-object))
-                                                  (level-collision-depth level))))
+                                         (or (not (subtypep (type-of game-object) 'level-object))
+                                             (not (eq (caddr (game-object-position game-object))
+                                                      (level-collision-depth level)))))
                                        (level-objects level)))
          (space (world-physics world)))
     (dolist (object collision-objects)
@@ -106,7 +104,5 @@
 (defun draw-level (level)
   "Draw the entire level (all contained objects)."
   (dolist (game-obj (level-objects level))
-    (draw game-obj))
-  (dolist (actor (level-actors level))
-    (draw actor)))
+    (draw game-obj)))
 

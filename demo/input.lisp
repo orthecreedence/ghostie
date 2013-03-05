@@ -30,8 +30,9 @@
       (let ((position (copy-tree (world-position render-world))))
         (setf (world-position game-world) position)))
     (when (key= #\A)
-      (in-game (game-world)
-        (add-random-box game-world)))))
+      (let ((x (car (game-object-position main-actor))))
+        (in-game (game-world)
+          (add-random-box game-world :x x))))))
 
 (defun input-key-press (game key)
   (when (or (eq (code-char key) #\Q)

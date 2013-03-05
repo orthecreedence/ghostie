@@ -43,7 +43,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -52,10 +52,10 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#d40000;fill-opacity:1;stroke:none"
+       style="fill:#808000;fill-opacity:1;stroke:none"
        id="rect2985"
        width="295"
-       height="10"
+       height="17"
        x="250.71428"
        y="520.93359" />
   </g>
