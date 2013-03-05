@@ -1,25 +1,26 @@
 (in-package :ghostie)
 ;THE END.
 
-(defclass actor (game-object)
-  ((name :accessor actor-name :initarg :name :initform nil)
-   (vel-avg-x :accessor actor-vel-avg-x :initform 0d0)
+(defclass actor (dynamic-object)
+  ((vel-avg-x :accessor actor-vel-avg-x :initform 0d0)
    (vel-avg-y :accessor actor-vel-avg-y :initform 0d0)))
 
-(defgeneric load-actor-physics-body (actor actor-meta)
-  (:documentation
-    "Load the physics body and shapes associated with this actor (along with
-     any other setup the body needs)."))
+(defmacro defactor (class-name superclasses slots &rest class-options)
+  "Abstraction of defclass, solves inter-package issues (in other words, allows
+   a game to add its own actor class, and allows ghostie to see it in its
+   namespace by importing it)."
+  ;; just simple wrap around defobject
+  `(defobject ,class-name ,superclasses ,slots ,@class-options))
 
-(defmethod load-actor-physics-body ((actor actor) actor-meta)
+(defmethod load-physics-body ((actor actor) actor-meta)
   (let ((mass (coerce (getf actor-meta :mass 50d0) 'double-float))
-        (max-vel (coerce (getf actor-meta :max-velocity 200d0) 'double-float))
+        (max-vel (coerce (getf actor-meta :max-velocity 1000d0) 'double-float))
         (friction (coerce (getf actor-meta :friction 0.9d0) 'double-float))
         (bb (calculate-game-object-bb actor))
         (physics-objects (getf actor-meta :physics))
         (position (mapcar (lambda (v)
                             (coerce v 'double-float))
-                          (getf actor-meta :start-pos '(0 0 0)))))
+                          (getf actor-meta :start-position '(0 0 0)))))
     (let* ((body (cpw:make-body (lambda () (cp:body-new mass 1d0))))
            (body-c (cpw:base-c body))
            (moment 0d0))
@@ -55,51 +56,6 @@
       (cp:body-set-pos body-c (car position) (cadr position))
       (cp:body-set-moment body-c moment)
       body)))
-
-(defmacro defactor (class-name superclasses slots &rest class-options)
-  "Abstraction of defclass, solves inter-package issues (in other words, allows
-   a game to add its own actor class, and allows ghostie to see it in its
-   namespace by importing it)."
-  `(progn
-     ,(append `(defclass ,class-name ,superclasses
-                 ,slots)
-              (when class-options
-                (list class-options)))
-     (import ',class-name :ghostie)))
-
-(defun load-actors (actors-meta)
-  (let ((actors nil))
-    (dolist (actor-info actors-meta)
-      (let* ((scale (getf actor-info :scale '(1 1 1)))
-             (actor-type (getf actor-info :actor))
-             (actor-name (getf actor-info :name))
-             (actor-directory (format nil "~a/~a/~a/~a/"
-                                      (namestring *game-directory*)
-                                      *resource-path*
-                                      *actor-path*
-                                      actor-type))
-             (meta (read-file (format nil "~a/meta.lisp" actor-directory)))
-             (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" actor-directory)
-                                            :curve-resolution 20
-                                            :scale (list (car scale) (- (cadr scale))))))
-        ;; set the actor's global meta into the level meta
-        (setf actor-info (append actor-info meta))
-
-        ;; load the actor's class file, if it has one
-        (let ((class-file (format nil "~a/class.lisp" actor-directory)))
-          (when (probe-file class-file)
-            (load class-file)))
-
-        (let* ((actor-symbol (intern (string-upcase actor-type) :ghostie))
-               (actor-class (if (find-class actor-symbol nil)
-                                actor-symbol
-                                'actor))
-               (actor (car (svg-to-game-objects svg-objs nil :object-type actor-class :center-objects t))))
-          (when actor-name
-            (setf (actor-name actor) actor-name))
-          (setf (game-object-physics-body actor) (load-actor-physics-body actor actor-info))
-          (push actor actors))))
-    actors))
 
 (defun update-actor-state (actor)
   (when (and actor (game-object-physics-body actor))

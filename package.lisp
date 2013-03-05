@@ -27,11 +27,14 @@
            #:game-object-bb
            #:calculate-game-object-bb
            
+           #:dynamic-object
+           #:object-name
+           #:defobject
+           #:load-physics-body
+
            #:actor
-           #:actor-name
            #:actor-vel-avg-x
            #:actor-vel-avg-y
-           #:load-actor-physics-body
            #:defactor
            
            #:level

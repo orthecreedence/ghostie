@@ -53,6 +53,7 @@
     :serial t
 	:components
 	((:file "game-object")
+	 (:file "dynamic-object")
 	 (:file "actor")
 	 (:file "level")))
    (:file "world" :depends-on ("package" opengl classes))

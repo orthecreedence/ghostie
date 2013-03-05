@@ -34,20 +34,13 @@
     ;; here, we convert the objects in the level SVG to displayable/collidable
     ;; objects, load the actors for the level, and store the level meta info
     (setf (level-objects level) (append (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
-                                        (load-objects level level-meta))
-          (level-actors level) (load-actors (getf level-meta :actors))
+                                        ;(load-objects (getf level-meta :objects))
+                                        )
+          (level-actors level) (load-objects (getf level-meta :actors) :type :actors) ;(load-actors (getf level-meta :actors))
           (level-meta level) level-meta)
     ;; level loaded!
     (trigger :level-load level)
     level))
-
-(defun load-meta-objects (level level-meta)
-  "Load objects out of the level meta. These must exist and directories with
-   class.lisp files in the *resource-path*/*object-path* directory in order to
-   load properly. These are usually things like moving platforms, plants, etc:
-   dynamic objects that are not part of the terrain, but exist as a part of the
-   level."
-  )
 
 (defun add-level-object (level object)
   "Add an object to a level. The object will be processed every game loop, and
