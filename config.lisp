@@ -9,6 +9,7 @@
            #:*resource-path*
            #:*actor-path*
            #:*level-path*
+           #:*object-path*
            
            #:*log-level*
            
@@ -60,4 +61,4 @@
 
 ;; --------- physics
 (defparameter +dt+ (coerce (/ 1 60) chipmunk-wrapper:+physics-precision+))
-(defparameter *physics-segment-thickness* 2.0d0)
+(defparameter *physics-segment-thickness* 3.0d0)

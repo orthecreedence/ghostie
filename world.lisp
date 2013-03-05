@@ -63,11 +63,7 @@
     ;; sync each game object with its physics body
     (dolist (game-object (append (level-objects level)
                                  (level-actors level)))
-      (sync-game-object-to-physics game-object :render t))
-    ;; update the render thread with our world display info
-    (let ((pos (copy-tree (world-position world))))
-      (in-render (render-world)
-        (setf (world-position render-world) pos)))))
+      (sync-game-object-to-physics game-object :render t))))
 
 (defun step-game-world (world)
   "Move the game world forward by one step. Calculates the physics delta for
@@ -103,6 +99,7 @@
                           (hex-to-rgb (getf level-meta :fog-color) :type 'list)
                           background)))
       (when iterations
+        (dbg :debug "(world) Setting physics iterations: ~a~%" iterations)
         (cp-f:space-set-iterations (cpw:base-c (world-physics world)) (round iterations)))
       (when gravity
         (setf (cp-a:space-gravity-y (cpw:base-c (world-physics world))) (coerce gravity 'double-float)))
@@ -130,10 +127,10 @@
    lets the game thread know a render happened, as well as syncs game objects to
    their physics bodies."
   (progn
+    (trigger :render-step world dt)
     (in-game (game-world)
       (game-world-sync game-world))
     (process-queue world :render)
-    (trigger :render-step world dt)
     (draw-world world)))
 
 (defun world-render-cleanup (world)
