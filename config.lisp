@@ -61,4 +61,4 @@
 
 ;; --------- physics
 (defparameter +dt+ (coerce (/ 1 60) chipmunk-wrapper:+physics-precision+))
-(defparameter *physics-segment-thickness* 3.0d0)
+(defparameter *physics-segment-thickness* 1.0d0)
