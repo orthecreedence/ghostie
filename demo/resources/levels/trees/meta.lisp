@@ -1,7 +1,7 @@
 (:name "trees"
  ;:actors ((:type "ghostie" :start-pos (-480 -450) :main t :scale (.7 .7 .7)))
  :actors ((:id :pilly :type "pill" :start-position (-480 -400) :scale (.7 .7 .7)))
- :objects ((:id :boxy :type "platform" :start-position (-300 -440) :scale (.7 .7 .7) :limit-x (-300 1100)))
+ :objects ((:id :boxy :type "platform" :start-position (-320 -440) :scale (.7 .7 .7) :limit-x (-300 1100)))
  :scale (1 1 1)
  :camera (99 205 -400)
  :background "#262524"

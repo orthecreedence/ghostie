@@ -16,21 +16,24 @@
     (unless (= time (or (platform-last-process platform) 0))
       (setf (platform-last-process platform) time))
     (when speed
-      (if (<= (cadr (getf (object-level-meta platform) :limit-x))
-              (car (game-object-position platform)))
-          (setf (platform-speed platform) nil)
-          (symbol-macrolet ((pos (cp-a:body-p-x (cpw:base-c (game-object-physics-body platform)))))
-            (setf pos (+ pos speed)))))))
+      (let ((body-c (cpw:base-c (game-object-physics-body platform))))
+        (if (<= (cadr (getf (object-level-meta platform) :limit-x))
+                (car (game-object-position platform)))
+            (setf (platform-speed platform) nil
+                  (cp-a:body-v-x body-c) 0d0)
+            (setf (cp-a:body-p-x body-c) (+ (cp-a:body-p-x body-c) speed)
+                  (cp-a:body-v-x body-c) (* internal-time-units-per-second speed)))))))
 
-(bind (:collision-begin :moving-platform-begin) ((actor actor) (platform platform) arbiter)
+(bind (:collision-pre :moving-platform-begin) ((actor actor) (platform platform) arbiter)
   (declare (ignore actor))
-  (cond ((< .98 (cadar (cpw:arbiter-normals arbiter)))
+  (cond ((< .5 (cadar (cpw:arbiter-normals arbiter)))
+         ;; ignore if coming up from bottom
          (setf (cpw:arbiter-ignore-collision arbiter) t))
         ((< (cadar (cpw:arbiter-normals arbiter)) -.98)
          ;; move the platform
-         (setf (platform-speed platform) 50d0)))
-  (dbg :debug "(platform) Player hit platform ~s~%" (cpw:arbiter-normals arbiter)))
+         (setf (platform-speed platform) 50d0))))
 
 (bind (:collision-separate :moving-platform-separate) ((actor actor) (platform platform) arbiter)
   (declare (ignore actor arbiter))
   (setf (platform-speed platform) nil))
+

@@ -1,7 +1,8 @@
 (in-package :ghostie-demo)
 
 (defactor pill (actor)
-  ((feet :accessor pill-feet :initform nil)))
+  ((on-ground :accessor pill-on-ground :initform nil)
+   (feet :accessor pill-feet :initform nil)))
 
 (defmethod load-physics-body ((pill pill) actor-meta)
   (declare (ignore actor-meta))
@@ -18,35 +19,21 @@
           (cpw:space-add-joint space joint))))
     body))
 
-(defun get-object-under-pill (pill)
-  (when (and pill (game-object-physics-body pill))
-    (let ((feet-shape-c (cpw:base-c (pill-feet pill)))
-          (space-c (cpw:base-c (cpw:shape-space (pill-feet pill)))))
-      (cffi:with-foreign-object (query 'clipmunk:segment-query-info)
-        (let ((body-x (cp-a:body-p-x (cp-a:shape-body feet-shape-c)))
-              (body-y (cp-a:body-p-y (cp-a:shape-body feet-shape-c)))
-              (shape-offset-x (cp-a:circle-shape-c-x feet-shape-c))
-              (shape-offset-y (cp-a:circle-shape-c-y feet-shape-c))
-              (shape-radius (cp-a:circle-shape-r feet-shape-c)))
-          (let* ((x1 (+ body-x shape-offset-x))
-                 (y1 (+ body-y shape-offset-y 2d0 (- shape-radius)))
-                 (x2 x1)
-                 (y2 (- y1 10)))
-            (cp:space-segment-query-first space-c x1 y1 x2 y2 99 (cffi:null-pointer) query)
-            (let* ((shape (cp-a:segment-query-info-shape query))
-                   (body (unless (cffi:null-pointer-p shape)
-                           (cpw:find-body-from-pointer (cp-a:shape-body shape)))))
-              (when (and body (not (eql body (game-object-physics-body pill))))
-                (let ((n-x (cp-a:segment-query-info-n-x query))
-                      (n-y (cp-a:segment-query-info-n-y query)))
-                  ;(dbg :debug "cn: ~s~%" (list n-x n-y))
-                  (values shape (list n-x n-y)))))))))))
+;; track when our pill lands on the ground
+(bind (:collision-pre :pill-start) ((pill pill) (object game-object) arbiter)
+  (declare (ignore object))
+  (let ((normal-y (cadar (cpw:arbiter-normals arbiter))))
+    (when (and normal-y
+               (<= normal-y -.6))
+      (setf (pill-on-ground pill) t)
+      ;; this helps disable momentary disconnects from the ground registering as
+      ;; being midair
+      (disable-binding :collision-separate :pill-separate :time .1))))
 
-(defun pill-grounded-p (pill)
-  (multiple-value-bind (shape contact-normal) (get-object-under-pill pill)
-    (when shape
-      (when (< (car contact-normal) (+ (cadr contact-normal) 0.3))
-        t))))
+;; track when our pill separates from the ground
+(bind (:collision-separate :pill-separate) ((pill pill) (object game-object) arbiter)
+  (declare (ignore object arbiter))
+  (setf (pill-on-ground pill) nil))
 
 (defun pill-stop (pill)
   (when (and pill (game-object-physics-body pill))
@@ -62,11 +49,13 @@
             (y (/ (abs x) 3)))
         (when (< (abs vel) *character-max-run*)
           ;(setf (cp-a:shape-u shape-c) (if (zerop x) 0.4d0 0.1d0))
-          (if (pill-grounded-p pill)
+          (if (pill-on-ground pill)
+              ;; if walking, apply a surface velocity
               (let ((shape-c (cpw:base-c (pill-feet pill))))
                 (cp:body-activate body-c)
                 (setf (cp-a:shape-surface_v-x shape-c) (coerce x 'double-float)
                       (cp-a:shape-surface_v-y shape-c) (coerce y 'double-float)))
+              ;; if midair, apply a slight impulse
               (cp:body-apply-impulse body-c
                                      (* 0.02d0 x (cp-a:body-m body-c))
                                      0d0
@@ -77,9 +66,11 @@
   (when (and pill (game-object-physics-body pill))
     (let* ((body-c (cpw:base-c (game-object-physics-body pill))))
       ;(dbg :debug "v-y: ~s ~s~%" (cp-a:body-v-y body-c) (actor-vel-avg-y pill))
-      (when (and (pill-grounded-p pill)
+      (when (and (pill-on-ground pill)
                  (< (abs (cp-a:body-v-y body-c)) 160)
                  (< (abs (actor-vel-avg-y pill)) 160))
+        (setf (pill-on-ground pill) nil)
+        ;(disable-binding :collision-separate :pill-start :time .5)
         (let* ((vel-x (cp-a:body-v-x body-c))
                (x (* x (- 1 (/ (abs vel-x) *character-max-run*)))))
           (cp:body-apply-impulse body-c
