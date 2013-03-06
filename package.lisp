@@ -26,6 +26,7 @@
            #:game-object-meta
            #:game-object-display
            #:game-object-bb
+           #:destroy-game-object
            #:calculate-game-object-bb
            
            #:dynamic-object
