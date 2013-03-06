@@ -1,6 +1,6 @@
 Ghostie
 =======
-Ghostie is a 2D game engine engine for Common Lisp.
+Ghostie is a 2D game engine engine for Common Lisp. [See the demo here](https://vimeo.com/61212217).
 
 Ghostie is currently undergoing massive surgery and it's not recommended to use
 for quite some time. If you dare, install the [dependencies](#dependencies) and
