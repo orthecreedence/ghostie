@@ -43,6 +43,7 @@
            
            #:level
            #:level-objects
+           #:level-object
            #:level-meta
            #:add-level-object
            #:remove-level-object
