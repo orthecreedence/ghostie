@@ -29,28 +29,35 @@
        (ccl::invalid-memory-access (e)
          (dbg :error "(physics) Invalid memory access =[ ~a~%" e))
        (error (e)
-         (dbg :error "(physics) Collision event error (begin): ~a~%" e)))
-     cp:+true+))
+         (dbg :error "(physics) Collision event error (begin): ~a~%" e)))))
 
 ;; TODO call make-arbiter only once, and store the result in the arbiter c obj
 ;; itself. note that creating a pointer, setting it into a hash table, and
 ;; dereferencing it to get the arbiter data might be slower than just calling
 ;; make-arbiter for each collision call (but need to benchmark before assuming)
 (define-collision-callback collision-begin (arbiter-data body1 body2)
-  (trigger :collision-begin body1 body2 arbiter-data)
-  (trigger :collision-begin body2 body1 arbiter-data))
+  (let ((obj1 (cpw:body-data body1))
+        (obj2 (cpw:body-data body2)))
+    (trigger :collision-begin obj1 obj2 arbiter-data)
+    (trigger :collision-begin obj2 obj1 arbiter-data)))
 
 (define-collision-callback collision-pre-solve (arbiter-data body1 body2)
-  (trigger :collision-pre body1 body2 arbiter-data)
-  (trigger :collision-pre body2 body1 arbiter-data))
+  (let ((obj1 (cpw:body-data body1))
+        (obj2 (cpw:body-data body2)))
+    (trigger :collision-pre obj1 obj2 arbiter-data)
+    (trigger :collision-pre obj2 obj1 arbiter-data)))
 
 (define-collision-callback collision-post-solve (arbiter-data body1 body2)
-  (trigger :collision-post body1 body2 arbiter-data)
-  (trigger :collision-post body2 body1 arbiter-data))
+  (let ((obj1 (cpw:body-data body1))
+        (obj2 (cpw:body-data body2)))
+    (trigger :collision-post obj1 obj2 arbiter-data)
+    (trigger :collision-post obj2 obj1 arbiter-data)))
 
 (define-collision-callback collision-separate (arbiter-data body1 body2)
-  (trigger :collision-separate body1 body2 arbiter-data)
-  (trigger :collision-separate body2 body1 arbiter-data))
+  (let ((obj1 (cpw:body-data body1))
+        (obj2 (cpw:body-data body2)))
+    (trigger :collision-separate obj1 obj2 arbiter-data)
+    (trigger :collision-separate obj2 obj1 arbiter-data)))
 
 (cffi:defcallback cp-begin :int ((arb :pointer) (space :pointer) (data :pointer))
   (collision-begin arb space data))

@@ -20,6 +20,7 @@
       (let ((game-object (make-game-object :type 'dynamic-object
                                            :gl-objects gl-objects
                                            :physics poly-body)))
+        (setf (cpw:body-data poly-body) game-object)
         (cpw:space-add-body space poly-body)
         (cpw:space-add-shape space poly-shape)
         (add-level-object (world-level world) game-object)

@@ -1,7 +1,8 @@
 (in-package :ghostie)
 
 (defclass dynamic-object (game-object)
-  ((id :accessor object-id :initarg :id :initform nil))
+  ((id :accessor object-id :initarg :id :initform nil)
+   (level-meta :accessor object-level-meta :initarg :level-meta :initform nil))
   (:documentation
     "Describes an object that acts as part of the level, but is more dynamic
      than terrain. For instance, a plant, a moving platform, a rope, a bridge,
@@ -45,8 +46,9 @@
                           (getf object-meta :start-position '(0 0 0)))))
     (let* ((body (cpw:make-body (lambda ()
                                   (if static
-                                      (cp:body-new-static)
-                                      (cp:body-new 1d0 1d0)))))
+                                      (cp:body-new +infinity+ +infinity+)
+                                      (cp:body-new 1d0 1d0)))
+                                :data object))
            (body-c (cpw:base-c body))
            (mass 0d0)
            (moment 0d0))
@@ -112,6 +114,15 @@
             (cpw:space-add-shape space shape))))
       body)))
 
+(defgeneric process-object (object)
+  (:documentation
+    "Called for each dynamic object on each game step. This methos can be useful
+     for moving objects around (outside of the physics realm, like moving
+     platforms), updating object state, etc."))
+
+(defmethod process-object ((object dynamic-object))
+  (declare (ignore object)))
+
 (defun load-objects (objects-meta &key (type :objects))
   "Load objects in a level defined by that level's meta. This can be dynamic
    objects (moving platforms, plants, bridges, etc) or actors as well."
@@ -154,7 +165,8 @@
             (setf (object-id object) object-id))
           ;; load the object's physics body
           (setf (game-object-physics-body object) (load-physics-body object object-info)
-                (game-object-draw-offset object) draw-offset)
+                (game-object-draw-offset object) draw-offset
+                (object-level-meta object) object-info)
           (push object objects))))
     objects))
 

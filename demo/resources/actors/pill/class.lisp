@@ -70,8 +70,7 @@
               (cp:body-apply-impulse body-c
                                      (* 0.02d0 x (cp-a:body-m body-c))
                                      0d0
-                                     0d0 0d0))
-          (trigger :actor-move pill))))))
+                                     0d0 0d0)))))))
 
 (defun pill-jump (pill &key (x 0d0) (y 300d0))
   "Make the character jump."
@@ -86,6 +85,5 @@
           (cp:body-apply-impulse body-c
                                  (* (cp-a:body-m body-c) (coerce x 'double-float))
                                  (* (cp-a:body-m body-c) (coerce y 'double-float))
-                                 0d0 0d0)
-          (trigger :actor-move pill))))))
+                                 0d0 0d0))))))
 

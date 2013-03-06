@@ -76,7 +76,7 @@
                                        (level-objects level)))
          (space (world-physics world)))
     (dolist (object collision-objects)
-      (let ((body (cpw:make-body (lambda () (cp:body-new-static))))
+      (let ((body (cpw:make-body (lambda () (cp:body-new-static)) :data object))
             (position-x (car (game-object-position object)))
             (position-y (cadr (game-object-position object))))
         (cp:body-set-pos (cpw:base-c body)

@@ -6,6 +6,7 @@
            #:*actor-path*
            #:*level-path*
            #:*log-level*
+           #:+dt+
 
            #:dbg
 
@@ -29,8 +30,10 @@
            
            #:dynamic-object
            #:object-id
+           #:object-level-meta
            #:defobject
            #:load-physics-body
+           #:process-object
 
            #:actor
            #:actor-vel-avg-x

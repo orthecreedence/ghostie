@@ -13,8 +13,8 @@
            
            #:*log-level*
            
-           #:+infinity-f+
-           #:+neg-infinity-f+
+           #:+infinity+
+           #:+neg-infinity+
 
            #:+config-graphics-window-x+
            #:+config-graphics-window-y+
@@ -51,8 +51,8 @@
 (defparameter *log-level* :debug)
 
 ;; define an "infinity" value
-(defconstant +infinity-f+ most-positive-single-float)
-(defconstant +neg-infinity-f+ most-negative-single-float)
+(defconstant +infinity+ most-positive-double-float)
+(defconstant +neg-infinity+ most-negative-double-float)
 
 ;; --------- graphics config
 (defconstant +config-graphics-window-x+ 800)
