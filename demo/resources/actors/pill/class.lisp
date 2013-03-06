@@ -4,21 +4,6 @@
   ((on-ground :accessor pill-on-ground :initform nil)
    (feet :accessor pill-feet :initform nil)))
 
-(defmethod load-physics-body ((pill pill) actor-meta)
-  (declare (ignore actor-meta))
-  (let* ((body (call-next-method))
-         (mass (cp-a:body-m (cpw:base-c body))))
-    (setf (pill-feet pill) (car (cpw:body-shapes body)))
-    (in-game (world)
-      (let ((space (world-physics world)))
-        ;; fix the character's rotation
-        (let ((joint (cpw:make-joint (cpw:space-static-body space) body
-                                     (lambda (body1 body2)
-                                       (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
-                                                                    0d0 (* mass 240000d0) (* mass 5000d0))))))
-          (cpw:space-add-joint space joint))))
-    body))
-
 ;; track when our pill lands on the ground
 (bind (:collision-pre :pill-start) ((pill pill) (object game-object) arbiter)
   (declare (ignore object))
@@ -34,6 +19,22 @@
 (bind (:collision-separate :pill-separate) ((pill pill) (object game-object) arbiter)
   (declare (ignore object arbiter))
   (setf (pill-on-ground pill) nil))
+
+(defmethod load-physics-body ((pill pill) actor-meta)
+  (declare (ignore actor-meta))
+  (let* ((body (call-next-method))
+         (mass (cp-a:body-m (cpw:base-c body))))
+    (setf (pill-feet pill) (car (cpw:body-shapes body)))
+    (in-game (world)
+      (let ((space (world-physics world)))
+        ;; fix the character's rotation
+        (let ((joint (cpw:make-joint (cpw:space-static-body space) body
+                                     (lambda (body1 body2)
+                                       (cp:damped-rotary-spring-new
+                                         (cpw:base-c body1) (cpw:base-c body2)
+                                         0d0 (* mass 240000d0) (* mass 5000d0))))))
+          (cpw:space-add-joint space joint))))
+    body))
 
 (defun pill-stop (pill)
   (when (and pill (game-object-physics-body pill))
@@ -70,7 +71,7 @@
                  (< (abs (cp-a:body-v-y body-c)) 160)
                  (< (abs (actor-vel-avg-y pill)) 160))
         (setf (pill-on-ground pill) nil)
-        ;(disable-binding :collision-separate :pill-start :time .5)
+        (disable-binding :collision-pre :pill-start :time .5)
         (let* ((vel-x (cp-a:body-v-x body-c))
                (x (* x (- 1 (/ (abs vel-x) *character-max-run*)))))
           (cp:body-apply-impulse body-c
