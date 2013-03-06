@@ -123,50 +123,56 @@
 (defmethod process-object ((object dynamic-object))
   (declare (ignore object)))
 
-(defun load-objects (objects-meta &key (type :objects))
+(defun create-object (object-meta &key (type :object))
+  "Create a dynamic object given a set of meta. Loads the object from its class
+   and meta files."
+  (let* ((path (case type
+                 (:actor *actor-path*)
+                 (:object *object-path*)))
+         (scale (getf object-meta :scale '(1 1 1)))
+         (object-type (getf object-meta :type))
+         (object-id (getf object-meta :id))
+         (object-directory (format nil "~a/~a/~a/~a/"
+                                  (namestring *game-directory*)
+                                  *resource-path*
+                                  path
+                                  object-type))
+         (meta (read-file (format nil "~a/meta.lisp" object-directory)))
+         (draw-offset (getf meta :draw-offset '(0 0 0)))
+         (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" object-directory)
+                                        :curve-resolution 20
+                                        :scale (list (car scale) (- (cadr scale))))))
+    (dbg :debug "(object) Loading object ~s~%" (list :id object-id :type type))
+    ;; set the object's global meta into the level meta
+    (setf object-meta (append object-meta meta))
+
+    ;; load the object's class file, if it has one
+    ;; TODO: check if already loaded here
+    (let ((class-file (format nil "~a/class.lisp" object-directory)))
+      (when (probe-file class-file)
+        (load class-file)))
+
+    ;; attempt to load the object class
+    (let* ((object-symbol (intern (string-upcase object-type) :ghostie))
+           (object-class (if (find-class object-symbol nil)
+                             object-symbol
+                             'dynamic-object))
+           (object (car (svg-to-game-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
+      (when object-id
+        (setf (object-id object) object-id))
+      ;; load the object's physics body
+      (setf (game-object-physics-body object) (load-physics-body object object-meta)
+            (game-object-draw-offset object) draw-offset
+            (object-level-meta object) object-meta)
+      object)))
+  
+(defun load-objects (objects-meta &key (type :object))
   "Load objects in a level defined by that level's meta. This can be dynamic
    objects (moving platforms, plants, bridges, etc) or actors as well."
-  (let ((objects nil)
-        ;; we'll have a different path depending on what kind of objects we're
-        ;; loading
-        (path (case type
-                (:actors *actor-path*)
-                (:objects *object-path*))))
+  (let ((objects nil))
     (dolist (object-info objects-meta)
-      (let* ((scale (getf object-info :scale '(1 1 1)))
-             (object-type (getf object-info :type))
-             (object-id (getf object-info :id))
-             (object-directory (format nil "~a/~a/~a/~a/"
-                                      (namestring *game-directory*)
-                                      *resource-path*
-                                      path
-                                      object-type))
-             (meta (read-file (format nil "~a/meta.lisp" object-directory)))
-             (draw-offset (getf meta :draw-offset '(0 0 0)))
-             (svg-objs (svgp:parse-svg-file (format nil "~a/objects.svg" object-directory)
-                                            :curve-resolution 20
-                                            :scale (list (car scale) (- (cadr scale))))))
-        (dbg :debug "(object) Loading object ~s~%" (list :id object-id :type type))
-        ;; set the object's global meta into the level meta
-        (setf object-info (append object-info meta))
-
-        ;; load the object's class file, if it has one
-        (let ((class-file (format nil "~a/class.lisp" object-directory)))
-          (when (probe-file class-file)
-            (load class-file)))
-
-        ;; attempt to load the object class
-        (let* ((object-symbol (intern (string-upcase object-type) :ghostie))
-               (object-class (if (find-class object-symbol nil)
-                                object-symbol
-                                'object))
-               (object (car (svg-to-game-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
-          (when object-id
-            (setf (object-id object) object-id))
-          ;; load the object's physics body
-          (setf (game-object-physics-body object) (load-physics-body object object-info)
-                (game-object-draw-offset object) draw-offset
-                (object-level-meta object) object-info)
-          (push object objects))))
+      (push (create-object object-info :type type) objects))
     objects))
+
+
 

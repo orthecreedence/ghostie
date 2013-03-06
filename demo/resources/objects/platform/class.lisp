@@ -23,6 +23,7 @@
             (setf pos (+ pos speed)))))))
 
 (bind (:collision-begin :moving-platform-begin) ((actor actor) (platform platform) arbiter)
+  (declare (ignore actor))
   (cond ((< .98 (cadar (cpw:arbiter-normals arbiter)))
          (setf (cpw:arbiter-ignore-collision arbiter) t))
         ((< (cadar (cpw:arbiter-normals arbiter)) -.98)
@@ -31,4 +32,5 @@
   (dbg :debug "(platform) Player hit platform ~s~%" (cpw:arbiter-normals arbiter)))
 
 (bind (:collision-separate :moving-platform-separate) ((actor actor) (platform platform) arbiter)
+  (declare (ignore actor arbiter))
   (setf (platform-speed platform) nil))

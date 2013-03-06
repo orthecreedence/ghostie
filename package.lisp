@@ -34,6 +34,7 @@
            #:defobject
            #:load-physics-body
            #:process-object
+           #:create-object
 
            #:actor
            #:actor-vel-avg-x

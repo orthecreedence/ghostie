@@ -35,7 +35,7 @@
     ;; level meta info
     (setf (level-objects level) (append (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
                                         (load-objects (getf level-meta :objects))
-                                        (load-objects (getf level-meta :actors) :type :actors))
+                                        (load-objects (getf level-meta :actors) :type :actor))
           (level-meta level) level-meta)
     ;; level loaded!
     (trigger :level-load level)
