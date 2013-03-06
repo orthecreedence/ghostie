@@ -92,7 +92,7 @@
             (gl-objects (loop for fake-gl-object in (game-object-gl-objects game-object)
                               for gl-object = (make-gl-object-from-fake fake-gl-object)
                               collect gl-object)))
-        (dbg :info "Initializing game object in render.~%")
+        (dbg :debug "(object) Initializing game object in render.~%")
         (let ((render-game-object (make-instance 'game-object
                                                  :gl-objects gl-objects
                                                  :position (copy-tree (game-object-position game-object))

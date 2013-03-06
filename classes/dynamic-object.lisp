@@ -98,7 +98,6 @@
                             (p2x (* p2x bb-max))
                             (p2y (* p2y bb-max))
                             (radius (* radius bb-max)))
-                        (dbg :debug "segment pt: ~s~%" (list p1x p1y p2x p2y radius))
                         (incf moment (cp:moment-for-segment physics-obj-mass p1x p1y p2x p2y))
                         (let ((shape (cpw:make-shape :segment body
                                                      (lambda (body)
