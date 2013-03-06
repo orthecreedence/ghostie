@@ -37,7 +37,6 @@
 (defmethod load-physics-body ((object dynamic-object) object-meta)
   (dbg :debug "(object) Loading physics shapes for ~s~%" (list (object-id object) (getf object-meta :type)))
   (let ((max-vel (coerce (getf object-meta :max-velocity 1000d0) 'double-float))
-        (friction (coerce (getf object-meta :friction 0.9d0) 'double-float))
         (static (getf object-meta :static))
         (bb (calculate-game-object-bb object))
         (physics-objects (getf object-meta :physics))
@@ -57,7 +56,10 @@
           (let ((bb-max (apply #'max bb))) ; grab our biggest coordinate
             ;; loop over each physics object in this body and attach it
             (dolist (phys-obj physics-objects)
-              (let ((physics-obj-mass (coerce (getf phys-obj :mass) 'double-float)))
+              (let ((physics-obj-mass (coerce (getf phys-obj :mass) 'double-float))
+                    (friction (coerce (getf phys-obj :friction 1) 'double-float))
+                    (elasticity (coerce (getf phys-obj :elasticity 0) 'double-float))
+                    (shape nil))
                 (incf mass physics-obj-mass)
                 (case (getf phys-obj :type)
                   (:circle
@@ -67,11 +69,10 @@
                             (x (* (car position) bb-max))
                             (y (* (cadr position) bb-max)))
                         (incf moment (cp:moment-for-circle physics-obj-mass r 0d0 x y))
-                        (let ((shape (cpw:make-shape :circle body
-                                                     (lambda (body)
-                                                       (cp:circle-shape-new (cpw:base-c body)
-                                                                            r x y)))))
-                          (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
+                        (setf shape (cpw:make-shape :circle body
+                                                    (lambda (body)
+                                                      (cp:circle-shape-new (cpw:base-c body)
+                                                                           r x y)))))))
                   (:box
                     (let ((width (getf phys-obj :width))
                           (height (getf phys-obj :height))
@@ -79,11 +80,10 @@
                       (let ((w (* width bb-max))
                             (h (* height bb-max)))
                         (incf moment (cp:moment-for-box physics-obj-mass w h))
-                        (let ((shape (cpw:make-shape :box body
-                                                     (lambda (body)
-                                                       (cp:box-shape-new (cpw:base-c body)
-                                                                         w h)))))
-                          (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
+                        (setf shape (cpw:make-shape :box body
+                                                    (lambda (body)
+                                                      (cp:box-shape-new (cpw:base-c body)
+                                                                        w h)))))))
                   (:segment
                     (let* ((endpoints (getf phys-obj :endpoints))
                            (p1 (car endpoints))
@@ -99,14 +99,17 @@
                             (p2y (* p2y bb-max))
                             (radius (* radius bb-max)))
                         (incf moment (cp:moment-for-segment physics-obj-mass p1x p1y p2x p2y))
-                        (let ((shape (cpw:make-shape :segment body
-                                                     (lambda (body)
-                                                       (cp:segment-shape-new (cpw:base-c body)
-                                                                             p1x p1y p2x p2y
-                                                                             radius)))))
-                          (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
+                        (setf shape (cpw:make-shape :segment body
+                                                    (lambda (body)
+                                                      (cp:segment-shape-new (cpw:base-c body)
+                                                                            p1x p1y p2x p2y
+                                                                            radius)))))))
                   (t
-                    (error (format nil "Unsupported physics type: ~a~%" (getf phys-obj :type))))))))
+                    (error (format nil "Unsupported physics type: ~a~%" (getf phys-obj :type)))))
+                ;; set our friction/elasticity
+                (let ((shape-c (cpw:base-c shape)))
+                  (setf (cp-a:shape-u shape-c) friction
+                        (cp-a:shape-e shape-c) elasticity)))))
 
           ;; load a default physics object (a stupid circle in the center of
           ;; the object)
@@ -118,7 +121,7 @@
                                          (lambda (body)
                                            (cp:circle-shape-new (cpw:base-c body)
                                                                 radius x y)))))
-              (setf (cp-a:shape-u (cpw:base-c shape)) friction))))
+              (setf (cp-a:shape-u (cpw:base-c shape)) 1d0))))
 
       ;; finalize the body: set position, velocity, mass, moment of inertia
       (setf (cp-a:body-v-limit body-c) max-vel)
