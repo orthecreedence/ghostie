@@ -35,5 +35,6 @@
 
 (bind (:collision-separate :moving-platform-separate) ((actor actor) (platform platform) arbiter)
   (declare (ignore actor arbiter))
-  (setf (platform-speed platform) nil))
+  (setf (platform-speed platform) nil
+        (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) 0d0))
 

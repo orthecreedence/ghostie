@@ -15,7 +15,7 @@
         (let ((joint (cpw:make-joint (cpw:space-static-body space) body
                                      (lambda (body1 body2)
                                        (cp:damped-rotary-spring-new (cpw:base-c body1) (cpw:base-c body2)
-                                                                    0d0 (* mass 240000d0) (* mass 25000d0))))))
+                                                                    0d0 (* mass 240000d0) (* mass 5000d0))))))
           (cpw:space-add-joint space joint))))
     body))
 
