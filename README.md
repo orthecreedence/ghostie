@@ -22,8 +22,9 @@ library.
 nice CLOS wrappage around `clipmunk` that makes the bindings a bit more lispy.
 
 #### C Libraries
-You will need to have [Chipmunk physics](http://chipmunk-physics.net/) >= 6 and
-[GLFW](http://www.glfw.org/) installed on your system for Ghostie to run.
+You will need to have [Chipmunk physics](http://chipmunk-physics.net/) >= 6.1.3
+(compiled with `-DCHIPMUNK_FFI`) and [GLFW](http://www.glfw.org/) installed on
+your system for Ghostie to run.
 
 
 Usage
