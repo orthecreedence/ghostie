@@ -12,6 +12,16 @@
           (body-b (cpw:find-body-from-pointer (cp-a:shape-body (cffi:mem-aref b :pointer)))))
       (values body-a body-b))))
 
+(defun reverse-normals (arbiter)
+  "Given an arbiter, reverse the contact normals (and save the reversed normals
+   back into the original arbiter)."
+  (let ((normals (cpw:arbiter-normals arbiter)))
+    (setf (cpw:arbiter-normals arbiter)
+          (mapcar (lambda (normal)
+                    (mapcar #'- normal))
+                  normals))
+    arbiter))
+
 (defmacro define-collision-callback (name (arbiter-var body1-var body2-var &key (sync t)) &body body)
   `(defun ,name (arbiter space data)
      (declare (ignore space data))
@@ -30,7 +40,7 @@
          (dbg :error "(physics) Invalid memory access =[ ~a~%" e)
          cp:+true+)
        (error (e)
-         (dbg :error "(physics) Collision event error (begin): ~a~%" e)
+         (dbg :error "(physics) Collision event error (~a): ~a~%" ',name e)
          cp:+true+))))
 
 ;; TODO call make-arbiter only once, and store the result in the arbiter c obj
@@ -41,25 +51,25 @@
   (let ((obj1 (cpw:body-data body1))
         (obj2 (cpw:body-data body2)))
     (trigger :collision-begin obj1 obj2 arbiter-data)
-    (trigger :collision-begin obj2 obj1 arbiter-data)))
+    (trigger :collision-begin obj2 obj1 (reverse-normals arbiter-data))))
 
 (define-collision-callback collision-pre-solve (arbiter-data body1 body2)
   (let ((obj1 (cpw:body-data body1))
         (obj2 (cpw:body-data body2)))
     (trigger :collision-pre obj1 obj2 arbiter-data)
-    (trigger :collision-pre obj2 obj1 arbiter-data)))
+    (trigger :collision-pre obj2 obj1 (reverse-normals arbiter-data))))
 
 (define-collision-callback collision-post-solve (arbiter-data body1 body2)
   (let ((obj1 (cpw:body-data body1))
         (obj2 (cpw:body-data body2)))
     (trigger :collision-post obj1 obj2 arbiter-data)
-    (trigger :collision-post obj2 obj1 arbiter-data)))
+    (trigger :collision-post obj2 obj1 (reverse-normals arbiter-data))))
 
 (define-collision-callback collision-separate (arbiter-data body1 body2)
   (let ((obj1 (cpw:body-data body1))
         (obj2 (cpw:body-data body2)))
     (trigger :collision-separate obj1 obj2 arbiter-data)
-    (trigger :collision-separate obj2 obj1 arbiter-data)))
+    (trigger :collision-separate obj2 obj1 (reverse-normals arbiter-data))))
 
 (cffi:defcallback cp-begin :int ((arb :pointer) (space :pointer) (data :pointer))
   (collision-begin arb space data))
