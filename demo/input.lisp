@@ -32,7 +32,7 @@
     (when (key= #\A)
       (let ((x (car (game-object-position main-actor))))
         (in-game (game-world)
-          (add-random-box game-world :x x))))))
+          (add-box game-world :x x))))))
 
 (defun input-key-press (game key)
   (when (or (eq (code-char key) #\Q)

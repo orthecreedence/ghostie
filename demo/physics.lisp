@@ -1,48 +1,9 @@
 (in-package :ghostie-demo)
 
-(defun add-poly-to-sym (world verts &key (mass 1d0) body shape (x 0d0) (y 0d0) (angle 0d0) (u 1d0) (e 0d0) (color "#000000"))
-  (let* ((space (world-physics world))
-         (moment (cpw:moment-for-poly mass verts 0 0))
-         (poly-body (if body
-                        body
-                        (cpw:make-body (lambda () (cp:body-new mass moment)))))
-         (poly-shape (if shape
-                         shape
-                         (cpw:make-shape :poly poly-body (lambda (body) (cpw:shape-poly body verts 0 0))))))
-    (setf (cp-a:shape-u (cpw:base-c poly-shape)) (coerce u 'double-float)
-          (cp-a:shape-e (cpw:base-c poly-shape)) (coerce e 'double-float)
-          (cp-a:body-v-limit (cpw:base-c poly-body)) 600d0)
-    (cp:body-set-angle (cpw:base-c poly-body) angle)
-    (cp:body-set-pos (cpw:base-c poly-body) x y)
-    (let ((gl-objects (list (make-fake-gl-object :data (glu-tessellate:tessellate verts)
-                                                 :position '(0 0 0)
-                                                 :color (hex-to-rgb color)))))
-      (let ((game-object (make-game-object :type 'dynamic-object
-                                           :gl-objects gl-objects
-                                           :physics poly-body)))
-        (setf (cpw:body-data poly-body) game-object)
-        (cpw:space-add-body space poly-body)
-        (cpw:space-add-shape space poly-shape)
-        (add-level-object (world-level world) game-object)
-        ;(push game-object (level-objects (world-level world)))
-        (sync-game-object-to-physics game-object)
-        (let ((render-game-object (make-game-object :type 'game-object
-                                                    :position (copy-tree (game-object-position game-object))
-                                                    :rotation (copy-tree (game-object-rotation game-object)))))
-          (setf (game-object-render-ref game-object) render-game-object)
-          (in-render (render-world)
-            (dbg :info "Creating game object in render.~%")
-            (let ((gl-objects (loop for fake-gl-object in (game-object-gl-objects game-object)
-                                    for gl-object = (make-gl-object-from-fake fake-gl-object)
-                                    collect gl-object)))
-              (setf (game-object-gl-objects render-game-object) gl-objects)
-              (push render-game-object (level-objects (world-level render-world))))))
-        game-object))))
-
-(defun add-random-box (world &key (x (- (random 300d0) 150)) (y 30d0))
-  (let ((verts #((-10 -10) (-10 10) (10 10) (10 -10)))
-        (mass 1.1d0))
-    (add-poly-to-sym world verts :mass mass :x x :y y :u 0.4 :e 0d0 :color "#559955")))
+(defun add-box (world &key (x (- (random 300d0) 150)) (y 30d0))
+  (let* ((box-meta `(:type "box" :start-position (,x ,y) :scale (.6 .6 .6)))
+         (object (create-object box-meta)))
+    (add-level-object (world-level world) object)))
 
 #|
 (defun add-random-bridge (world)
