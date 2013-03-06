@@ -27,9 +27,11 @@
                cp:+false+
                cp:+true+)))
        (ccl::invalid-memory-access (e)
-         (dbg :error "(physics) Invalid memory access =[ ~a~%" e))
+         (dbg :error "(physics) Invalid memory access =[ ~a~%" e)
+         cp:+true+)
        (error (e)
-         (dbg :error "(physics) Collision event error (begin): ~a~%" e)))))
+         (dbg :error "(physics) Collision event error (begin): ~a~%" e)
+         cp:+true+))))
 
 ;; TODO call make-arbiter only once, and store the result in the arbiter c obj
 ;; itself. note that creating a pointer, setting it into a hash table, and
