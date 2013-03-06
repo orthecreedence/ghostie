@@ -22,6 +22,8 @@
       (setf (cp-a:space-sleep-time-threshold (cpw:base-c space)) 3d0)
       (setf (cp-a:space-damping (cpw:base-c space)) 0.9d0)
       (setf (world-physics world) space)
+      (cp:enable-segment-to-segment-collisions)
+      ;(cp-f:space-set-collision-slop (cpw:base-c space) .05d0)
       (cp:space-set-default-collision-handler (cpw:base-c space)
                                               (cffi:callback cp-begin)
                                               (cffi:callback cp-pre-solve)

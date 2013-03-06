@@ -7,7 +7,7 @@
   (declare (ignore actor-meta))
   (let* ((body (call-next-method))
          (mass (cp-a:body-m (cpw:base-c body))))
-    (setf (pill-feet pill) (caddr (cpw:body-shapes body)))
+    (setf (pill-feet pill) (car (cpw:body-shapes body)))
     (in-game (world)
       (let ((space (world-physics world)))
         ;; fix the character's rotation

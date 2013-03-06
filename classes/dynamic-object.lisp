@@ -84,6 +84,28 @@
                                                        (cp:box-shape-new (cpw:base-c body)
                                                                          w h)))))
                           (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
+                  (:segment
+                    (let* ((endpoints (getf phys-obj :endpoints))
+                           (p1 (car endpoints))
+                           (p2 (cadr endpoints))
+                           (p1x (car p1))
+                           (p1y (cadr p1))
+                           (p2x (car p2))
+                           (p2y (cadr p2))
+                           (radius (getf phys-obj :radius)))
+                      (let ((p1x (* p1x bb-max))
+                            (p1y (* p1y bb-max))
+                            (p2x (* p2x bb-max))
+                            (p2y (* p2y bb-max))
+                            (radius (* radius bb-max)))
+                        (dbg :debug "segment pt: ~s~%" (list p1x p1y p2x p2y radius))
+                        (incf moment (cp:moment-for-segment physics-obj-mass p1x p1y p2x p2y))
+                        (let ((shape (cpw:make-shape :segment body
+                                                     (lambda (body)
+                                                       (cp:segment-shape-new (cpw:base-c body)
+                                                                             p1x p1y p2x p2y
+                                                                             radius)))))
+                          (setf (cp-a:shape-u (cpw:base-c shape)) friction)))))
                   (t
                     (error (format nil "Unsupported physics type: ~a~%" (getf phys-obj :type))))))))
 
