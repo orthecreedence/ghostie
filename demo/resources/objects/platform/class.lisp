@@ -11,7 +11,8 @@
          (setf (cpw:arbiter-ignore-collision arbiter) t))
         ((< (cadar (cpw:arbiter-normals arbiter)) -.98)
          ;; move the platform
-         (setf (platform-speed platform) 50d0))))
+         (setf (platform-speed platform) 50d0
+               (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) (platform-speed platform)))))
 
 (bind (:collision-separate :moving-platform-separate) ((actor actor) (platform platform) arbiter)
   (declare (ignore actor arbiter))
@@ -35,6 +36,5 @@
                 (car (game-object-position platform)))
             (setf (platform-speed platform) nil
                   (cp-a:body-v-x body-c) 0d0)
-            (setf (cp-a:body-p-x body-c) (+ (cp-a:body-p-x body-c) speed)
-                  (cp-a:body-v-x body-c) (* internal-time-units-per-second speed)))))))
+            (setf (cp-a:body-p-x body-c) (+ (cp-a:body-p-x body-c) speed)))))))
 
