@@ -9,7 +9,8 @@
   (cond ((< .5 (cadar (cpw:arbiter-normals arbiter)))
          ;; ignore if coming up from bottom
          (setf (cpw:arbiter-ignore-collision arbiter) t))
-        ((< (cadar (cpw:arbiter-normals arbiter)) -.98)
+        ((and (< (cadar (cpw:arbiter-normals arbiter)) -.98)
+              (within-limit platform))
          ;; move the platform
          (setf (platform-speed platform) 50d0
                (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) (platform-speed platform)))))
@@ -18,6 +19,13 @@
   (declare (ignore actor arbiter))
   (setf (platform-speed platform) nil
         (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) 0d0))
+
+(defun within-limit (platform)
+  "Check if the platform is within its specified limits."
+  (let ((limits (getf (object-level-meta platform) :limit-x)))
+    (or (not limits)
+        (< (car (game-object-position platform))
+           (cadr limits)))))
 
 (defmethod process-object ((platform platform))
   (let* ((speed (platform-speed platform))
@@ -32,8 +40,7 @@
       (setf (platform-last-process platform) time))
     (when speed
       (let ((body-c (cpw:base-c (game-object-physics-body platform))))
-        (if (<= (cadr (getf (object-level-meta platform) :limit-x))
-                (car (game-object-position platform)))
+        (if (not (within-limit platform))
             (setf (platform-speed platform) nil
                   (cp-a:body-v-x body-c) 0d0)
             (setf (cp-a:body-p-x body-c) (+ (cp-a:body-p-x body-c) speed)))))))
