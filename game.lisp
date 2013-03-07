@@ -9,7 +9,8 @@
    (render-world :accessor game-render-world :initarg :render-world :initform nil)
    (render-thread :accessor game-render-thread :initarg :render-thread :initform nil)
    (quit :accessor game-quit :initform nil)
-   (event-queue :accessor game-event-queue :initarg :event-queue :initform nil))
+   (event-queue :accessor game-event-queue :initarg :event-queue :initform nil)
+   (loaded-objects :accessor game-loaded-objects :initarg :loaded-objects :initform (make-hash-table :test #'equal)))
   (:documentation
    "Holds a game world, a render world, and their corresponding threads."))
 

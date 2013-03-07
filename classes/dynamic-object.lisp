@@ -17,12 +17,19 @@
   "Abstraction of defclass, solves inter-package issues (in other words, allows
    a game to add its own object class, and allows ghostie to see it in its
    namespace by importing it)."
+  (setf (gethash (string-downcase (string class-name))
+                 (game-loaded-objects ghostie::*game*)) t)
   `(progn
      ,(append `(defclass ,class-name ,superclasses
                  ,slots)
               (when class-options
                 (list class-options)))
      (import ',class-name :ghostie)))
+
+(defun object-loaded (object-name-string)
+  "Tests if an object has already been loaded by ghostie (meaning its class
+   file)."
+  (gethash (string-downcase object-name-string) (game-loaded-objects *game*)))
 
 (defgeneric load-physics-body (object object-meta)
   (:documentation
@@ -171,10 +178,10 @@
     (setf object-meta (append object-meta meta))
 
     ;; load the object's class file, if it has one
-    ;; TODO: check if already loaded here
-    (let ((class-file (format nil "~a/class.lisp" object-directory)))
-      (when (probe-file class-file)
-        (load class-file)))
+    (unless (object-loaded object-type)
+      (let ((class-file (format nil "~a/class.lisp" object-directory)))
+        (when (probe-file class-file)
+          (load class-file))))
 
     ;; attempt to load the object class
     (let* ((object-symbol (intern (string-upcase object-type) :ghostie))
@@ -197,6 +204,4 @@
     (dolist (object-info objects-meta)
       (push (create-object object-info :type type) objects))
     objects))
-
-
 
