@@ -36,7 +36,7 @@
            (if (cpw:arbiter-ignore-collision ,arbiter-var)
                cp:+false+
                cp:+true+)))
-       (error (e)
+       (condition (e)
          (dbg :error "(physics) Collision event error (~a): ~a~%" ',name e)
          cp:+true+))))
 
