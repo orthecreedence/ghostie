@@ -63,8 +63,8 @@
                 (incf mass physics-obj-mass)
                 (case (getf phys-obj :type)
                   (:circle
-                    (let ((position (getf phys-obj :position))
-                          (radius (getf phys-obj :radius)))
+                    (let ((position (getf phys-obj :position '(0 0)))
+                          (radius (getf phys-obj :radius 1)))
                       (let ((r (* radius bb-max))
                             (x (* (car position) bb-max))
                             (y (* (cadr position) bb-max)))
