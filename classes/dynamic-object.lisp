@@ -151,6 +151,7 @@
      for moving objects around (outside of the physics realm, like moving
      platforms), updating object state, etc."))
 
+;; Defaults to doing nothing!! Add your own processing method.
 (defmethod process-object ((object dynamic-object))
   (declare (ignore object)))
 
@@ -188,7 +189,7 @@
            (object-class (if (find-class object-symbol nil)
                              object-symbol
                              'dynamic-object))
-           (object (car (svg-to-base-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
+           (object (car (svg-to-base-objects svg-objs nil :object-type object-class :center-objects t))))
       (when object-id
         (setf (object-id object) object-id))
       ;; load the object's physics body

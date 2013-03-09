@@ -10,9 +10,16 @@
    (draw-offset :accessor object-draw-offset :initarg :draw-offset :initform '(0 0 0))
    (render-ref :accessor object-render-ref :initarg :render-ref :initform nil)
    (last-sync :accessor object-last-sync :initform nil)
-   (bb :accessor object-bb :initform nil)))
+   (bb :accessor object-bb :initform nil))
+  (:documentation
+    "This is the base ghostie object that ties a lot of things together to
+     represent the most basic/abstract object in a game. It holds not only its
+     physics body (which it is kept in sync with) but the gl-objects used to
+     display it."))
+     
 
 (defun make-base-object (&key (type 'base-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
+  "Wrapper to create a base-object."
   (let ((obj (make-instance type :position position :rotation rotation)))
     (setf (object-gl-objects obj) gl-objects
           (object-physics-body obj) physics)
@@ -27,6 +34,11 @@
   (dolist (gl-object (object-gl-objects base-object))
     (in-render ()
       (free-gl-object gl-object))))
+
+(defgeneric draw (object)
+  (:documentation
+    "The draw method is used to draw any base-object. It iterates over the GL
+     objects attached to the base object and sends them to OpenGL."))
 
 (defmethod draw ((object base-object))
   (dolist (gl-object (object-gl-objects object))
@@ -72,6 +84,8 @@
   base-object)
 
 (defun parse-svg-styles (styles &key fill opacity)
+  "Parses the styles section of an SVG declaration to pull out useful meta info
+   attached to an object."
   (let ((fill (if (stringp fill) fill "#000000"))
         (opacity (if (stringp opacity) (read-from-string opacity) 1.0)))
     (let ((directives (split-sequence:split-sequence #\; styles)))
@@ -86,6 +100,11 @@
     (list :fill fill :opacity opacity)))
 
 (defun sync-base-objects-to-render (base-objects)
+  "Takes a collection of base objects and makes sure the same base objects exist
+   in the render world as well as the game world (base objects are created in
+   the game world). This is a one-time event for any game object: once it exists
+   in both threads, it no longer needs to be synced aside from its display
+   matrix and other dynamic attributes."
   (dolist (base-object base-objects)
     (in-render (world)
       (let ((level (world-level world))
@@ -100,7 +119,10 @@
           (push render-base-object (level-objects level))
           (setf (object-render-ref base-object) render-base-object))))))
 
-(defun svg-to-base-objects (svg-objects objects-meta &key (object-type 'base-object) (scale '(1 1 1)) (draw-offset '(0 0)) center-objects)
+(defun svg-to-base-objects (svg-objects objects-meta &key (object-type 'base-object) (scale '(1 1 1)) center-objects)
+  "Given a collection of objects parsed by cl-svg-polygon, create base objects
+   out of them. This includes translating any polygon info into gl-objects and
+   storing them with the base object."
   (let ((obj-hash (make-hash-table :test #'equal))
         (base-objects nil)
         (scale (if scale scale '(1 1 1))))
@@ -170,6 +192,7 @@
   base-object)
 
 (defun calculate-object-bb (base-object)
+  "Calculates the bounding-box for a base object."
   (let ((min-x most-positive-double-float)
         (min-y most-positive-double-float)
         (max-x most-negative-double-float)
