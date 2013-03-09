@@ -52,7 +52,7 @@
 	:depends-on ("package")
     :serial t
 	:components
-	((:file "game-object")
+	((:file "base-object")
 	 (:file "dynamic-object")
 	 (:file "actor")
 	 (:file "level")))

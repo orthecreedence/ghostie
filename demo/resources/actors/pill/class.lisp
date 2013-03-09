@@ -5,7 +5,7 @@
    (feet :accessor pill-feet :initform nil)))
 
 ;; track when our pill lands on the ground
-(bind (:collision-pre :pill-start) ((pill pill) (object game-object) arbiter)
+(bind (:collision-pre :pill-start) ((pill pill) (object base-object) arbiter)
   (declare (ignore object))
   (let ((normal-y (cadar (cpw:arbiter-normals arbiter))))
     (when (and normal-y
@@ -16,7 +16,7 @@
       (disable-binding :collision-separate :pill-separate :time .1))))
 
 ;; track when our pill separates from the ground
-(bind (:collision-separate :pill-separate) ((pill pill) (object game-object) arbiter)
+(bind (:collision-separate :pill-separate) ((pill pill) (object base-object) arbiter)
   (declare (ignore object arbiter))
   (setf (pill-on-ground pill) nil))
 
@@ -37,15 +37,15 @@
     body))
 
 (defun pill-stop (pill)
-  (when (and pill (game-object-physics-body pill))
+  (when (and pill (object-physics-body pill))
     (let ((shape-c (cpw:base-c (pill-feet pill))))
       (setf (cp-a:shape-surface_v-x shape-c) 0d0
             (cp-a:shape-surface_v-y shape-c) 0d0))))
 
 (defun pill-run (pill x)
   "Move the character on the HORizonal plane."
-  (when (and pill (game-object-physics-body pill))
-    (let ((body-c (cpw:base-c (game-object-physics-body pill))))
+  (when (and pill (object-physics-body pill))
+    (let ((body-c (cpw:base-c (object-physics-body pill))))
       (let ((vel (cp-a:body-v-x body-c))
             (y (/ (abs x) 3)))
         (when (< (abs vel) *character-max-run*)
@@ -64,8 +64,8 @@
 
 (defun pill-jump (pill &key (x 0d0) (y 300d0))
   "Make the character jump."
-  (when (and pill (game-object-physics-body pill))
-    (let* ((body-c (cpw:base-c (game-object-physics-body pill))))
+  (when (and pill (object-physics-body pill))
+    (let* ((body-c (cpw:base-c (object-physics-body pill))))
       ;(dbg :debug "v-y: ~s ~s~%" (cp-a:body-v-y body-c) (actor-vel-avg-y pill))
       (when (and (pill-on-ground pill)
                  (< (abs (cp-a:body-v-y body-c)) 160)

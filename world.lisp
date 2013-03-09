@@ -63,8 +63,8 @@
    thread for display."
   (let ((level (world-level world)))
     ;; sync each game object with its physics body
-    (dolist (game-object (level-objects level))
-      (sync-game-object-to-physics game-object :render t))))
+    (dolist (base-object (level-objects level))
+      (sync-base-object-to-physics base-object :render t))))
 
 (defun step-game-world (world)
   "Move the game world forward by one step. Calculates the physics delta for
@@ -74,10 +74,10 @@
   (let ((space (world-physics world)))
     (cpw:space-step space :dt +dt+)
     (cpw:sync-space-bodies space)
-    (dolist (game-object (level-objects (world-level world)))
-      (sync-game-object-to-physics game-object)
-      (when (subtypep (type-of game-object) 'dynamic-object)
-        (process-object game-object)))))
+    (dolist (base-object (level-objects (world-level world)))
+      (sync-base-object-to-physics base-object)
+      (when (subtypep (type-of base-object) 'dynamic-object)
+        (process-object base-object)))))
 
 (defun world-load-level (world level-name)
   "Load a level into the given world."

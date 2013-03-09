@@ -30,7 +30,7 @@
       (let ((position (copy-tree (world-position render-world))))
         (setf (world-position game-world) position)))
     (when (key= #\A)
-      (let ((x (car (game-object-position main-actor))))
+      (let ((x (car (object-position main-actor))))
         (in-game (game-world)
           (add-box game-world :x x))))))
 

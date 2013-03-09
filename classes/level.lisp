@@ -6,9 +6,9 @@
    (meta :accessor level-meta :initarg :meta :initform nil))
   (:documentation "Describes a level, and the objects in that level."))
 
-(defclass level-object (game-object) ()
+(defclass level-object (base-object) ()
   (:documentation
-    "A direct extension of game-object, helps collision handlers tell if an
+    "A direct extension of base-object, helps collision handlers tell if an
      object is interacting with part of the level, or with an object inside the
      level."))
 
@@ -33,7 +33,7 @@
     ;; here, we convert the objects in the level SVG to displayable/collidable
     ;; objects, load the dynamic objects/actors for the level, and store the
     ;; level meta info
-    (setf (level-objects level) (append (svg-to-game-objects objects level-meta :center-objects t :object-type 'level-object)
+    (setf (level-objects level) (append (svg-to-base-objects objects level-meta :center-objects t :object-type 'level-object)
                                         (load-objects (getf level-meta :objects))
                                         (load-objects (getf level-meta :actors) :type :actor))
           (level-meta level) level-meta)
@@ -55,8 +55,8 @@
 
 (defun level-cleanup (level)
   "Clean up the objects in a level (in the game thread) and reset the level."
-  (dolist (game-object (level-objects level))
-    (destroy-game-object game-object))
+  (dolist (base-object (level-objects level))
+    (destroy-base-object base-object))
   (setf (level-objects level) nil
         (level-meta level) nil)
   level)
@@ -68,21 +68,21 @@
    Generally this happens for the ground/walls/etc of a level that are
    positioned at the level's collision depth (default 0)."
   (let* ((level (world-level world))
-         (collision-objects (remove-if (lambda (game-object)
+         (collision-objects (remove-if (lambda (base-object)
                                          ;; grab objects in the same plane as collision-depth
-                                         (or (not (subtypep (type-of game-object) 'level-object))
-                                             (not (eq (caddr (game-object-position game-object))
+                                         (or (not (subtypep (type-of base-object) 'level-object))
+                                             (not (eq (caddr (object-position base-object))
                                                       (level-collision-depth level)))))
                                        (level-objects level)))
          (space (world-physics world)))
     (dolist (object collision-objects)
       (let ((body (cpw:make-body (lambda () (cp:body-new-static)) :data object))
-            (position-x (car (game-object-position object)))
-            (position-y (cadr (game-object-position object))))
+            (position-x (car (object-position object)))
+            (position-y (cadr (object-position object))))
         (cp:body-set-pos (cpw:base-c body)
                          (coerce position-x 'double-float)
                          (coerce position-y 'double-float))
-        (dolist (gl-object (game-object-gl-objects object))
+        (dolist (gl-object (object-gl-objects object))
           (let* ((disconnected (getf (gl-object-shape-meta gl-object) :disconnected))
                  (verts (gl-object-shape-points gl-object))
                  (last-pt (if disconnected

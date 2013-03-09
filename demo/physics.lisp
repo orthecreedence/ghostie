@@ -7,7 +7,7 @@
 
 #|
 (defun add-random-bridge (world)
-  (let* ((game-objects nil)
+  (let* ((base-objects nil)
          (num-segments 10)
          (segment-mass 100d0)
          (segment-spacing 10d0)
@@ -19,9 +19,9 @@
          (y -300d0))
     (dotimes (i num-segments)
       (let ((x (+ x (* (* 2 segment-spacing) i))))
-        (push (add-poly-to-sym world segment-verts :mass segment-mass :x x :y y :color "#885555") game-objects)))
+        (push (add-poly-to-sym world segment-verts :mass segment-mass :x x :y y :color "#885555") base-objects)))
     (let ((bodies (coerce (append (list (cpw:space-static-body (world-physics world)))
-                                  (loop for obj in (reverse game-objects) collect (game-object-physics-body obj)))
+                                  (loop for obj in (reverse base-objects) collect (object-physics-body obj)))
                           'vector)))
       (dotimes (i (1- (length bodies)))
         (let ((body1 (aref bodies i))
@@ -38,6 +38,6 @@
                                                                              (cpw:base-c body2)
                                                                              a1x a1y a2x a2y)))))
               (cpw:space-add-joint (world-physics world) joint))))))
-    game-objects))
+    base-objects))
 |#
 

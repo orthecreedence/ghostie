@@ -19,15 +19,15 @@
 
            #:recompile-shaders
            
-           #:game-object
-           ;#:game-object-position
-           ;#:game-object-rotation
-           #:game-object-physics-body
-           #:game-object-meta
-           #:game-object-display
-           #:game-object-bb
-           #:destroy-game-object
-           #:calculate-game-object-bb
+           #:base-object
+           ;#:object-position
+           ;#:object-rotation
+           #:object-physics-body
+           #:object-meta
+           #:object-display
+           #:object-bb
+           #:destroy-base-object
+           #:calculate-object-bb
            
            #:dynamic-object
            #:object-id

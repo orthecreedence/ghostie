@@ -2,7 +2,7 @@
 
 (defun sync-actor-position-window (world actor)
   "Keeps the camera position in sync with an actor."
-  (let* ((position (game-object-position actor))
+  (let* ((position (object-position actor))
          (x (- (* (car position) .5)))
          (y (- (* (cadr position) .5))))
     (setf (world-position world) (list x (- y 50) (caddr (world-position world))))
@@ -35,10 +35,10 @@
       (sync-actor-position-window (game-render-world game) pill))))
 
 ;(defun update-actor-state (actor)
-;  (when (and actor (game-object-physics-body actor))
+;  (when (and actor (object-physics-body actor))
 ;    (let ((alpha 1/1000)
-;          (vel-x (cp-a:body-v-x (cpw:base-c (game-object-physics-body actor))))
-;          (vel-y (cp-a:body-v-y (cpw:base-c (game-object-physics-body actor)))))
+;          (vel-x (cp-a:body-v-x (cpw:base-c (object-physics-body actor))))
+;          (vel-y (cp-a:body-v-y (cpw:base-c (object-physics-body actor)))))
 ;      ;(dbg :debug "avg-y: ~s~%" (+ (* alpha vel-y) (* (- 1d0 alpha) (actor-vel-avg-y actor))))
 ;      (setf (actor-vel-avg-x actor) (+ (* alpha vel-x)
 ;                                       (* (- 1d0 alpha) (actor-vel-avg-x actor)))

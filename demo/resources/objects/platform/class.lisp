@@ -13,18 +13,18 @@
               (within-limit platform))
          ;; move the platform
          (setf (platform-speed platform) 50d0
-               (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) (platform-speed platform)))))
+               (cp-a:body-v-x (cpw:base-c (object-physics-body platform))) (platform-speed platform)))))
 
 (bind (:collision-separate :moving-platform-separate) ((actor actor) (platform platform) arbiter)
   (declare (ignore actor arbiter))
   (setf (platform-speed platform) nil
-        (cp-a:body-v-x (cpw:base-c (game-object-physics-body platform))) 0d0))
+        (cp-a:body-v-x (cpw:base-c (object-physics-body platform))) 0d0))
 
 (defun within-limit (platform)
   "Check if the platform is within its specified limits."
   (let ((limits (getf (object-level-meta platform) :limit-x)))
     (or (not limits)
-        (< (car (game-object-position platform))
+        (< (car (object-position platform))
            (cadr limits)))))
 
 (defmethod process-object ((platform platform))
@@ -39,7 +39,7 @@
     (unless (= time (or (platform-last-process platform) 0))
       (setf (platform-last-process platform) time))
     (when speed
-      (let ((body-c (cpw:base-c (game-object-physics-body platform))))
+      (let ((body-c (cpw:base-c (object-physics-body platform))))
         (if (not (within-limit platform))
             (setf (platform-speed platform) nil
                   (cp-a:body-v-x body-c) 0d0)

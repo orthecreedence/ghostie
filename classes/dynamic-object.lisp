@@ -1,6 +1,6 @@
 (in-package :ghostie)
 
-(defclass dynamic-object (game-object)
+(defclass dynamic-object (base-object)
   ((id :accessor object-id :initarg :id :initform nil)
    (level-meta :accessor object-level-meta :initarg :level-meta :initform nil))
   (:documentation
@@ -8,7 +8,7 @@
      than terrain. For instance, a plant, a moving platform, a rope, a bridge,
      etc. Things that are pre-defined that the player can interact with.
      
-     This directly extends game-object.
+     This directly extends base-object.
      
      It is meant to be extended in your resources/objects/[object]/class.lisp
      file or by your actor classes (actors are dynamic objects!)"))
@@ -45,7 +45,7 @@
   (dbg :debug "(object) Loading physics shapes for ~s~%" (list (object-id object) (getf object-meta :type)))
   (let ((max-vel (coerce (getf object-meta :max-velocity 1000d0) 'double-float))
         (static (getf object-meta :static))
-        (bb (calculate-game-object-bb object))
+        (bb (calculate-object-bb object))
         (physics-objects (getf object-meta :physics))
         (position (mapcar (lambda (v)
                             (coerce v 'double-float))
@@ -188,12 +188,12 @@
            (object-class (if (find-class object-symbol nil)
                              object-symbol
                              'dynamic-object))
-           (object (car (svg-to-game-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
+           (object (car (svg-to-base-objects svg-objs nil :object-type object-class :center-objects t :draw-offset draw-offset))))
       (when object-id
         (setf (object-id object) object-id))
       ;; load the object's physics body
-      (setf (game-object-physics-body object) (load-physics-body object object-meta)
-            (game-object-draw-offset object) draw-offset
+      (setf (object-physics-body object) (load-physics-body object object-meta)
+            (object-draw-offset object) draw-offset
             (object-level-meta object) object-meta)
       object)))
   
