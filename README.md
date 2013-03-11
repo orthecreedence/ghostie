@@ -1,10 +1,10 @@
 Ghostie
 =======
-Ghostie is a 2D game engine engine for Common Lisp. [See the demo here](https://vimeo.com/61212217).
+Ghostie is a 2D game engine engine for Common Lisp.
+[See the demo here in low-res with shitty colors (anyone know a good screencasting tool for windows?)](https://vimeo.com/61212217).
 
-Ghostie is currently undergoing massive surgery and it's not recommended to use
-for quite some time. If you dare, install the [dependencies](#dependencies) and
-[load up the demo](#usage), which is working great.
+The goal of Ghostie is to provide an engine for easily creating beautiful games
+without making any assumptions about the gameplay itself.
 
 Dependencies
 ------------
@@ -35,7 +35,8 @@ Usage
 ```
 
 This starts the demo level, which is a basic demonstration of a mobile character
-and interaction with the physics environment.
+and interaction with the physics environment. The demo level is tiny for now,
+but the idea is eventually to create a full-blown game level in the demo.
 
 Key bindings:
 
