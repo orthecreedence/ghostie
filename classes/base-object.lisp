@@ -44,7 +44,7 @@
   (dolist (gl-object (object-gl-objects object))
     (unless (getf (gl-object-shape-meta gl-object) :disconnected)
       (draw-gl-object gl-object
-                      :color (when (getf (object-meta object) :sleeping) (hex-to-rgb "#333333"))
+                      ;:color (when (getf (object-meta object) :sleeping) (hex-to-rgb "#333333"))
                       :position (object-position object)
                       :rotation (list 0 0 1 (object-rotation object))))))
 

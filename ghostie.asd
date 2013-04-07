@@ -55,6 +55,7 @@
 	((:file "base-object")
 	 (:file "dynamic-object")
 	 (:file "actor")
+	 (:file "compound-object")
 	 (:file "level")))
    (:file "world" :depends-on ("package" opengl classes))
    (:file "game" :depends-on ("world"))))

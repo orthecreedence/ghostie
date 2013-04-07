@@ -10,6 +10,7 @@
            #:*actor-path*
            #:*level-path*
            #:*object-path*
+           #:*compound-object-path*
            
            #:*log-level*
            
@@ -47,6 +48,8 @@
   "The name of the directory (under the resources dir) that levels load from.")
 (defparameter *object-path* "objects"
   "The name of the directory (under the resources dir) that objects load from.")
+(defparameter *compound-object-path* "compound-objects"
+  "The name of the directory (under the resources dir) that compound objects load from.")
 
 (defparameter *log-level* :debug)
 
@@ -62,3 +65,4 @@
 ;; --------- physics
 (defparameter +dt+ (coerce (/ 1 60) chipmunk-wrapper:+physics-precision+))
 (defparameter *physics-segment-thickness* 3.0d0)
+

@@ -60,12 +60,15 @@
            (moment 0d0))
       (if physics-objects
           ;; load the physics objects from the meta
-          (let ((bb-max (apply #'max bb))) ; grab our biggest coordinate
+          (let ((obj-width (* 2 (abs (car bb))))
+                (obj-height (* 2 (abs (cadr bb))))
+                (bb-max (apply #'max bb))) ; grab our biggest coordinate
             ;; loop over each physics object in this body and attach it
             (dolist (phys-obj physics-objects)
               (let ((physics-obj-mass (coerce (getf phys-obj :mass) 'double-float))
                     (friction (coerce (getf phys-obj :friction 1) 'double-float))
                     (elasticity (coerce (getf phys-obj :elasticity 0) 'double-float))
+                    (shape-group (getf phys-obj :group))
                     (shape nil))
                 (incf mass physics-obj-mass)
                 (case (getf phys-obj :type)
@@ -82,10 +85,9 @@
                                                                            r x y)))))))
                   (:box
                     (let ((width (getf phys-obj :width))
-                          (height (getf phys-obj :height))
-                          (bb-max (* bb-max 2)))
-                      (let ((w (* width bb-max))
-                            (h (* height bb-max)))
+                          (height (getf phys-obj :height)))
+                      (let ((w (* width obj-width))
+                            (h (* height obj-height)))
                         (incf moment (cp:moment-for-box physics-obj-mass w h))
                         (setf shape (cpw:make-shape :box body
                                                     (lambda (body)
@@ -116,7 +118,10 @@
                 ;; set our friction/elasticity
                 (let ((shape-c (cpw:base-c shape)))
                   (setf (cp-a:shape-u shape-c) friction
-                        (cp-a:shape-e shape-c) elasticity)))))
+                        (cp-a:shape-e shape-c) elasticity)
+                  (when shape-group
+                    (let ((pt (cffi:make-pointer shape-group)))
+                      (setf (cp-a:shape-group shape-c) pt)))))))
 
           ;; load a default physics object (a stupid circle in the center of
           ;; the object)

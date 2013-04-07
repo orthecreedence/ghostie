@@ -173,7 +173,7 @@
     (when binding
       (let ((period (if time
                         (+ (get-internal-real-time)
-                           (floor (* time internal-time-units-per-second)))
+                           (* time internal-time-units-per-second))
                         nil)))
         (setf (event-binding-enabled binding) period))
       binding)))

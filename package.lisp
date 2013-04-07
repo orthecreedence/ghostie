@@ -5,6 +5,8 @@
            #:*resource-path*
            #:*actor-path*
            #:*level-path*
+           #:*object-path*
+           #:*compound-object-path*
            #:*log-level*
            #:+dt+
 
@@ -36,6 +38,14 @@
            #:load-physics-body
            #:process-object
            #:create-object
+
+           #:compound-object
+           #:compound-object-pieces
+           #:compound-object-joints
+           #:compound-object-motors
+           #:compound-object-meta
+           #:init-compound-object
+           #:create-compound-object
 
            #:actor
            #:actor-vel-avg-x

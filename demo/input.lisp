@@ -29,6 +29,8 @@
     (when sync-position
       (let ((position (copy-tree (world-position render-world))))
         (setf (world-position game-world) position)))
+    (when (key= #\P)
+      (dbg :notice "(actor) Position: ~s~%" (object-position main-actor)))
     (when (key= #\A)
       (let ((x (car (object-position main-actor))))
         (in-game (game-world)
@@ -50,6 +52,13 @@
          (ghostie::world-game-cleanup game-world)
          (ghostie::create-world game-world)
          (ghostie::world-load-level game-world "trees")))
+      (#\B
+       (dbg :debug "(bridge) Reloading (and creating) bridge~%")
+       (load (format nil "~a/~a/~a/bridge/class"
+                     *game-directory*
+                     *resource-path*
+                     *compound-object-path*))
+       (test-bridge))
       (#\C
        (recompile-shaders))
       (#\T

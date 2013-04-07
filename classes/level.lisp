@@ -2,6 +2,7 @@
 
 (defclass level ()
   ((objects :accessor level-objects :initform nil)
+   (compound-objects :accessor level-compound-objects :initform nil)
    (collision-depth :accessor level-collision-depth :initform 0)
    (meta :accessor level-meta :initarg :meta :initform nil))
   (:documentation "Describes a level, and the objects in that level."))
@@ -36,6 +37,7 @@
     (setf (level-objects level) (append (svg-to-base-objects objects level-meta :center-objects t :object-type 'level-object)
                                         (load-objects (getf level-meta :objects))
                                         (load-objects (getf level-meta :actors) :type :actor))
+          (level-compound-objects level) (load-compound-objects (getf level-meta :compound-objects))
           (level-meta level) level-meta)
     ;; level loaded!
     (trigger :level-load level)
@@ -97,7 +99,8 @@
                                                body
                                                (lambda (body) (cpw:shape-segment body (car last-pt) (cadr last-pt) x y *physics-segment-thickness*)))))
                     (setf (cp-a:shape-u (cpw:base-c shape)) 0.8d0
-                          (cp-a:shape-e (cpw:base-c shape)) 0.0d0)
+                          (cp-a:shape-e (cpw:base-c shape)) 0.0d0
+                          (cp-a:shape-group (cpw:base-c shape)) (cffi:make-pointer 1))
                     (cpw:space-add-shape space shape)))
                 (setf last-pt (list x y))))))))))
 
