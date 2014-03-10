@@ -11,7 +11,7 @@
         (setf (world-position game-world) pos)))))
 
 (defun start ()
-  (let* ((game (ghostie::create-game "trees"))
+  (let* ((game (ghostie::create-game "floating-test"))
          (pill nil))
 
     ;(setf *log-level* :notice)
