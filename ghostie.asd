@@ -15,11 +15,11 @@
   :depends-on (#:split-sequence #:cffi #:jpl-queues #:ghostie-config)
   :components
   ((:module lib
-	:serial t
-	:components
-	((:file "util")
-	 (:file "sync")
-	 (:file "matrix")))))
+    :serial t
+    :components
+    ((:file "util")
+     (:file "sync")
+     (:file "matrix")))))
 
 (asdf:defsystem ghostie-event
   :author "Andrew Lyon <orthecreedence@gmail.com>"
@@ -39,24 +39,24 @@
   :components
   ((:file "package")
    (:module opengl
-	:depends-on ("package")
+    :depends-on ("package")
     :serial t
-	:components
-	((:file "shaders")
-	 (:file "fbo")
-	 (:file "object")))
+    :components
+    ((:file "shaders")
+     (:file "fbo")
+     (:file "object")))
    (:file "input" :depends-on ("package" opengl))
    (:file "window" :depends-on ("package" opengl))
    (:file "physics" :depends-on ("package" opengl))
    (:module classes
-	:depends-on ("package")
+    :depends-on ("package")
     :serial t
-	:components
-	((:file "base-object")
-	 (:file "dynamic-object")
-	 (:file "actor")
-	 (:file "compound-object")
-	 (:file "level")))
+    :components
+    ((:file "base-object")
+     (:file "dynamic-object")
+     (:file "actor")
+     (:file "compound-object")
+     (:file "level")))
    (:file "world" :depends-on ("package" opengl classes))
    (:file "game" :depends-on ("world"))))
 

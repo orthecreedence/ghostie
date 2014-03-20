@@ -9,7 +9,7 @@
    (render-world :accessor game-render-world :initarg :render-world :initform nil)
    (render-thread :accessor game-render-thread :initarg :render-thread :initform nil)
    (quit :accessor game-quit :initform nil)
-   (event-queue :accessor game-event-queue :initarg :event-queue :initform nil)
+   (event-bindings :accessor game-event-bindings :initarg :event-bindings :initform nil)
    (loaded-objects :accessor game-loaded-objects :initarg :loaded-objects :initform (make-hash-table :test #'equal)))
   (:documentation
    "Holds a game world, a render world, and their corresponding threads."))
@@ -53,10 +53,10 @@
                    :game-thread (bt:make-thread #'game-thread :name "game-thread")
                    :render-world render-world
                    :render-thread (bt:make-thread #'render-thread :name "render-thread")
-                   :event-queue (make-instance 'event-queue)))
+                   :event-bindings (make-instance 'event-bindings)))
       (unless *game*
         (setf *game* game)
-        (setf *event-queue* (game-event-queue game)))
+        (setf *event-bindings* (game-event-bindings game)))
       game)))
 
 (defun stop-game (game &key force)
@@ -73,7 +73,7 @@
                (dbg :info "Ghostie thread stopped (:force ~a)~%" force)))
            (when (equal *game* game)
              (setf *game* nil
-                   *event-queue* nil))))
+                   *event-bindings* nil))))
     (dbg :info "(game) Stopping game and render threads~%")
     (in-render ()
       (setf *quit* t)
