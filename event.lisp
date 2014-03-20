@@ -1,13 +1,16 @@
 (defpackage :ghostie-event
   (:use :cl :ghostie-config :ghostie-util)
-  (:export #:event-bindings
-           #:*event-bindings*
+  (:export #:*event-bindings*
+           #:event-bindings
            #:trigger
            #:bind
            #:unbind
            #:disable-binding
            #:enable-binding))
 (in-package :ghostie-event)
+
+(defvar *event-bindings* nil
+  "Holds the default event queue. Must be instantiated elsewhere.")
 
 (defclass event-bindings ()
   ((bindings :accessor event-bindings-bindings :initform nil)))
@@ -19,9 +22,6 @@
    (name :accessor event-binding-name :initarg :name :initform nil)
    (enabled :accessor event-binding-enabled :initarg :enabled :initform t))
   (:documentation "Describes a binding of a function to an event."))
-
-(defvar *event-bindings* nil
-  "Holds the default event queue. Must be instantiated elsewhere.")
 
 (defun make-event (event-type args)
   "Make an event, along with the arguments it fires."

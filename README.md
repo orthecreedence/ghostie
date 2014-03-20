@@ -4,7 +4,7 @@ Ghostie is a 2D game engine engine for Common Lisp.
 [See the demo here in low-res with shitty colors (anyone know a good screencasting tool for windows?)](https://vimeo.com/61212217).
 
 The goal of Ghostie is to provide an engine for easily creating beautiful games
-without making any assumptions about the gameplay itself.
+without making (m)any assumptions about the gameplay itself.
 
 Dependencies
 ------------
@@ -59,9 +59,9 @@ Ghostie *requires* OpenGL >= 3.3 as it makes use of shaders and some other newer
 OpenGL extensions that are only available in later versions. Get with the times,
 man.
 
-Ghostie has a game thread and a render thread which are synced via
-[jpl-queues](http://www.thoughtcrime.us/software/jpl-queues/). Your
-implementation must support threading to run Ghostie.
+Ghostie *currently* runs everything (game logic/physics/rendering) in one
+thread. Control is immediately returned to the caller after the thread is
+spawned.
 
 Ghostie is entirely a work in progress and there is a lot of non-trivial work to
 do on it, as outlined above. My goal is to not only provide a viable option for

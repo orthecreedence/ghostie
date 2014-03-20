@@ -18,7 +18,7 @@
 (defun make-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
   (set-gl-object-data (make-instance 'gl-object :position position :scale scale :color color :shape-points shape-points :shape-meta shape-meta) data texture uv-map))
 
-(defun make-fake-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
+(defun make-svg-gl-object (&key data (position '(0 0 -1)) (scale '(1 1 1)) texture uv-map (color #(0 0 0 1)) (shape-points nil) (shape-meta nil))
   (let ((vertex-data (coerce (loop for ((x1 y1) (x2 y2) (x3 y3))
                                    in data
                                    append (list x1 y1 0d0 x2 y2 0d0 x3 y3 0d0)) 'vector)))
@@ -32,19 +32,19 @@
                               :texture texture
                               :uv-map uv-map)))
 
-(defun make-gl-object-from-fake (fake-gl-object)
+(defun make-gl-object-from-svg (svg-gl-object)
   (let ((triangles (loop for (x1 y1 nil x2 y2 nil x3 y3 nil)
-                         on (coerce (gl-object-vertex-data fake-gl-object) 'list)
+                         on (coerce (gl-object-vertex-data svg-gl-object) 'list)
                          by #'(lambda (x) (cdddr (cdddr (cdddr x))))
                          collect (list (list x1 y1) (list x2 y2) (list x3 y3)))))
     (make-gl-object :data triangles
-                    :position (copy-tree (gl-object-position fake-gl-object))
-                    :scale (copy-tree (gl-object-scale fake-gl-object))
-                    :color (copy-tree (gl-object-color fake-gl-object))
-                    :shape-points (copy-tree (gl-object-shape-points fake-gl-object))
-                    :shape-meta (copy-tree (gl-object-shape-meta fake-gl-object))
-                    :texture (gl-object-texture fake-gl-object)
-                    :uv-map (gl-object-uv-map fake-gl-object))))
+                    :position (copy-tree (gl-object-position svg-gl-object))
+                    :scale (copy-tree (gl-object-scale svg-gl-object))
+                    :color (copy-tree (gl-object-color svg-gl-object))
+                    :shape-points (copy-tree (gl-object-shape-points svg-gl-object))
+                    :shape-meta (copy-tree (gl-object-shape-meta svg-gl-object))
+                    :texture (gl-object-texture svg-gl-object)
+                    :uv-map (gl-object-uv-map svg-gl-object))))
 
 (defmethod set-gl-object-data (gl-object (triangles list) &optional texture uv-map)
   "Copies a set of floating-point vertex data into a VBO which is then stored

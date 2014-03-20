@@ -12,7 +12,9 @@
   :licence "MIT"
   :version "0.2.1"
   :description "Utility package for Ghostie"
-  :depends-on (#:split-sequence #:cffi #:jpl-queues #:ghostie-config)
+  :depends-on (#:split-sequence
+               #:cffi
+               #:ghostie-config)
   :components
   ((:module lib
     :serial t
@@ -25,7 +27,8 @@
   :licence "MIT"
   :version "0.2.1"
   :description "Event system for Ghostie"
-  :depends-on (#:ghostie-config #:ghostie-util)
+  :depends-on (#:ghostie-config
+               #:ghostie-util)
   :components
   ((:file "event")))
 
@@ -34,7 +37,18 @@
   :licence "MIT"
   :version "0.2.1"
   :description "Ghostie: A platformer engine for CL"
-  :depends-on (#:cl-glfw #:cl-opengl #:cl-glu #:bordeaux-threads #:split-sequence #:cl-svg-polygon #:glu-tessellate #:clipmunk #:chipmunk-wrapper #:ghostie-config #:ghostie-util #:ghostie-event)
+  :depends-on (#:cl-glfw
+               #:cl-opengl
+               #:cl-glu
+               #:bordeaux-threads
+               #:split-sequence
+               #:cl-svg-polygon
+               #:glu-tessellate
+               #:clipmunk
+               #:chipmunk-wrapper
+               #:ghostie-config
+               #:ghostie-util
+               #:ghostie-event)
   :components
   ((:file "package")
    (:module opengl

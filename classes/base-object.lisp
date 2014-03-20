@@ -8,7 +8,6 @@
    (meta :accessor object-meta :initarg :meta :initform nil)
    (display :accessor object-display :initarg :display :initform t)
    (draw-offset :accessor object-draw-offset :initarg :draw-offset :initform '(0 0 0))
-   (render-ref :accessor object-render-ref :initarg :render-ref :initform nil)
    (last-sync :accessor object-last-sync :initform nil)
    (bb :accessor object-bb :initform nil))
   (:documentation
@@ -18,10 +17,10 @@
      display it."))
      
 
-(defun make-base-object (&key (type 'base-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
+(defun make-base-object (&key (type 'base-object) svg-gl-objects physics (position '(0 0 0)) (rotation 0.0))
   "Wrapper to create a base-object."
   (let ((obj (make-instance type :position position :rotation rotation))
-        (gl-objects (loop for fake-gl-object in gl-objects collect (make-gl-object-from-fake fake-gl-object))))
+        (gl-objects (loop for svg-gl-object in svg-gl-objects collect (make-gl-object-from-svg svg-gl-object))))
     (setf (object-gl-objects obj) gl-objects
           (object-physics-body obj) physics)
     obj))
@@ -94,26 +93,6 @@
             (setf fill value)))))
     (list :fill fill :opacity opacity)))
 
-;(defun sync-base-objects-to-render (base-objects)
-;  "Takes a collection of base objects and makes sure the same base objects exist
-;   in the render world as well as the game world (base objects are created in
-;   the game world). This is a one-time event for any game object: once it exists
-;   in both threads, it no longer needs to be synced aside from its display
-;   matrix and other dynamic attributes."
-;  (dolist (base-object base-objects)
-;    (in-render (world)
-;      (let ((level (world-level world))
-;            (gl-objects (loop for fake-gl-object in (object-gl-objects base-object)
-;                              for gl-object = (make-gl-object-from-fake fake-gl-object)
-;                              collect gl-object)))
-;        (dbg :debug "(object) Initializing game object in render.~%")
-;        (let ((render-base-object (make-instance 'base-object
-;                                                 :gl-objects gl-objects
-;                                                 :position (copy-tree (object-position base-object))
-;                                                 :rotation (copy-tree (object-rotation base-object)))))
-;          (push render-base-object (level-objects level))
-;          (setf (object-render-ref base-object) render-base-object))))))
-
 (defun svg-to-base-objects (svg-objects objects-meta &key (object-type 'base-object) (scale '(1 1 1)) center-objects)
   "Given a collection of objects parsed by cl-svg-polygon, create base objects
    out of them. This includes translating any polygon info into gl-objects and
@@ -136,20 +115,19 @@
                (meta (getf obj :meta))
                (disconnected (getf meta :disconnected)))
           (when (or (< 0 (length triangles)) disconnected)
-            (push (make-fake-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (getf obj :point-data))
+            (push (make-svg-gl-object :data triangles :color color :scale scale :shape-meta meta :shape-points (getf obj :point-data))
                   (gethash group-name obj-hash))))))
     (loop for group-name being the hash-keys of obj-hash
-          for gl-objects being the hash-values of obj-hash do
+          for svg-gl-objects being the hash-values of obj-hash do
       (let* ((meta (find-if (lambda (property) (equal (getf property :name) group-name))
                             (getf objects-meta :object-properties)))
              (depth (getf meta :layer-depth)))
         (let ((base-object (make-base-object :type object-type
-                                             :gl-objects gl-objects
+                                             :svg-gl-objects svg-gl-objects
                                              :position (list 0 0 (if depth depth 0)))))
           (when center-objects
             (center-base-object base-object))
           (push base-object base-objects))))
-    ;(sync-base-objects-to-render base-objects)
     base-objects))
 
 (defun center-base-object (base-object)

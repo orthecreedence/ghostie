@@ -1,5 +1,9 @@
 (in-package :ghostie-util)
 
+(defun nanp (v)
+  "Make sure our matrices aren't getting infinity values."
+  (not (ignore-errors (mod v 360))))
+
 (defun id-matrix (dims)
   (let ((array (make-array (* dims dims) :initial-element 0.0 :element-type 'single-float)))
     (dotimes (d dims)
@@ -50,6 +54,8 @@
     matrix))
 
 (defun m-rotate (x y z theta &key degrees)
+  (when (nanp theta)
+    (return-from m-rotate (id-matrix 4)))
   (let* ((matrix (id-matrix 4))
          (angle-rad (if degrees (* (mod theta 360) (/ 3.14159 180)) theta))
          (x2 (* x x))

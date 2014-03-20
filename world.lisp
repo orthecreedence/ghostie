@@ -71,7 +71,7 @@
 
 (defun step-world (world dt)
   "Move the world forward! Calculates physics and moves/displays objects."
-  (when *quit* (return-from step-game-world nil))
+  (when *quit* (return-from step-world nil))
   (trigger :step world dt)
   (let ((space (world-physics world)))
     (cpw:space-step space :dt +dt+)

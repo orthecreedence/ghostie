@@ -43,7 +43,7 @@
        (ghostie::world-cleanup world)
        (ghostie::create-world world)
        (ghostie::init-render world)
-       (ghostie::world-load-level game-world "trees"))
+       (ghostie::world-load-level world "trees"))
       (#\B
        (dbg :debug "(bridge) Reloading (and creating) bridge~%")
        (load (format nil "~a/~a/~a/bridge/class"
