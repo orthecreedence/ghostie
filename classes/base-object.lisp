@@ -20,7 +20,8 @@
 
 (defun make-base-object (&key (type 'base-object) gl-objects physics (position '(0 0 0)) (rotation 0.0))
   "Wrapper to create a base-object."
-  (let ((obj (make-instance type :position position :rotation rotation)))
+  (let ((obj (make-instance type :position position :rotation rotation))
+        (gl-objects (loop for fake-gl-object in gl-objects collect (make-gl-object-from-fake fake-gl-object))))
     (setf (object-gl-objects obj) gl-objects
           (object-physics-body obj) physics)
     obj))
@@ -32,8 +33,7 @@
     (when body
       (cpw:destroy (object-physics-body base-object))))
   (dolist (gl-object (object-gl-objects base-object))
-    (in-render ()
-      (free-gl-object gl-object))))
+    (free-gl-object gl-object)))
 
 (defgeneric draw (object)
   (:documentation
@@ -67,20 +67,15 @@
           (setf (object-position base-object) position
                 (object-rotation base-object) rotation
                 (getf (object-meta base-object) :sleeping) sleeping)
-          (let ((render-base-object (object-render-ref base-object)))
-            (when (and render (object-display base-object) render-base-object)
-              ;; run the sleep/wake events for this object (if needed)
-              (cond ((and sleeping (not (getf (object-last-sync base-object) :sleeping)))
-                     (trigger :object-sleep base-object))
-                    ((and (not sleeping) (getf (object-last-sync base-object) :sleeping))
-                     (trigger :object-wake base-object)))
-              (setf (object-last-sync base-object) (list :position position
-                                                              :rotation rotation
-                                                              :sleeping sleeping))
-              (in-render ()
-                (setf (object-position render-base-object) position
-                      (object-rotation render-base-object) rotation
-                      (getf (object-meta render-base-object) :sleeping) sleeping))))))))
+          (when (and render (object-display base-object))
+            ;; run the sleep/wake events for this object (if needed)
+            (cond ((and sleeping (not (getf (object-last-sync base-object) :sleeping)))
+                   (trigger :object-sleep base-object))
+                  ((and (not sleeping) (getf (object-last-sync base-object) :sleeping))
+                   (trigger :object-wake base-object)))
+            (setf (object-last-sync base-object) (list :position position
+                                                       :rotation rotation
+                                                       :sleeping sleeping)))))))
   base-object)
 
 (defun parse-svg-styles (styles &key fill opacity)
@@ -99,25 +94,25 @@
             (setf fill value)))))
     (list :fill fill :opacity opacity)))
 
-(defun sync-base-objects-to-render (base-objects)
-  "Takes a collection of base objects and makes sure the same base objects exist
-   in the render world as well as the game world (base objects are created in
-   the game world). This is a one-time event for any game object: once it exists
-   in both threads, it no longer needs to be synced aside from its display
-   matrix and other dynamic attributes."
-  (dolist (base-object base-objects)
-    (in-render (world)
-      (let ((level (world-level world))
-            (gl-objects (loop for fake-gl-object in (object-gl-objects base-object)
-                              for gl-object = (make-gl-object-from-fake fake-gl-object)
-                              collect gl-object)))
-        (dbg :debug "(object) Initializing game object in render.~%")
-        (let ((render-base-object (make-instance 'base-object
-                                                 :gl-objects gl-objects
-                                                 :position (copy-tree (object-position base-object))
-                                                 :rotation (copy-tree (object-rotation base-object)))))
-          (push render-base-object (level-objects level))
-          (setf (object-render-ref base-object) render-base-object))))))
+;(defun sync-base-objects-to-render (base-objects)
+;  "Takes a collection of base objects and makes sure the same base objects exist
+;   in the render world as well as the game world (base objects are created in
+;   the game world). This is a one-time event for any game object: once it exists
+;   in both threads, it no longer needs to be synced aside from its display
+;   matrix and other dynamic attributes."
+;  (dolist (base-object base-objects)
+;    (in-render (world)
+;      (let ((level (world-level world))
+;            (gl-objects (loop for fake-gl-object in (object-gl-objects base-object)
+;                              for gl-object = (make-gl-object-from-fake fake-gl-object)
+;                              collect gl-object)))
+;        (dbg :debug "(object) Initializing game object in render.~%")
+;        (let ((render-base-object (make-instance 'base-object
+;                                                 :gl-objects gl-objects
+;                                                 :position (copy-tree (object-position base-object))
+;                                                 :rotation (copy-tree (object-rotation base-object)))))
+;          (push render-base-object (level-objects level))
+;          (setf (object-render-ref base-object) render-base-object))))))
 
 (defun svg-to-base-objects (svg-objects objects-meta &key (object-type 'base-object) (scale '(1 1 1)) center-objects)
   "Given a collection of objects parsed by cl-svg-polygon, create base objects
@@ -154,7 +149,7 @@
           (when center-objects
             (center-base-object base-object))
           (push base-object base-objects))))
-    (sync-base-objects-to-render base-objects)
+    ;(sync-base-objects-to-render base-objects)
     base-objects))
 
 (defun center-base-object (base-object)

@@ -2,39 +2,34 @@
 
 (defun input-key-handler (game render-world dt main-actor)
   (let ((sync-position nil)
-        (game-world (game-game-world game)))
+        (world (game-world game)))
     (when (key= #\-)
       (setf sync-position t)
       (decf (nth 2 (world-position render-world)) (* (coerce dt 'single-float) 100)))
     (when (key= #\=)
       (setf sync-position t)
       (incf (nth 2 (world-position render-world)) (* (coerce dt 'single-float) 100)))
-    (in-game ()
-      (pill-stop main-actor))
+    (pill-stop main-actor)
     (when (key= glfw:+key-left+)
-      (in-game ()
-        (pill-run main-actor -200.4)))
+      (pill-run main-actor -200.4))
     (when (key= glfw:+key-right+)
-      (in-game ()
-        (pill-run main-actor 200.4)))
+      (pill-run main-actor 200.4))
     (when (key= glfw:+key-up+)
       (let ((leftp (key= glfw:+key-left+))
             (rightp (key= glfw:+key-right+)))
-        (in-game ()
-          (pill-jump main-actor
-                     :y 320d0
-                     :x (cond (leftp -200d0)
-                              (rightp 200d0)
-                              (t 0d0))))))
+        (pill-jump main-actor
+                   :y 320d0
+                   :x (cond (leftp -200d0)
+                            (rightp 200d0)
+                            (t 0d0)))))
     (when sync-position
       (let ((position (copy-tree (world-position render-world))))
-        (setf (world-position game-world) position)))
+        (setf (world-position world) position)))
     (when (key= #\P)
       (dbg :notice "(actor) Position: ~s~%" (object-position main-actor)))
     (when (key= #\A)
       (let ((x (car (object-position main-actor))))
-        (in-game (game-world)
-          (add-box game-world :x x))))))
+        (add-box world :x x)))))
 
 (defun input-key-press (game key)
   (when (or (eq (code-char key) #\Q)
@@ -42,16 +37,13 @@
     (stop-game game)))
 
 (defun input-key-release (game key)
-  (let ((render-world (game-render-world game)))
+  (let ((world (game-world game)))
     (case (code-char key)
       (#\L
-       (ghostie::world-render-cleanup render-world)
-       (ghostie::create-world render-world)
-       (ghostie::init-render render-world)
-       (in-game (game-world)
-         (ghostie::world-game-cleanup game-world)
-         (ghostie::create-world game-world)
-         (ghostie::world-load-level game-world "trees")))
+       (ghostie::world-cleanup world)
+       (ghostie::create-world world)
+       (ghostie::init-render world)
+       (ghostie::world-load-level game-world "trees"))
       (#\B
        (dbg :debug "(bridge) Reloading (and creating) bridge~%")
        (load (format nil "~a/~a/~a/bridge/class"
@@ -64,11 +56,8 @@
       (#\T
        (ghostie::test-gl-funcs))
       (#\R
-       (let* ((camera (getf (level-meta (world-level render-world)) :camera))
+       (let* ((camera (getf (level-meta (world-level world)) :camera))
               (camera (if camera camera '(0 0 -36))))
          (dbg :debug "(input) Camera reset: ~s~%" camera)
-         (setf (world-position render-world) (copy-tree camera))
-         (let ((position (copy-tree (world-position render-world))))
-           (in-game (game-world)
-             (setf (world-position game-world) position))))))))
+         (setf (world-position world) (copy-tree camera)))))))
 

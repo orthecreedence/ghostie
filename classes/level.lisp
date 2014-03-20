@@ -13,7 +13,7 @@
      object is interacting with part of the level, or with an object inside the
      level."))
 
-(defun load-level (level-name)
+(defun load-level (world level-name)
   "Load a level via its SVG/meta.lisp file."
   (let* ((level (make-instance 'level))
          (level-directory (format nil "~a/~a/~a/~a/"
@@ -27,14 +27,11 @@
                                        :curve-resolution 20
                                        :group-id-attribute-name "label"
                                        :scale (list (car scale) (- (cadr scale))))))
-    ;; make sure the level in the render world as a copy of our meta
-    (in-render (world)
-      (dbg :info "(level) Copying level to render~%")
-      (setf (world-level world) (make-instance 'level :meta (copy-tree level-meta))))
     ;; here, we convert the objects in the level SVG to displayable/collidable
     ;; objects, load the dynamic objects/actors for the level, and store the
     ;; level meta info
-    (setf (level-objects level) (append (svg-to-base-objects objects level-meta :center-objects t :object-type 'level-object)
+    (setf (world-level world) level
+          (level-objects level) (append (svg-to-base-objects objects level-meta :center-objects t :object-type 'level-object)
                                         (load-objects (getf level-meta :objects))
                                         (load-objects (getf level-meta :actors) :type :actor))
           (level-compound-objects level) (load-compound-objects (getf level-meta :compound-objects))

@@ -13,11 +13,8 @@
 
            #:*queue-game-to-render*
            #:*queue-render-to-game*
-           #:init-message-queue
            #:enqueue
            #:process-queue
-           #:in-game
-           #:in-render
            
            #:id-matrix
            #:mat*

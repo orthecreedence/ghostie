@@ -35,13 +35,12 @@
             (getf (world-draw-meta world) :fog-amt) 0.0))
     world))
 
-;;; ----------------------------------------------------------------------------
-;;; Game functions
-;;; ----------------------------------------------------------------------------
-(defun world-game-cleanup (world)
-  "Cleanup (ie free) any game objects in the game thread, free the physics world
-   and mark the world as empty."
-  (dbg :info "(world) Cleaning up game world~%")
+(defun world-cleanup (world)
+  "Cleanup/free any objects in the world, free the physics, empty everything
+   out. Also frees any OpenGL objects laying around and makes sure any other
+   display objects are properly cleaned up."
+  ;; cleanuip game objects/physics
+  (dbg :info "(world) Cleaning world~%")
   (when (world-level world)
     (level-cleanup (world-level world)))
   (let ((space (world-physics world)))
@@ -53,37 +52,42 @@
   (setf (world-physics world) nil
         (world-level world) nil
         (world-draw-meta world) nil)
+  ;; cleanup opengl objects
+  (dbg :info "(world) Cleaning up render world~%")
+  (when (world-level world)
+    (level-cleanup (world-level world)))
+  (setf (world-level world) nil
+        (world-draw-meta world) nil)
+  (free-gl-assets)
   world)
 
-(defun game-world-sync (world)
+(defun sync-world-physics (world)
   "This function makes sure all objects in the game thread are synced with their
-   physics counterparts.
-   
-   It also copies some of the world's display properties over to the render
-   thread for display."
+   physics counterparts."
   (let ((level (world-level world)))
     ;; sync each game object with its physics body
     (dolist (base-object (level-objects level))
       (sync-base-object-to-physics base-object :render t))))
 
-(defun step-game-world (world)
-  "Move the game world forward by one step. Calculates the physics delta for
-   each simulated object"
+(defun step-world (world dt)
+  "Move the world forward! Calculates physics and moves/displays objects."
   (when *quit* (return-from step-game-world nil))
-  (trigger :game-step world)
+  (trigger :step world dt)
   (let ((space (world-physics world)))
     (cpw:space-step space :dt +dt+)
     (cpw:sync-space-bodies space)
     (dolist (base-object (level-objects (world-level world)))
       (sync-base-object-to-physics base-object)
       (when (subtypep (type-of base-object) 'dynamic-object)
-        (process-object base-object)))))
+        (process-object base-object))))
+  (sync-world-physics world)
+  (draw-world world))
 
 (defun world-load-level (world level-name)
   "Load a level into the given world."
   ;; load the current level
   (dbg :notice "(world) Loading level ~s~%" level-name)
-  (setf (world-level world) (load-level level-name))
+  (load-level world level-name)
   (init-level-physics-objects world)
   (let ((level-meta (level-meta (world-level world))))
     ;; grab/generate some display/physics characteristics for the level
@@ -111,39 +115,11 @@
             (getf (world-draw-meta world) :fog-color) fog-color)
       (when camera
         (setf (world-position world) camera))))
-
-  (let ((meta (copy-tree (world-draw-meta world)))
-        (position (copy-tree (world-position world))))
-    (in-render (render-world)
-      (dbg :info "(world) Copying game world meta to render world.~%")
-      (apply #'gl:clear-color (getf meta :background))
-      (setf (world-draw-meta render-world) meta
-            (world-position render-world) position))))
-
-;;; ----------------------------------------------------------------------------
-;;; Render functions
-;;; ----------------------------------------------------------------------------
-(defun step-render-world (world dt)
-  "Runs all queued render items (in the render thread) and draws the world. Also
-   lets the game thread know a render happened, as well as syncs game objects to
-   their physics bodies."
-  (progn
-    (trigger :render-step world dt)
-    (in-game (game-world)
-      (game-world-sync game-world))
-    (process-queue world :render)
-    (draw-world world)))
-
-(defun world-render-cleanup (world)
-  "Cleanup the render thread. Frees any OpenGL objects laying around and makes
-   sure any other display objects are properly cleaned up."
-  (dbg :info "(world) Cleaning up render world~%")
-  (when (world-level world)
-    (level-cleanup (world-level world)))
-  (setf (world-level world) nil
-        (world-draw-meta world) nil)
-  (free-gl-assets)
-  world)
+  (handler-case
+    (apply #'gl:clear-color (getf (world-draw-meta world) :background))
+    (t (e)
+      (format t "erro: clear-color: ~a~%" e)
+      (format t "errstr: ~s~%" (cffi:foreign-funcall "gluErrorString" :int 1282 :string)))))
 
 (defun free-gl-assets ()
   "Free all the GL objects we're using to display our game world."

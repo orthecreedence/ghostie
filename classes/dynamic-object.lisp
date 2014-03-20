@@ -141,13 +141,13 @@
       (unless static
         (cp:body-set-mass body-c (coerce mass 'double-float))
         (cp:body-set-moment body-c moment))
-      ;; add the body to the physics world (async)
-      (in-game (world)
-        (let ((space (world-physics world)))
-          (unless static
-            (cpw:space-add-body space body))
-          (dolist (shape (cpw:body-shapes body))
-            (cpw:space-add-shape space shape))))
+      ;; add the body to the physics world
+      (let* ((world (game-world *game*))
+             (space (world-physics world)))
+        (unless static
+          (cpw:space-add-body space body))
+        (dolist (shape (cpw:body-shapes body))
+          (cpw:space-add-shape space shape)))
       body)))
 
 (defgeneric process-object (object)

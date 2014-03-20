@@ -18,7 +18,6 @@
     :serial t
     :components
     ((:file "util")
-     (:file "sync")
      (:file "matrix")))))
 
 (asdf:defsystem ghostie-event

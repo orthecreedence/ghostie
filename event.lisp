@@ -83,8 +83,7 @@
 (defun trigger (event-type &rest args)
   "Trigger a ghostie event"
   (let ((event (make-event event-type args)))
-    (unless (or (eq event-type :game-step)       ; no need to bitch on every step
-                (eq event-type :render-step)
+    (unless (or (eq event-type :step)            ; no need to bitch on every step
                 (eq event-type :collision-pre)   ; these two are just too noisy
                 (eq event-type :collision-post)
                 (eq event-type :collision-begin)

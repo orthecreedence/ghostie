@@ -12,10 +12,6 @@
 
            #:dbg
 
-           #:enqueue
-           #:in-game
-           #:in-render
-
            #:trigger
            #:bind
 
@@ -66,8 +62,7 @@
            #:world-draw-meta
            
            #:game
-           #:game-game-world
-           #:game-render-world
+           #:game-world
            #:*game*
            #:create-game
            #:stop-game))

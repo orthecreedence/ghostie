@@ -25,15 +25,14 @@
   (let* ((body (call-next-method))
          (mass (cp-a:body-m (cpw:base-c body))))
     (setf (pill-feet pill) (car (cpw:body-shapes body)))
-    (in-game (world)
-      (let ((space (world-physics world)))
-        ;; fix the character's rotation
-        (let ((joint (cpw:make-joint (cpw:space-static-body space) body
-                                     (lambda (body1 body2)
-                                       (cp:damped-rotary-spring-new
-                                         (cpw:base-c body1) (cpw:base-c body2)
-                                         0d0 (* mass 240000d0) (* mass 5000d0))))))
-          (cpw:space-add-joint space joint))))
+    (let ((space (world-physics (game-world *game*))))
+      ;; fix the character's rotation
+      (let ((joint (cpw:make-joint (cpw:space-static-body space) body
+                                   (lambda (body1 body2)
+                                     (cp:damped-rotary-spring-new
+                                       (cpw:base-c body1) (cpw:base-c body2)
+                                       0d0 (* mass 240000d0) (* mass 5000d0))))))
+        (cpw:space-add-joint space joint)))
     body))
 
 (defun pill-stop (pill)
