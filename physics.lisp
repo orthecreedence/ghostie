@@ -1,6 +1,3 @@
-;;; TODO: Allow setting arbiter elasticity/friction/surface velocity from the
-;;; cpw:arbiter object passed into callbacks (ie sync it in these callbacks)
-;;; and also allow a triggered event to cancel/confirm the collision
 (in-package :ghostie)
 
 (defun get-bodies-from-arbiter (arbiter)
